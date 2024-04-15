@@ -1,0 +1,108 @@
+{
+  "Root": {
+    "ClassName": "LABOR_REPORT",
+    "ParameterValues": [
+      {
+        "FeildName": "P_ORG_ID",
+        "DataType": "VarChar",
+        "DtoName": "ListOrgIds"
+      },
+      {
+        "FeildName": "P_START_DATE",
+        "DataType": "DateTime2",
+        "DtoName": "DateStart"
+      },
+      {
+        "FeildName": "P_END_DATE",
+        "DataType": "DateTime2",
+        "DtoName": "DateEnd"
+      }
+    ],
+    "FontFamily": "Times New Roman",
+    "Size": 11.0,
+    "ErCode": "BC_LAO_DONG",
+    "HeaderRow": 7,
+    "HeaderTitles": [
+      {
+        "Text": "ER_HEADER_TITLE_COMPANY_NAME",
+        "Cell": "A1:G1"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_NAME_LABOR_REPORT",
+        "Cell": "B3:G3"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_FROM_DATE_TO_DATE",
+        "Cell": "B4:G4"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_UNIT_NAME",
+        "Cell": "B5:G5"
+      }
+    ],
+    "HeaderGridTitles": [
+      {
+        "Text": "ER_ORDER_NUM",
+        "Cell": "A7:A7"
+      },
+      {
+        "Text": "ER_FULL_NAME",
+        "Cell": "B7:B7"
+      },
+      {
+        "Text": "ER_POSITION",
+        "Cell": "C7:C7"
+      },
+      {
+        "Text": "ER_ORG_UNIT",
+        "Cell": "D7:D7"
+      },
+      {
+        "Text": "ER_GENDER",
+        "Cell": "E7:E7"
+      },
+      {
+        "Text": "ER_COMPANY",
+        "Cell": "F7:F7"
+      },
+      {
+        "Text": "ER_WORK_EMAIL",
+        "Cell": "G7:G7"
+      }
+    ],
+    "MegreCellRange": [
+      "A1:G1",
+      "B3:G3",
+      "B4:G4",
+      "B5:G5"
+    ],
+    "HorizontalAlignmentCenter": [
+      "B3:G3",
+      "B4:G4",
+      "B5:G5",
+      "A7:G7"
+    ],
+    "HorizontalAlignmentLeft": [
+      "A1:G1"
+    ],
+    "VerticalAlignmentCenter": [
+      "A7:G7"
+    ],
+    "RowHeighs": [
+      {
+        "RowNumber": 7,
+        "Height": 40
+      }
+    ],
+    "RangeAutoFit": "A8:G8",
+    "BorderHeader": "A7:G7",
+    "FontBolds": [
+      "A1:G1",
+      "B3:G3",
+      "B4:G4",
+      "B5:G5",
+      "A7:G7"
+    ]
+  }
+  
+}

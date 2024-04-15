@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+option csharp_namespace = "API.GrpcServices";
+import "google/api/annotations.proto";
+
+package sysfunction;
+
+// The greeting service definition.
+service GrpcSysFunction {
+  // Sends a greeting
+  rpc ReadAllWithAllActions (ReadAllWithAllActionsRequest) returns (ReadAllWithAllActionsReply)
+  {
+	  option (google.api.http) =
+	  {
+		  get: "/api/grpc/SysFunction/ReadAllWithAllActions"
+	  };
+
+  };
+
+}
+
+// The request message containing the user's name.
+message ReadAllWithAllActionsRequest {
+  //string name = 1;
+}
+
+// The response message containing the greetings.
+message ReadAllWithAllActionsReply {
+	string messageCode = 1;
+	int32 errorType = 2;
+	int32 statusCode = 3;
+	string innerBody = 4;
+}

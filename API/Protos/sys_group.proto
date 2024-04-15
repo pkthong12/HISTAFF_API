@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+option csharp_namespace = "API.GrpcServices";
+import "google/api/annotations.proto";
+
+package sysgroup;
+
+// The GrpcSysGroup service definition.
+service GrpcSysGroup {
+  // Sends a greeting
+  rpc QueryFunctionActionPermissionList (QueryFunctionActionPermissionListRequest) returns (QueryFunctionActionPermissionListReply)
+  {
+	  option (google.api.http) =
+	  {
+		  get: "/api/grpc/SysGroup/QueryFunctionActionPermissionList"
+	  };
+
+  };
+
+}
+
+// The request message containing the user's name.
+message QueryFunctionActionPermissionListRequest {
+  int32 groupId = 1;
+}
+
+// The response message containing the greetings.
+message QueryFunctionActionPermissionListReply {
+	string messageCode = 1;
+	int32 errorType = 2;
+	int32 statusCode = 3;
+	string innerBody = 4;
+}

@@ -1,0 +1,118 @@
+{
+  "ExFiles": [
+    {
+      "ExCode": "HU_CONTRACT",
+      "DataStartRow": 6,
+      "RowsToPrepare": 1000,
+      "RenderOtherListReferences": false,
+      "RenderAdministrativePlaces": false,
+      "BuildOrgTree": false,
+      "BuildPositions": true,
+
+      "ExDirectReferences": [
+        {
+          "Table": "HU_CONTRACT_TYPE",
+          "UniqueIndexColumns": [ "NAME" ],
+          "Condition": "(IS_ACTIVE = 1 AND CODE != 'PLHDLD')"
+        },
+        {
+          "Table": "HU_EMPLOYEE_CV",
+          "UniqueIndexColumns": [ "FULL_NAME", "ID_NO" ]
+        },
+        {
+          "Table": "HU_POSITION",
+          "UniqueIndexColumns": [ "NAME", "CODE" ]
+        },
+        {
+          "Table": "HU_WORKING",
+          "UniqueIndexColumns": [ "DECISION_NO" ]
+        }
+      ],
+      "ExIndirectReferences": [
+        {
+          "ParentTable": "HU_EMPLOYEE_CV",
+          "ChildTable": "HU_EMPLOYEE",
+          "ChildKey": "PROFILE_ID",
+          "ParentUniqueIndexColumns": [ "FULL_NAME", "ID_NO" ],
+          "ChildUniqueIndexColumns": [ "CODE" ]
+        },
+        {
+          "ParentTable": "HU_EMPLOYEE",
+          "ChildTable": "HU_WORKING",
+          "ChildKey": "EMPLOYEE_ID",
+          "ParentUniqueIndexColumns": [ "CODE" ],
+          "ChildUniqueIndexColumns": [ "DECISION_NO" ],
+          "ChildCondition": "(IS_WAGE = -1 AND STATUS_ID = 994)"
+        }
+      ],
+
+      "ExTables": [
+        {
+          "Table": "HU_CONTRACT",
+          "BufferTable": "HU_CONTRACT_IMPORT",
+          "RenderOrder": 1,
+          "ImportOrder": 1,
+          "HeaderBgColor": "#358ccb",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "CONTRACT_NO" ],
+          "RenderColumns": [
+            "PROFILE_ID",
+            "EMPLOYEE_ID",
+            "CONTRACT_NO",
+            "CONTRACT_TYPE_ID",
+            "START_DATE",
+            "EXPIRE_DATE",
+            "SIGNER_POSITION",
+            "SIGN_PROFILE_ID",
+            "SIGN_ID",
+            "SIGN_DATE",
+            "WORKING_ID",
+            "NOTE"
+          ],
+          "RequiredColumns": [
+            "EMPLOYEE_ID",
+            "CONTRACT_NO",
+            "PROFILE_ID",
+            "CONTRACT_TYPE_ID",
+            "START_DATE"
+          ],
+          "UniqueIndexes": [],
+          "Rules": [
+            {
+              "Column": "SIGNER_POSITION",
+              "DirectReference": "HU_POSITION"
+            },
+            {
+              "Column": "PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "EMPLOYEE_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "PROFILE_ID"
+            },
+            {
+              "Column": "CONTRACT_TYPE_ID",
+              "DirectReference": "HU_CONTRACT_TYPE"
+            },
+            {
+              "Column": "SIGN_PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "SIGN_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "SIGN_PROFILE_ID"
+            },
+            {
+              "Column": "WORKING_ID",
+              "IndirectReference": [ "HU_EMPLOYEE", "HU_WORKING" ],
+              "IndirectColumn": "EMPLOYEE_ID"
+            }
+          ]
+        }
+
+      ]
+    }
+  ]
+}

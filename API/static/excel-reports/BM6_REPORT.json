@@ -1,0 +1,271 @@
+{
+  "Root": {
+    "ClassName": "BM6_REPORT",
+    "ParameterValues": [
+      {
+        "FeildName": "P_ORG_ID",
+        "DataType": "VarChar",
+        "DtoName": "ListOrgIds"
+      },
+      {
+        "FeildName": "P_YEAR",
+        "DataType": "Int",
+        "DtoName": "Year"
+      },
+      {
+        "FeildName": "P_EMPLOYEE_CREATED",
+        "DataType": "VarChar",
+        "DtoName": "EmployeeDeclare"
+      },
+      {
+        "FeildName": "P_REPRESENTATIVE",
+        "DataType": "VarChar",
+        "DtoName": "EmployeeRepresentative"
+      }
+    ],
+    "FontFamily": "Times New Roman",
+    "Size": 12.0,
+    "ErCode": "BM6",
+    "HeaderRow": 7,
+    "HeaderTitles": [
+      {
+        "Text": "ER_HEADER_TITLE_COMPANY_NAME",
+        "Cell": "A1:E1"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_BM6",
+        "Cell": "T1:U1"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_BM6_NAME",
+        "Cell": "A3:V3"
+      }
+    ],
+    "HeaderGridTitles": [
+      {
+        "Text": "ER_ORDER_NUM",
+        "Cell": "A5:A7"
+      }
+    ],
+    "HeaderNoTranslates": [
+      {
+        "Text": "Tên công ty",
+        "Cell": "B5:B7"
+      },
+      {
+        "Text": "Người quản lý chuyên trách",
+        "Cell": "C5:M5"
+      },
+      {
+        "Text": "Số lượng (người)",
+        "Cell": "C6:E6"
+      },
+      {
+        "Text": "KH năm trước",
+        "Cell": "C7:C7"
+      },
+      {
+        "Text": "TH năm trước",
+        "Cell": "D7:D7"
+      },
+      {
+        "Text": "KH năm ...(YYYY)",
+        "Cell": "E7:E7"
+      },
+      {
+        "Text": "Quỹ tiền lương (tr đ)",
+        "Cell": "F6:H6"
+      },
+      {
+        "Text": "KH năm trước",
+        "Cell": "F7:F7"
+      },
+      {
+        "Text": "TH năm trước",
+        "Cell": "G7:G7"
+      },
+      {
+        "Text": "KH năm ...(YYYY)",
+        "Cell": "H7:H7"
+      },
+      {
+        "Text": "Quỹ tiền thưởng (tr đ)",
+        "Cell": "I6:K6"
+      },
+      {
+        "Text": "KH năm trước",
+        "Cell": "I7:I7"
+      },
+      {
+        "Text": "TH năm trước",
+        "Cell": "J7:J7"
+      },
+      {
+        "Text": "KH năm ...(YYYY)",
+        "Cell": "K7:K7"
+      },
+      {
+        "Text": "Tiền lương BQ của người quản lý chuyên trách là người đại diện vốn NN (tr.đ/tháng)",
+        "Cell": "L6:M6"
+      },
+      {
+        "Text": "TH năm trước",
+        "Cell": "L7:L7"
+      },
+      {
+        "Text": "KH năm ...(YYYY)",
+        "Cell": "M7:M7"
+      },
+      {
+        "Text": "Người quản lý không chuyên trách",
+        "Cell": "N5:V5"
+      },
+      {
+        "Text": "Số lượng (người)",
+        "Cell": "N6:P6"
+      },
+      {
+        "Text": "KH năm trước",
+        "Cell": "N7:N7"
+      },
+      {
+        "Text": "TH năm trước",
+        "Cell": "O7:O7"
+      },
+      {
+        "Text": "KH năm ...(YYYY)",
+        "Cell": "P7:P7"
+      },
+      {
+        "Text": "Quỹ thù lao",
+        "Cell": "Q6:S6"
+      },
+      {
+        "Text": "KH năm trước",
+        "Cell": "Q7:Q7"
+      },
+      {
+        "Text": "TH năm trước",
+        "Cell": "R7:R7"
+      },
+      {
+        "Text": "KH năm ...(YYYY)",
+        "Cell": "S7:S7"
+      },
+      {
+        "Text": "Quỹ tiền thưởng",
+        "Cell": "T6:V6"
+      },
+      {
+        "Text": "KH năm trước",
+        "Cell": "T7:T7"
+      },
+      {
+        "Text": "TH năm trước",
+        "Cell": "U7:U7"
+      },
+      {
+        "Text": "KH năm ...(YYYY)",
+        "Cell": "V7:V7"
+      }
+    ],
+
+    "GridContents": [
+      {
+        "Text": "1",
+        "Cell": "A9:A9"
+      },
+      {
+        "Text": "Công ty mẹ Tổng công ty Thép Việt Nam - CTCP",
+        "Cell": "B9:B9"
+      }
+    ],
+
+    "FooterTitles": [
+      {
+        "Text": "ER_TOTAL",
+        "Cell": "A10:B10"
+      },
+      {
+        "Text": "ER_FOOTER_PLACE_DATE_NOW",
+        "Cell": "P12:V12"
+      }
+    ],
+
+    "FooterNoTranslates": [
+      {
+        "Text": "Người lập biểu",
+        "Cell": "B13:E13"
+      },
+      {
+        "Text": "Người đại diện phần vốn Nhà nước",
+        "Cell": "P13:V13"
+      }
+    ],
+
+    "MegreCellRange": [
+      "A1:F1",
+      "T1:U1",
+      "A3:V3",
+      "A5:A7",
+      "B5:B7",
+      "C5:M5",
+      "C6:E6",
+      "F6:H6",
+      "I6:K6",
+      "L6:M6",
+      "N5:V5",
+      "N6:P6",
+      "Q6:S6",
+      "T6:V6",
+      "A10:B10",
+      "P12:V12",
+      "B13:E13",
+      "P13:V13"
+    ],
+    "HorizontalAlignmentCenter": [
+      "A3:V3",
+      "A5:V7",
+      "P12:V12",
+      "B13:E13",
+      "P13:V13"
+    ],
+    "VerticalAlignmentCenter": [
+      "A5:V7"
+    ],
+    "WrapText": [
+      "A5:V7",
+      "B9:B9"
+    ],
+    "RowHeighs": [
+      {
+        "RowNumber": 7,
+        "Height": 32
+      },
+      {
+        "RowNumber": 9,
+        "Height": 110
+      }
+    ],
+    "RangeAutoFit": "A8:V8",
+    "BorderHeader": "A5:V10",
+    "FontBolds": [
+      "A1:F1",
+      "T1:U1",
+      "A3:V3",
+      "A5:V7",
+      "A10:B10",
+      "B13:E13",
+      "P13:V13"
+    ],
+    "FontItalic": [
+      "P12:V12"
+    ],
+    "FontSizeSpecifics": [
+      {
+        "Cell": "A1:V1",
+        "Size": 11
+      }
+    ]
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "ExFiles": [
+    {
+      "ExCode": "AT_SWIPE_DATA",
+      "DataStartRow": 6,
+      "RowsToPrepare": 200,
+      "RenderOtherListReferences": false,
+      "RenderAdministrativePlaces": false,
+      "BuildOrgTree": false,
+      "BuildPositions": false,
+
+      "ExDirectReferences": [
+        {
+          "Table": "AT_TERMINAL",
+          "UniqueIndexColumns": [ "TERMINAL_CODE" ]
+        }
+      ],
+      "ExIndirectReferences": [],
+
+      "ExTables": [
+        {
+          "Table": "AT_SWIPE_DATA",
+          "BufferTable": "AT_SWIPE_DATA_IMPORT",
+          "RenderOrder": 1,
+          "ImportOrder": 1,
+          "HeaderBgColor": "#358ccb",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "ID" ],
+          "RenderColumns": [
+            "TERMINAL_ID",
+            "ITIME_ID",
+            "WORKING_DAY",
+            "TIME_ONLY"
+          ],
+          "RequiredColumns": [
+            "ITIME_ID",
+            "TERMINAL_ID",
+            "WORKING_DAY",
+            "VALTIME"
+          ],
+          "UniqueIndexes": [],
+          "Rules": [
+            {
+              "Column": "TERMINAL_ID",
+              "DirectReference": "AT_TERMINAL"
+            }
+          ]
+        }
+
+      ]
+    }
+  ]
+}

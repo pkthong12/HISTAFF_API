@@ -1,0 +1,180 @@
+{
+  "ExFiles": [
+    {
+      "ExCode": "HU_COMMEND",
+      "DataStartRow": 6,
+      "RowsToPrepare": 1000,
+      "RenderOtherListReferences": true,
+      "RenderAdministrativePlaces": false,
+      "BuildOrgTree": false,
+      "BuildPositions": true,
+      "ExDirectReferences": [
+        {
+          "Table": "HU_EMPLOYEE_CV",
+          "UniqueIndexColumns": [ "FULL_NAME", "ID_NO" ]
+        },
+        {
+          "Table": "HU_EMPLOYEE",
+          "UniqueIndexColumns": [ "CODE" ]
+        },
+        {
+          "Table": "HU_ORG_LEVEL",
+          "UniqueIndexColumns": [ "NAME", "CODE" ],
+          "Condition": "(IS_ACTIVE = 1)"
+        },
+        {
+          "Table": "PA_LIST_FUND_SOURCE",
+          "UniqueIndexColumns": [ "NAME", "CODE" ],
+          "Condition": "(IS_ACTIVE = 1)"
+        },
+        {
+          "Table": "AT_SALARY_PERIOD",
+          "UniqueIndexColumns": [ "NAME" ],
+          "Condition": "(IS_ACTIVE = 1)"
+        }
+      ],
+      "ExIndirectReferences": [
+        {
+          "ParentTable": "HU_EMPLOYEE_CV",
+          "ChildTable": "HU_EMPLOYEE",
+          "ChildKey": "PROFILE_ID",
+          "ParentUniqueIndexColumns": [ "FULL_NAME", "ID_NO" ],
+          "ChildUniqueIndexColumns": [ "CODE" ],
+          "Condition": "(WORK_STATUS_ID != 1028)"
+        }
+      ],
+
+      "ExTables": [
+        {
+          "Table": "HU_COMMEND_EMPLOYEE",
+          "BufferTable": "HU_COMMEND_EMPLOYEE_IMPORT",
+          "RenderOrder": 1,
+          "ImportOrder": 1,
+          "HeaderBgColor": "#F37540",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "EMPLOYEE_ID" ],
+          "RenderColumns": [
+            "PROFILE_ID",
+            "EMPLOYEE_ID"
+          ],
+          "RequiredColumns": [
+            "PROFILE_ID"
+          ],
+          "UniqueIndexes": [],
+          "Rules": [
+            {
+              "Column": "PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "EMPLOYEE_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "PROFILE_ID"
+            }
+          ]
+        },
+        {
+          "Table": "HU_COMMEND",
+          "BufferTable": "HU_COMMEND_IMPORT",
+          "RenderOrder": 2,
+          "ImportOrder": 2,
+          "HeaderBgColor": "#358ccb",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "ID" ],
+          "RenderColumns": [
+            "STATUS_PAYMENT_ID",
+            "COMMEND_OBJ_ID",
+            "YEAR",
+            "NO",
+            "SIGN_DATE",
+            "SIGN_PROFILE_ID",
+            "SIGN_ID",
+            "SALARY_INCREASE_TIME",
+            "AWARD_TITLE_ID",
+            "ORG_LEVEL_ID",
+            "REASON",
+            "NOTE",
+            "EFFECT_DATE",
+            "PAYMENT_NO",
+            "FUND_SOURCE_ID",
+            "MONEY",
+            "REWARD_ID",
+            "LIST_REWARD_LEVEL_ID",
+            "IS_TAX",
+            "MONTH_TAX",
+            "PAYMENT_CONTENT",
+            "SIGN_PAYMENT_PROFILE_ID",
+            "SIGN_PAYMENT_ID",
+            "POSITION_PAYMENT_NAME",
+            "SIGN_PAYMENT_DATE",
+            "PAYMENT_NOTE"
+          ],
+          "RequiredColumns": [
+            "COMMEND_OBJ_ID",
+            "YEAR",
+            "NO",
+            "REWARD_ID",
+            "ORG_LEVEL_ID",
+            "EFFECT_DATE",
+            "PAYMENT_NO",
+            "LIST_REWARD_LEVEL_ID"
+          ],
+          "UniqueIndexes": [],
+          "Rules": [
+            {
+              "Column": "STATUS_PAYMENT_ID",
+              "SysOtherListTypeCode": "STATUS"
+            },
+            {
+              "Column": "COMMEND_OBJ_ID",
+              "SysOtherListTypeCode": "DTKT"
+            },
+            {
+              "Column": "SIGN_PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "SIGN_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "SIGN_PROFILE_ID"
+            },
+            {
+              "Column": "AWARD_TITLE_ID",
+              "SysOtherListTypeCode": "DHKT"
+            },
+            {
+              "Column": "ORG_LEVEL_ID",
+              "DirectReference": "HU_ORG_LEVEL"
+            },
+            {
+              "Column": "FUND_SOURCE_ID",
+              "DirectReference": "PA_LIST_FUND_SOURCE"
+            },
+            {
+              "Column": "REWARD_ID",
+              "SysOtherListTypeCode": "HTKT"
+            },
+            {
+              "Column": "LIST_REWARD_LEVEL_ID",
+              "DirectReference": "HU_ORG_LEVEL"
+            },
+            {
+              "Column": "MONTH_TAX",
+              "DirectReference": "AT_SALARY_PERIOD"
+            },
+            {
+              "Column": "SIGN_PAYMENT_PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "SIGN_PAYMENT_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "SIGN_PAYMENT_PROFILE_ID"
+            }
+          ]
+        }
+
+      ]
+    }
+  ]
+}

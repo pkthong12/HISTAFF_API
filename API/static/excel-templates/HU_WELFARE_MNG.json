@@ -1,0 +1,85 @@
+{
+  "ExFiles": [
+    {
+      "ExCode": "HU_WELFARE_MNG",
+      "DataStartRow": 6,
+      "RowsToPrepare": 1000,
+      "RenderOtherListReferences": false,
+      "RenderAdministrativePlaces": false,
+      "BuildOrgTree": false,
+      "BuildPositions": false,
+
+      "ExDirectReferences": [
+        {
+          "Table": "HU_EMPLOYEE_CV",
+          "UniqueIndexColumns": [ "FULL_NAME", "ID_NO" ]
+        },
+        {
+          "Table": "HU_EMPLOYEE",
+          "UniqueIndexColumns": [ "CODE" ]
+        },
+        {
+          "Table": "HU_WELFARE",
+          "UniqueIndexColumns": [ "NAME" ],
+          "Condition": "(IS_AUTO_ACTIVE IS NULL)"
+        }
+      ],
+      "ExIndirectReferences": [
+        {
+          "ParentTable": "HU_EMPLOYEE_CV",
+          "ChildTable": "HU_EMPLOYEE",
+          "ChildKey": "PROFILE_ID",
+          "ParentUniqueIndexColumns": [ "FULL_NAME", "ID_NO" ],
+          "ChildUniqueIndexColumns": [ "CODE" ]
+        }
+      ],
+
+      "ExTables": [
+        {
+          "Table": "HU_WELFARE_MNG",
+          "BufferTable": "HU_WELFARE_MNG_IMPORT",
+          "RenderOrder": 1,
+          "ImportOrder": 1,
+          "HeaderBgColor": "#358ccb",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "ID" ],
+          "RenderColumns": [
+            "PROFILE_ID",
+            "EMPLOYEE_ID",
+            "WELFARE_ID",
+            "DECISION_CODE",
+            "EFFECT_DATE",
+            "EXPIRE_DATE",
+            "MONEY",
+            "NOTE"
+
+          ],
+          "RequiredColumns": [
+            "EMPLOYEE_ID",
+            "PROFILE_ID",
+            "WELFARE_ID",
+            "DECISION_CODE",
+            "EFFECT_DATE",
+            "MONEY"
+          ],
+          "UniqueIndexes": [],
+          "Rules": [
+            {
+              "Column": "PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "EMPLOYEE_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "PROFILE_ID"
+            },
+            {
+              "Column": "WELFARE_ID",
+              "DirectReference": "HU_WELFARE"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

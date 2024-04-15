@@ -1,0 +1,624 @@
+{
+  "Root": {
+    "ClassName": "BM4_REPORT",
+    "ParameterValues": [
+      {
+        "FeildName": "P_ORG_ID",
+        "DataType": "VarChar",
+        "DtoName": "ListOrgIds"
+      },
+      {
+        "FeildName": "P_YEAR",
+        "DataType": "Int",
+        "DtoName": "Year"
+      },
+      {
+        "FeildName": "P_EMPLOYEE_ID",
+        "DataType": "VarChar",
+        "DtoName": "EmployeeDeclare"
+      },
+      {
+        "FeildName": "P_EMPLOYEE_REPRESENTATIVE_ID",
+        "DataType": "VarChar",
+        "DtoName": "EmployeeRepresentative"
+      }
+    ],
+    "FontFamily": "Times New Roman",
+    "Size": 12.0,
+    "ErCode": "BM4",
+    "HeaderRow": 5,
+    "HeaderTitles": [
+      {
+        "Text": "ER_HEADER_TITLE_COMPANY_NAME",
+        "Cell": "A1:B1"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_BM4",
+        "Cell": "G1:H1"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_BM4_NAME",
+        "Cell": "A3:H3"
+      }
+    ],
+    "HeaderNoTranslates": [
+
+      {
+        "Text": "Stt",
+        "Cell": "A5:A5"
+      },
+      {
+        "Text": "Nội dung",
+        "Cell": "B5:B5"
+      },
+      {
+        "Text": "Đvt",
+        "Cell": "C5:C5"
+      },
+      {
+        "Text": "Phương án của công ty",
+        "Cell": "D5:E5"
+      },
+      {
+        "Text": "Thực hiện năm trước",
+        "Cell": "D6:D6"
+      },
+      {
+        "Text": "Kế hoạch năm",
+        "Cell": "E6:E6"
+      },
+      {
+        "Text": "Đề xuất của người đại diện phần vốn nhà nước",
+        "Cell": "F5:H5"
+      },
+      {
+        "Text": "Thực hiện năm trước",
+        "Cell": "F6:F6"
+      },
+      {
+        "Text": "Kế hoạch năm",
+        "Cell": "G6:G6"
+      },
+      {
+        "Text": "Căn cứ đề xuất",
+        "Cell": "H6:H6"
+      },
+      {
+        "Text": "1",
+        "Cell": "A7:A7"
+      },
+      {
+        "Text": "I",
+        "Cell": "A8:A8"
+      },
+      {
+        "Text": "-",
+        "Cell": "A9:A9"
+      },
+      {
+        "Text": "-",
+        "Cell": "A10:A10"
+      },
+      {
+        "Text": "-",
+        "Cell": "A11:A11"
+      },
+      {
+        "Text": "-",
+        "Cell": "A12:A12"
+      },
+      {
+        "Text": "-",
+        "Cell": "A13:A13"
+      },
+      {
+        "Text": "II",
+        "Cell": "A14:A14"
+      },
+      {
+        "Text": "1",
+        "Cell": "A15:A15"
+      },
+      {
+        "Text": "2",
+        "Cell": "A16:A16"
+      },
+      {
+        "Text": "3",
+        "Cell": "A17:A17"
+      },
+      {
+        "Text": "4",
+        "Cell": "A18:A18"
+      },
+      {
+        "Text": "-",
+        "Cell": "A19:A19"
+      },
+      {
+        "Text": "-",
+        "Cell": "A20:A20"
+      },
+      {
+        "Text": "III",
+        "Cell": "A21:A21"
+      },
+      {
+        "Text": "1",
+        "Cell": "A22:A22"
+      },
+      {
+        "Text": "-",
+        "Cell": "A23:A23"
+      },
+      {
+        "Text": "-",
+        "Cell": "A24:A24"
+      },
+      {
+        "Text": "-",
+        "Cell": "A25:A25"
+      },
+      {
+        "Text": "-",
+        "Cell": "A26:A26"
+      },
+      {
+        "Text": "-",
+        "Cell": "A27:A27"
+      },
+      {
+        "Text": "2",
+        "Cell": "A28:A28"
+      },
+      {
+        "Text": "-",
+        "Cell": "A29:A29"
+      },
+      {
+        "Text": "-",
+        "Cell": "A30:A30"
+      },
+      {
+        "Text": "3",
+        "Cell": "A31:A31"
+      },
+      {
+        "Text": "IV",
+        "Cell": "A32:A32"
+      },
+      {
+        "Text": "1",
+        "Cell": "A33:A33"
+      },
+      {
+        "Text": "2",
+        "Cell": "A34:A34"
+      },
+      {
+        "Text": "3",
+        "Cell": "A35:A35"
+      },
+
+      {
+        "Text": "V",
+        "Cell": "A36:A36"
+      },
+      {
+        "Text": "1",
+        "Cell": "A37:A37"
+      },
+      {
+        "Text": "-",
+        "Cell": "A38:A38"
+      },
+      {
+        "Text": "-",
+        "Cell": "A39:A39"
+      },
+      {
+        "Text": "2",
+        "Cell": "A40:A40"
+      },
+      {
+        "Text": "VI",
+        "Cell": "A41:A41"
+      },
+      {
+        "Text": "2",
+        "Cell": "B7:B7"
+      },
+      {
+        "Text": "Lao động",
+        "Cell": "B8:B8"
+      },
+      {
+        "Text": "Tổng số lao động, trong đó:",
+        "Cell": "B9:B9"
+      },
+      {
+        "Text": "Người quản lý",
+        "Cell": "B10:B10"
+      },
+      {
+        "Text": "Lao động chuyên môn, nghiệp vụ",
+        "Cell": "B11:B11"
+      },
+      {
+        "Text": "Lao động trực tiếp sản xuất, kinh doanh",
+        "Cell": "B12:B12"
+      },
+      {
+        "Text": "Lao động thừa hành, phục vụ",
+        "Cell": "B13:B13"
+      },
+      {
+        "Text": "Tiền lương của người lao động",
+        "Cell": "B14:B14"
+      },
+      {
+        "Text": "Quỹ tiền lương",
+        "Cell": "B15:B15"
+      },
+      {
+        "Text": "Số lao động để tính quỹ tiền lương",
+        "Cell": "B16:B16"
+      },
+      {
+        "Text": "Tiền lương bình quân",
+        "Cell": "B17:B17"
+      },
+      {
+        "Text": "Yếu tố khách quan khi xác định tiền lương",
+        "Cell": "B18:B18"
+      },
+      {
+        "Text": "Phần lợi nhuận giảm do yếu tố khách quan",
+        "Cell": "B19:B19"
+      },
+      {
+        "Text": "Phân năng suất lao động giảm do yếu tố khách quan",
+        "Cell": "B20:B20"
+      },
+      {
+        "Text": "Tiền lương của người quản lý chuyên trách",
+        "Cell": "B21:B21"
+      },
+      {
+        "Text": "Số người",
+        "Cell": "B22:B22"
+      },
+      {
+        "Text": "Mức lương cơ bản để tính tiền lương",
+        "Cell": "B23:B23"
+      },
+      {
+        "Text": "Tiền lương bình quân",
+        "Cell": "B24:B24"
+      },
+      {
+        "Text": "Hệ số điều chỉnh tăng thêm tiền lương",
+        "Cell": "B25:B25"
+      },
+      {
+        "Text": "Tiền lương bình quân",
+        "Cell": "B26:B26"
+      },
+      {
+        "Text": "Tiền lương tăng thêm do lợi nhuận thực hiện vượt lợi nhuận kế hoạch(áp dụng đối với xác định tiền lương thực hiện)",
+        "Cell": "B27:B27"
+      },
+      {
+        "Text": "Tiền lương của người quản lý chuyên trách, không là người đại diện phần vốn nhà nước",
+        "Cell": "B28:B28"
+      },
+      {
+        "Text": "Số người",
+        "Cell": "B29:B29"
+      },
+      {
+        "Text": "Tình lương bình quân",
+        "Cell": "B30:B30"
+      },
+      {
+        "Text": "Tổng quỹ tiền lương của người quản lý chuyên trách",
+        "Cell": "B31:B31"
+      },
+      {
+        "Text": "Thù lao của người quản lý không chuyên trách",
+        "Cell": "B32:B32"
+      },
+      {
+        "Text": "Số người",
+        "Cell": "B33:B33"
+      },
+      {
+        "Text": "Mức thù lao bình quân",
+        "Cell": "B34:B34"
+      },
+      {
+        "Text": "Quỹ thù lao",
+        "Cell": "B35:B35"
+      },
+
+      {
+        "Text": "Quỹ tiền thưởng, phúc lợi",
+        "Cell": "B36:B36"
+      },
+      {
+        "Text": "Quỹ tiền thưởng phúc lợi của người lao động",
+        "Cell": "B37:B37"
+      },
+      {
+        "Text": "Quỹ khen, thưởng",
+        "Cell": "B38:B38"
+      },
+      {
+        "Text": "Quỹ phúc lợi",
+        "Cell": "B39:B39"
+      },
+      {
+        "Text": "Quỹ tiền thưởng của người quản lý",
+        "Cell": "B40:B40"
+      },
+      {
+        "Text": "Một số nội dung khác",
+        "Cell": "B41:B41"
+      },
+      {
+        "Text": "3",
+        "Cell": "C7:C7"
+      },
+      {
+        "Text": "Người",
+        "Cell": "C10:C10"
+      },
+      {
+        "Text": "Người",
+        "Cell": "C11:C11"
+      },
+      {
+        "Text": "Người",
+        "Cell": "C12:C12"
+      },
+      {
+        "Text": "Người",
+        "Cell": "C13:C13"
+      },
+      {
+        "Text": "Tr đồng",
+        "Cell": "C15:C15"
+      },
+      {
+        "Text": "Người",
+        "Cell": "C16:C16"
+      },
+      {
+        "Text": "Tr.đ/tháng",
+        "Cell": "C17:C17"
+      },
+      {
+        "Text": "Tr đồng",
+        "Cell": "C19:C19"
+      },
+      {
+        "Text": "Trđồng/ng/năm",
+        "Cell": "C20:C20"
+      },
+      {
+        "Text": "Người",
+        "Cell": "C23:C23"
+      },
+      {
+        "Text": "Tr.đ/tháng",
+        "Cell": "C24:C24"
+      },
+      {
+        "Text": "Tr.đ/tháng",
+        "Cell": "C26:C26"
+      },
+      {
+        "Text": "Triệu đồng",
+        "Cell": "C27:C27"
+      },
+      {
+        "Text": "Người",
+        "Cell": "C29:C29"
+      },
+      {
+        "Text": "Tr.đ/tháng",
+        "Cell": "C30:C30"
+      },
+      {
+        "Text": "Triệu đồng",
+        "Cell": "C31:C31"
+      },
+      {
+        "Text": "Người",
+        "Cell": "C33:C33"
+      },
+      {
+        "Text": "Tr.đ/tháng",
+        "Cell": "C34:C34"
+      },
+      {
+        "Text": "Triệu đồng",
+        "Cell": "C35:C35"
+      },
+      {
+        "Text": "Triệu đồng",
+        "Cell": "C37:C37"
+      },
+      {
+        "Text": "Triệu đồng",
+        "Cell": "C38:C38"
+      },
+      {
+        "Text": "Triệu đồng",
+        "Cell": "C39:C39"
+      },
+      {
+        "Text": "Triệu đồng",
+        "Cell": "C40:C40"
+      },
+      {
+        "Text": "4",
+        "Cell": "D7:D7"
+      },
+      {
+        "Text": "5",
+        "Cell": "E7:E7"
+      },
+      {
+        "Text": "6",
+        "Cell": "F7:F7"
+      },
+      {
+        "Text": "7",
+        "Cell": "G7:G7"
+      },
+      {
+        "Text": "8",
+        "Cell": "H7:H7"
+      }
+
+    ],
+
+    "FooterTitles": [
+      {
+        "Text": "ER_FOOTER_PLACE_DATE_NOW",
+        "Cell": "E43:H43"
+      }
+    ],
+
+
+    "FooterNoTranslates": [
+      {
+        "Text": "Người lập biểu",
+        "Cell": "B44:B44"
+      },
+      {
+        "Text": "Người đại diện phần vốn Nhà nước",
+        "Cell": "E44:H44"
+      }
+    ],
+
+    "MegreCellRange": [
+      "A1:B1",
+      "G1:H1",
+      "A3:H3",
+      "D5:E5",
+      "A5:A6",
+      "B5:B6",
+      "C5:C6",
+      "F5:H5",
+      "E43:H43",
+      "E44:H44",
+      "E47:H47"
+
+    ],
+    "VerticalAlignmentCenter": [
+      "G1:H1",
+      "A3:H3",
+      "A5:H6",
+      "A7:A41",
+      "B7:H7",
+      "C8:C41",
+      "B32:B32",
+      "C32:H32",
+      "E43:H43",
+      "E44:H44",
+      "B44:B44",
+      "E47:H47",
+      "B47:B47"
+
+    ],
+    "HorizontalAlignmentCenter": [
+      "G1:H1",
+      "A3:H3",
+      "A5:H6",
+      "A7:A41",
+      "B7:H7",
+      "C8:H41",
+      "E43:H43",
+      "E44:H44",
+      "B44:B44",
+      "E47:H47",
+      "B47:B47"
+
+    ],
+    "WrapText": [
+      "A3:A3",
+      "A5:H6",
+      "B27:B27",
+      "B28:B28"
+
+    ],
+    "RowHeighs": [
+      {
+        "RowNumber": 3,
+        "Height": 40
+      },
+      {
+        "RowNumber": 6,
+        "Height": 50
+      },
+      {
+        "RowNumber": 13,
+        "Height": 32
+      },
+      {
+        "RowNumber": 27,
+        "Height": 32
+      }
+    ],
+    "ColumnWidths": [
+      {
+        "ColumnNumber": 1,
+        "Width": 12
+      },
+      {
+        "ColumnNumber": 2,
+        "Width": 36
+      },
+      {
+        "ColumnNumber": 3,
+        "Width": 14
+      }
+    ],
+    "RangeAutoFit": "A5:H41",
+    "BorderHeader": "A5:H41",
+    "FontBolds": [
+      "A1:H1",
+      "A3:H3",
+      "A5:H5",
+      "A8:B8",
+      "D6:H6",
+      "A14:B14",
+      "A21:B21",
+      "A22:B22",
+      "A28:B28",
+      "A31:B31",
+      "A32:B32",
+      "A36:B36",
+      "A37:B38",
+      "A40:B40",
+      "A41:B41",
+      "E44:H44",
+      "B44:B44"
+    ],
+    "FontItalic": [
+      "E43:E43"
+    ],
+    "FontSizeSpecifics": [
+      {
+        "Cell": "G1:H1",
+        "Size": 11
+      },
+      {
+        "Cell": "A3:H3",
+        "Size": 11
+      }
+    ]
+  }
+}

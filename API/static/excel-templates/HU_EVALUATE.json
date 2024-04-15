@@ -1,0 +1,124 @@
+{
+  "ExFiles": [
+    {
+      "ExCode": "HU_EVALUATE",
+      "DataStartRow": 6,
+      "RowsToPrepare": 1000,
+      "RenderOtherListReferences": true,
+      "RenderAdministrativePlaces": false,
+      "BuildOrgTree": true,
+      "BuildPositions": true,
+
+      "ExDirectReferences": [
+        {
+          "Table": "HU_EMPLOYEE_CV",
+          "UniqueIndexColumns": [ "FULL_NAME", "ID_NO" ]
+        },
+        {
+          "Table": "HU_POSITION",
+          "UniqueIndexColumns": [ "NAME", "CODE" ]
+        }
+      ],
+      "ExIndirectReferences": [
+        {
+          "ParentTable": "SYS_OTHER_LIST",
+          "ChildTable": "HU_CLASSIFICATION",
+          "ChildKey": "CLASSIFICATION_LEVEL",
+          "ParentUniqueIndexColumns": [ "NAME", "CODE" ],
+          "ChildUniqueIndexColumns": [ "CODE" ]
+        },
+        {
+          "ParentTable": "HU_ORGANIZATION",
+          "ChildTable": "HU_POSITION",
+          "ChildKey": "ORG_ID",
+          "ParentUniqueIndexColumns": [ "NAME", "CODE" ],
+          "ChildUniqueIndexColumns": [ "NAME", "CODE" ]
+        },
+        {
+          "ParentTable": "HU_EMPLOYEE_CV",
+          "ChildTable": "HU_EMPLOYEE",
+          "ChildKey": "PROFILE_ID",
+          "ParentUniqueIndexColumns": [ "FULL_NAME", "ID_NO" ],
+          "ChildUniqueIndexColumns": [ "CODE" ]
+        }
+
+      ],
+
+      "ExTables": [
+        {
+          "Table": "HU_EVALUATE",
+          "BufferTable": "HU_EVALUATE_IMPORT",
+          "RenderOrder": 1,
+          "ImportOrder": 1,
+          "HeaderBgColor": "#358ccb",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "ID" ],
+          "RenderColumns": [
+            "YEAR",
+            "ORG_ID",
+            "POSITION_ID",
+            "PROFILE_ID",
+            "CLASSIFICATION_ID",
+            "POINT",
+            "NOTE"
+
+          ],
+          "RequiredColumns": [
+            "EVALUATE_TYPE",
+            "EMPLOYEE_CODE",
+            "EMPLOYEE_ID",
+            "EMPLOYEE_CODE",
+            "EMPLOYEE_NAME",
+            "CLASSIFICATION_ID",
+            "POINT"
+          ],
+          "UniqueIndexes": [],
+          "Rules": [
+            {
+              "Column": "EVALUATE_TYPE",
+              "SysOtherListTypeCode": "CLASSIFICATION_TYPE"
+            },
+            {
+              "Column": "CLASSIFICATION_ID",
+              "SysOtherListTypeCode": "CLASSIFICATION_LEVEL"
+            },
+            {
+              "Column": "ORG_ID",
+              "DirectReference": "HU_ORGANIZATION"
+            },
+            {
+              "Column": "POSITION_ID",
+              "IndirectReference": [ "HU_ORGANIZATION", "HU_POSITION" ],
+              "IndirectColumn": "ORG_ID"
+            },
+            {
+              "Column": "ORG_CONCURRENT_ID",
+              "DirectReference": "HU_ORGANIZATION"
+            },
+            {
+              "Column": "POSITION_CONCURRENT_ID",
+              "IndirectReference": [ "HU_ORGANIZATION", "HU_POSITION" ],
+              "IndirectColumn": "ORG_CONCURRENT_ID"
+            },
+            {
+              "Column": "EMPLOYEE_ID",
+              "IndirectReference": [ "HU_POSITION", "HU_EMPLOYEE" ],
+              "IndirectColumn": "POSITION_ID"
+            },
+            {
+              "Column": "PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "EMPLOYEE_CODE",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "PROFILE_ID"
+            }
+
+          ]
+        }
+
+      ]
+    }
+  ]
+}

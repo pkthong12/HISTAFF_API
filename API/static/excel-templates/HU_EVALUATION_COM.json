@@ -1,0 +1,84 @@
+{
+  "ExFiles": [
+    {
+      "ExCode": "HU_EVALUATION_COM",
+      "DataStartRow": 6,
+      "RowsToPrepare": 1000,
+      "RenderOtherListReferences": true,
+      "RenderAdministrativePlaces": false,
+      "BuildOrgTree": false,
+      "BuildPositions": false,
+
+      "ExDirectReferences": [
+        {
+          "Table": "HU_EMPLOYEE_CV",
+          "UniqueIndexColumns": [ "FULL_NAME", "ID_NO" ],
+          "Condition":  "(IS_MEMBER = 1)"
+        },
+        {
+          "Table": "HU_EMPLOYEE",
+          "UniqueIndexColumns": [ "CODE" ]
+        }
+      ],
+      "ExIndirectReferences": [
+        {
+          "ParentTable": "SYS_OTHER_LIST",
+          "ChildTable": "HU_CLASSIFICATION",
+          "ChildKey": "CLASSIFICATION_LEVEL",
+          "ParentUniqueIndexColumns": [ "NAME", "CODE" ],
+          "ChildUniqueIndexColumns": [ "CODE" ]
+        },
+        {
+          "ParentTable": "HU_EMPLOYEE_CV",
+          "ChildTable": "HU_EMPLOYEE",
+          "ChildKey": "PROFILE_ID",
+          "ParentUniqueIndexColumns": [ "FULL_NAME", "ID_NO" ],
+          "ChildUniqueIndexColumns": [ "CODE" ]
+          
+        }
+
+      ],
+
+      "ExTables": [
+        {
+          "Table": "HU_EVALUATION_COM",
+          "BufferTable": "HU_EVALUATION_COM_IMPORT",
+          "RenderOrder": 1,
+          "ImportOrder": 1,
+          "HeaderBgColor": "#358ccb",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "ID" ],
+          "RenderColumns": [
+            "YEAR_EVALUATION",
+            "PROFILE_ID",
+            "EMPLOYEE_ID",
+            "CLASSIFICATION_ID",
+            "POINT_EVALUATION",
+            "NOTE"
+
+          ],
+          "RequiredColumns": [],
+          "UniqueIndexes": [],
+          "Rules": [
+            {
+              "Column": "CLASSIFICATION_ID",
+              "SysOtherListTypeCode": "CLASSIFICATION_LEVEL"
+            },
+            {
+              "Column": "PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "EMPLOYEE_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "PROFILE_ID"
+            }
+
+          ]
+        }
+
+      ]
+    }
+  ]
+}
+

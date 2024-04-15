@@ -1,0 +1,335 @@
+{
+  "Root": {
+    "ClassName": "BM5_REPORT",
+    "ParameterValues": [
+      {
+        "FeildName": "P_ORG_ID",
+        "DataType": "VarChar",
+        "DtoName": "ListOrgIds"
+      },
+      {
+        "FeildName": "P_YEAR",
+        "DataType": "Int",
+        "DtoName": "Year"
+      },
+      {
+        "FeildName": "P_EMPLOYEE_CREATED",
+        "DataType": "VarChar",
+        "DtoName": "EmployeeDeclare"
+      },
+      {
+        "FeildName": "P_REPRESENTATIVE",
+        "DataType": "VarChar",
+        "DtoName": "EmployeeRepresentative"
+      }
+    ],
+    "FontFamily": "Times New Roman",
+    "Size": 11.0,
+    "ErCode": "BM5",
+    "HeaderRow": 8,
+    "HeaderTitles": [
+      {
+        "Text": "ER_HEADER_TITLE_COMPANY_NAME",
+        "Cell": "A1:E1"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_BM5",
+        "Cell": "X1:Y1"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_BM5_NAME",
+        "Cell": "A3:Z3"
+      }
+    ],
+    "HeaderGridTitles": [
+      {
+        "Text": "ER_ORDER_NUM",
+        "Cell": "A5:A7"
+      }
+    ],
+    "HeaderNoTranslates": [
+      {
+        "Text": "Tên công ty",
+        "Cell": "B5:B5"
+      },
+      {
+        "Text": "Chỉ tiêu sản xuất kinh doanh",
+        "Cell": "C5:K5"
+      },
+      {
+        "Text": "Tổng doanh thu (tr.đ)",
+        "Cell": "C6:E6"
+      },
+      {
+        "Text": "KH năm trước",
+        "Cell": "C7:C8"
+      },
+      {
+        "Text": "TH năm trước",
+        "Cell": "D7:D8"
+      },
+      {
+        "Text": "KH năm ...(YYYY)",
+        "Cell": "E7:E8"
+      },
+      {
+        "Text": "Lợi nhuận (tr.đ)",
+        "Cell": "F6:H6"
+      },
+      {
+        "Text": "KH năm trước",
+        "Cell": "F7:F8"
+      },
+      {
+        "Text": "TH năm trước",
+        "Cell": "G7:G8"
+      },
+      {
+        "Text": "KH năm ...(YYYY)",
+        "Cell": "H7:H8"
+      },
+      {
+        "Text": "Tổng chi chưa có lương (tr.đ)",
+        "Cell": "I6:K6"
+      },
+      {
+        "Text": "KH năm trước",
+        "Cell": "I7:I8"
+      },
+      {
+        "Text": "TH năm trước",
+        "Cell": "J7:J8"
+      },
+      {
+        "Text": "KH năm ...(YYYY)",
+        "Cell": "K7:K8"
+      },
+      {
+        "Text": "Lao động (người)",
+        "Cell": "L5:O6"
+      },
+      {
+        "Text": "KH năm trước",
+        "Cell": "L7:L8"
+      },
+      {
+        "Text": "TH năm trước",
+        "Cell": "M7:N7"
+      },
+      {
+        "Text": "Theo KH",
+        "Cell": "M8:M8"
+      },
+      {
+        "Text": "Thực tế sử dụng BQ",
+        "Cell": "N8:N8"
+      },
+      {
+        "Text": "KH năm ...(YYYY)",
+        "Cell": "O7:O8"
+      },
+      {
+        "Text": "Mức tiền lương bình quân theo hợp đồng lao động (tr.đ/tháng)",
+        "Cell": "P5:Q6"
+      },
+      {
+        "Text": "TH năm trước",
+        "Cell": "P7:P8"
+      },
+      {
+        "Text": "KH năm ...(YYYY)",
+        "Cell": "Q7:Q8"
+      },
+      {
+        "Text": "Mức tiền lương bình quân (tr.đ/tháng)",
+        "Cell": "R5:T6"
+      },
+      {
+        "Text": "Năm trước",
+        "Cell": "R7:S7"
+      },
+      {
+        "Text": "Kế hoạch",
+        "Cell": "R8:R8"
+      },
+      {
+        "Text": "Thực hiện",
+        "Cell": "S8:S8"
+      },
+      {
+        "Text": "KH năm ...(YYYY)",
+        "Cell": "T7:T8"
+      },
+      {
+        "Text": "Quỹ tiền lương (tr.đ)",
+        "Cell": "U5:W6"
+      },
+      {
+        "Text": "KH năm trước",
+        "Cell": "U7:U8"
+      },
+      {
+        "Text": "TH năm trước",
+        "Cell": "V7:V8"
+      },
+      {
+        "Text": "KH năm ...(YYYY)",
+        "Cell": "W7:W8"
+      },
+      {
+        "Text": "Quỹ khen thưởng, phúc lợi (tr.đ)",
+        "Cell": "X5:Z6"
+      },
+      {
+        "Text": "KH năm trước",
+        "Cell": "X7:X8"
+      },
+      {
+        "Text": "TH năm trước",
+        "Cell": "Y7:Y8"
+      },
+      {
+        "Text": "KH năm 2023",
+        "Cell": "Z7:Z8"
+      }
+    ],
+
+    "GridContents": [
+      {
+        "Text": "1",
+        "Cell": "A10:A10"
+      },
+      {
+        "Text": "Công ty mẹ Tổng công ty Thép Việt Nam - CTCP",
+        "Cell": "B10:B10"
+      }
+    ],
+
+    "FooterTitles": [
+      {
+        "Text": "ER_TOTAL",
+        "Cell": "A11:B11"
+      },
+      {
+        "Text": "ER_FOOTER_PLACE_DATE_NOW",
+        "Cell": "T14:Z14"
+      }
+    ],
+
+    "FooterNoTranslates": [
+      {
+        "Text": "Ghi chú:",
+        "Cell": "A12:Z12"
+      },
+      {
+        "Text": "Người lập biểu",
+        "Cell": "B15:E15"
+      },
+      {
+        "Text": "Người đại diện phần vốn Nhà nước",
+        "Cell": "T15:Z15"
+      }
+    ],
+
+    "MegreCellRange": [
+      "A1:F1",
+      "X1:Y1",
+      "A3:Z3",
+      "A5:A8",
+      "B5:B8",
+      "C5:K5",
+      "C6:E6",
+      "C7:C8",
+      "D7:D8",
+      "E7:E8",
+      "F6:H6",
+      "F7:F8",
+      "G7:G8",
+      "H7:H8",
+      "I6:K6",
+      "I7:I8",
+      "J7:J8",
+      "K7:K8",
+      "L5:O6",
+      "L7:L8",
+      "M7:N7",
+      "O7:O8",
+      "P5:Q6",
+      "P7:P8",
+      "Q7:Q8",
+      "R5:T6",
+      "R7:S7",
+      "T7:T8",
+      "U5:W6",
+      "U7:U8",
+      "V7:V8",
+      "W7:W8",
+      "X5:Z6",
+      "X7:X8",
+      "Y7:Y8",
+      "Z7:Z8",
+      "A11:B11",
+      "A12:Z12",
+      "T14:Z14",
+      "B15:E15",
+      "T15:Z15"
+    ],
+    "HorizontalAlignmentCenter": [
+      "A3:Z3",
+      "A5:Z8",
+      "T14:Z14",
+      "B15:E15",
+      "T15:Z15"
+    ],
+    "VerticalAlignmentCenter": [
+      "A5:Z8",
+      "B10:B10"
+    ],
+    "WrapText": [
+      "A5:Z8",
+      "B10:B10"
+    ],
+    "RowHeighs": [
+      {
+        "RowNumber": 6,
+        "Height": 37
+      },
+      {
+        "RowNumber": 8,
+        "Height": 42
+      },
+      {
+        "RowNumber": 10,
+        "Height": 110
+      }
+    ],
+    "RangeAutoFit": "A9:Z9",
+    "BorderHeader": "A5:Z11",
+    "FontBolds": [
+      "A1:F1",
+      "X1:Y1",
+      "A3:Z3",
+      "A5:Z8",
+      "B15:E15",
+      "T15:Z15"
+    ],
+    "FontItalic": [
+      "A12:Z12",
+      "T14:Z14"
+    ],
+    "FontSizeSpecifics": [
+      {
+        "Cell": "A10:Z10",
+        "Size": 12
+      },
+      {
+        "Cell": "B15:Z15",
+        "Size": 12
+      },
+      {
+        "Cell": "T14:Z14",
+        "Size": 12
+      }
+    ]
+  }
+}

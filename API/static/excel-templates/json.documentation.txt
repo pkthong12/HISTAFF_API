@@ -1,0 +1,328 @@
+﻿{
+  "ExFiles": [
+    {
+      "ExCode": "STAFF_PROFILE", // Mã file nghiệp vụ xuất/nhập
+      "DataStartRow": 6, // Dòng bắt đầu nhập dữ liệu
+      "RowsToPrepare": 200, // Số dòng chuẩn bị sẵn công thức, danh mục
+
+      // Các tham chiếu trực tiếp
+      "ExDirectReferences": [
+        {
+          "Table": "HU_BANK",
+          "UniqueIndexColumns": [ "NAME" ]
+        },
+        {
+          "Table": "HU_WARD",
+          "UniqueIndexColumns": [ "NAME", "CODE" ]
+        }
+      ],
+
+      // Các tham chiếu gián tiếp 
+      // (danh mục phụ thuộc vào giá trị đã chọn của danh mục khác)
+      // Mỗi một phần tử trong mảng này là object có cấu trúc không đổi:
+      //      ParentTable: string = bảng cha
+      //      ChildTable: string = bảng cong
+      //      ChildKey: string = khóa ngoại của bảng con tương ứng với ID của bảng cha
+      //      ParentUniqueIndexColumns: string[] = bộ cột định danh tính đơn nhất của bảng cha
+      //      ChildUniqueIndexColumns: string[] = bộ cột định danh tính đơn nhất của bảng con
+      "ExIndirectReferences": [
+        {
+          "ParentTable": "HU_NATION",
+          "ChildTable": "HU_PROVINCE",
+          "ChildKey": "NATION_ID",
+          "ParentUniqueIndexColumns": [ "NAME" ],
+          "ChildUniqueIndexColumns": [ "NAME", "CODE" ]
+        },
+        {
+          "ParentTable": "HU_CONTRACT_TYPE",
+          "ChildTable": "HU_CONTRACT",
+          "ChildKey": "CONTRACT_TYPE_ID",
+          "ParentUniqueIndexColumns": [ "NAME" ],
+          "ChildUniqueIndexColumns": [ "CONTRACT_NO", "CAST(ID AS VARCHAR)" ]
+        },
+        {
+          "ParentTable": "HU_PROVINCE",
+          "ChildTable": "HU_DISTRICT",
+          "ChildKey": "PROVINCE_ID",
+          "ParentUniqueIndexColumns": [ "NAME", "CODE" ],
+          "ChildUniqueIndexColumns": [ "NAME", "CODE" ]
+        },
+        {
+          "ParentTable": "HU_DISTRICT",
+          "ChildTable": "HU_WARD",
+          "ChildKey": "DISTRICT_ID",
+          "ParentUniqueIndexColumns": [ "NAME", "CODE" ],
+          "ChildUniqueIndexColumns": [ "NAME", "CODE" ]
+        },
+        {
+          "ParentTable": "HU_BANK",
+          "ChildTable": "HU_BANK_BRANCH",
+          "ChildKey": "BANK_ID",
+          "ParentUniqueIndexColumns": [ "NAME" ],
+          "ChildUniqueIndexColumns": [ "NAME", "CODE" ]
+        }
+      ],
+
+      // Các bảng cần thay đổi khi nhập
+      // Table: string = tên bảng trong CSDL
+      // ExecuteOrder: number = thứ tự xử lý khi nhập
+      // HeaderBgColor: string = màu nền của tiêu đề
+      // HeaderTextColor: string = màu chữ của tiêu đề
+      // IdentityColumns: string[] = bộ cột nhận dạng bản ghi đơn nhất,
+      // FirstRenderColumns: string[] = trước tiên dựng các cột này
+      // IgnoredColumns: string[] = bỏ qua các cột này
+      // Rules: object[] = quy tắc lấy danh mục cho từng cột
+      //        Trong đó cấu trúc object có dạng
+      //        Column: string = tên cột cần dựng
+      //        SysOtherListTypeCode: string? (nếu lấy từ SYS_OTHER_LIST) = code của SYS_OTHER_LIST_TYPE mà từ đó SYS_OTHER_LIST được lọc
+      //        DirectReference: string? (nếu lấy từ tham chiếu trực tiếp) = tên bảng cần lấy danh mục
+      //        IndirectReference: string[string1, string2]? (nếu lấy từ tham chiếu gián tiếp) mảng có 2 phần tử chuỗi = tên bảng cha và tên bảng con
+      //                           string1 và string2 cần được tìm thấy trong một phần tử của mảng ExIndirectReferences đã mô tả ở trên
+      //                           trong phần tử đó ParentTable = string1 và ChildTable = string2
+      //        IndirectColumn: string? (nếu lấy từ tham chiếu gián tiếp) = tên cột có giá trị số làm ảnh hưởng đến danh mục của cột cần dựng
+      //        IndirectValue: number? (nếu lấy từ tham chiếu gián tiếp) =  giá trị ID cố định của bảng cha
+      "ExTables": [
+        {
+          "Table": "HU_EMPLOYEE_CV",
+          "ExecuteOrder": 1,
+          "HeaderBgColor": "#358ccb",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "ID_NO" ],
+          "FirstRenderColumns": [
+            "FULL_NAME",
+            "GENDER_ID",
+            "NATIONALITY_ID",
+            "DOMICILE",
+            "NATIVE_ID",
+            "BIRTH_DATE",
+            "BIRTH_PLACE",
+            "BIRTH_REGIS_ADDRESS",
+            "ID_NO",
+            "ID_DATE",
+            "ID_PLACE",
+            "PROVINCE_ID",
+            "DISTRICT_ID",
+            "WARD_ID",
+            "ADDRESS",
+            "CUR_PROVINCE_ID",
+            "CUR_DISTRICT_ID",
+            "CUR_WARD_ID",
+            "CUR_ADDRESS",
+            "EMAIL",
+            "MARITAL_STATUS_ID",
+            "IS_MEMBER",
+            "BANK_ID",
+            "BANK_BRANCH",
+            "BANK_NO"
+          ],
+          "IgnoredColumns": [
+            "ID",
+            "CREATED_DATE",
+            "CREATED_BY",
+            "UPDATED_DATE",
+            "UPDATED_BY",
+            "AVATAR",
+            "EXAMINATION_DATE",
+            "FAMILY_MEMBER",
+            "FAMILY_POLICY",
+            "FIRST_NAME",
+            "LAST_NAME",
+            "FAMILY_DETAIL",
+            "GOVERMENT_MANAGEMENT_ID",
+            "HEALTH_CARE_ADDRESS",
+            "HEALTH_NOTES",
+            "HEALTH_TYPE",
+            "HEART",
+            "HEIGHT",
+            "HIGHEST_MILITARY_POSITION",
+            "HOUSEHOLD_CODE",
+            "HOUSEHOLD_NUMBER",
+            "IMAGE",
+            "IS_HOST",
+            "IS_JOIN_YOUTH_GROUP",
+            "IS_UNIONIST",
+            "VISA_DATE",
+            "VISA_EXPIRE",
+            "VISA_NO",
+            "VISA_PLACE",
+            "YELLOW_FLAG",
+            "YOUTH_GROUP_ADDRESS",
+            "YOUTH_GROUP_DATE",
+            "YOUTH_GROUP_POSITION",
+            "YOUTH_SAVE_NATION_ADDRESS",
+            "YOUTH_SAVE_NATION_DATE",
+            "YOUTH_SAVE_NATION_POSITION",
+            "UNIONIST_ADDRESS",
+            "UNIONIST_DATE",
+            "UNIONIST_POSITION",
+            "VATERANS_ADDRESS",
+            "VATERANS_MEMBER_DATE",
+            "VATERANS_POSITION",
+            "VETERANS",
+            "BANK_ID_2",
+            "BANK_BRANCH_2",
+            "BANK_NO_2",
+            "BLOOD_GROUP",
+            "BLOOD_PRESSURE",
+            "CARD_NUMBER",
+            "CARRER",
+            "CARRER_BEFORE_RECUITMENT",
+            "COMPUTER_SKILL",
+            "CURRENT_PARTY_COMMITTEE",
+            "DISCHARGE_DATE",
+            "EMPLOYEE_OBJECT_ID",
+            "ENLISTMENT_DATE",
+            "ITIME_ID",
+            "LAND_FOR_PRODUCTION",
+            "LAND_GRANTED",
+            "LANGUAGE",
+            "ADDITIONAL_INFOMATION"
+
+          ],
+          "Rules": [
+            {
+              "Column": "GENDER_ID",
+              "SysOtherListTypeCode": "GENDER"
+            },
+            {
+              "Column": "NATIONALITY_ID",
+              "SysOtherListTypeCode": "NATIONALITY"
+            },
+            {
+              "Column": "MARITAL_STATUS_ID",
+              "SysOtherListTypeCode": "FAMILY_STATUS"
+            },
+            {
+              "Column": "QUALIFICATION_ID",
+              "SysOtherListTypeCode": "MAJOR"
+            },
+            {
+              "Column": "QUALIFICATION_ID_2",
+              "SysOtherListTypeCode": "MAJOR"
+            },
+            {
+              "Column": "QUALIFICATION_ID_3",
+              "SysOtherListTypeCode": "MAJOR"
+            },
+            {
+              "Column": "LEARNING_LEVEL_ID",
+              "SysOtherListTypeCode": "LEARNING_LEVEL"
+            },
+            {
+              "Column": "NATIVE_ID",
+              "SysOtherListTypeCode": "NATION"
+            },
+            {
+              "Column": "RELIGION_ID",
+              "SysOtherListTypeCode": "RELIGION"
+            },
+            {
+              "Column": "EDUCATION_LEVEL_ID",
+              "SysOtherListTypeCode": "EDUCATION_LEVEL"
+            },
+            {
+              "Column": "SCHOOL_ID",
+              "SysOtherListTypeCode": "GRADUATE_SCHOOL"
+            },
+            {
+              "Column": "SCHOOL_ID_2",
+              "SysOtherListTypeCode": "GRADUATE_SCHOOL"
+            },
+            {
+              "Column": "SCHOOL_ID_3",
+              "SysOtherListTypeCode": "GRADUATE_SCHOOL"
+            },
+            {
+              "Column": "TRAINING_FORM_ID",
+              "SysOtherListTypeCode": "TRAINING_FORM"
+            },
+            {
+              "Column": "TRAINING_FORM_ID_2",
+              "SysOtherListTypeCode": "TRAINING_FORM"
+            },
+            {
+              "Column": "TRAINING_FORM_ID_3",
+              "SysOtherListTypeCode": "TRAINING_FORM"
+            },
+            {
+              "Column": "LANGUAGE_ID",
+              "SysOtherListTypeCode": "LANGUAGE"
+            },
+            {
+              "Column": "LANGUAGE_ID_2",
+              "SysOtherListTypeCode": "LANGUAGE"
+            },
+            {
+              "Column": "LANGUAGE_ID_3",
+              "SysOtherListTypeCode": "LANGUAGE"
+            },
+            {
+              "Column": "LANGUAGE_LEVEL_ID",
+              "SysOtherListTypeCode": "LANGUAGE_LEVEL"
+            },
+            {
+              "Column": "LANGUAGE_LEVEL_ID_2",
+              "SysOtherListTypeCode": "LANGUAGE_LEVEL"
+            },
+            {
+              "Column": "LANGUAGE_LEVEL_ID_3",
+              "SysOtherListTypeCode": "LANGUAGE_LEVEL"
+            },
+            {
+              "Column": "PROVINCE_ID",
+              "IndirectReference": [ "HU_NATION", "HU_PROVINCE" ],
+              "IndirectValue": 1
+            },
+            {
+              "Column": "DISTRICT_ID",
+              "IndirectReference": [ "HU_PROVINCE", "HU_DISTRICT" ],
+              "IndirectColumn": "PROVINCE_ID"
+            },
+            {
+              "Column": "WARD_ID",
+              "IndirectReference": [ "HU_DISTRICT", "HU_WARD" ],
+              "IndirectColumn": "DISTRICT_ID"
+            },
+            {
+              "Column": "CUR_PROVINCE_ID",
+              "IndirectReference": [ "HU_NATION", "HU_PROVINCE" ],
+              "IndirectValue": 1
+            },
+            {
+              "Column": "CUR_DISTRICT_ID",
+              "IndirectReference": [ "HU_PROVINCE", "HU_DISTRICT" ],
+              "IndirectColumn": "CUR_PROVINCE_ID"
+            },
+            {
+              "Column": "CUR_WARD_ID",
+              "IndirectReference": [ "HU_DISTRICT", "HU_WARD" ],
+              "IndirectColumn": "CUR_DISTRICT_ID"
+            },
+            {
+              "Column": "BANK_ID",
+              "DirectReference": "HU_BANK"
+            },
+            {
+              "Column": "BANK_BRANCH",
+              "IndirectReference": [ "HU_BANK", "HU_BANK_BRANCH" ],
+              "IndirectColumn": "BANK_ID"
+            }
+          ]
+        },
+        {
+          "Table": "HU_EMPLOYEE",
+          "ExecuteOrder": 2,
+          "HeaderBgColor": "#F37540",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "CODE" ],
+          "FirstRenderColumns": [
+          ],
+          "IgnoredColumns": [
+          ],
+          "Rules": [
+          ]
+        }
+      ]
+    }
+  ]
+}

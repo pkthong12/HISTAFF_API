@@ -1,0 +1,112 @@
+{
+  "ExFiles": [
+    {
+      "ExCode": "HU_CERTIFICATE",
+      "DataStartRow": 6,
+      "RowsToPrepare": 1000,
+      "RenderOtherListReferences": true,
+      "RenderAdministrativePlaces": false,
+      "BuildOrgTree": false,
+      "BuildPositions": false,
+
+      "ExDirectReferences": [
+        {
+          "Table": "HU_EMPLOYEE_CV",
+          "UniqueIndexColumns": [ "FULL_NAME", "ID_NO" ]
+        },
+        {
+          "Table": "HU_EMPLOYEE",
+          "UniqueIndexColumns": [ "CODE" ]
+        }
+      ],
+      "ExIndirectReferences": [
+        {
+          "ParentTable": "HU_EMPLOYEE_CV",
+          "ChildTable": "HU_EMPLOYEE",
+          "ChildKey": "PROFILE_ID",
+          "ParentUniqueIndexColumns": [ "FULL_NAME", "ID_NO" ],
+          "ChildUniqueIndexColumns": [ "CODE" ]
+        }
+      ],
+
+      "ExTables": [
+        {
+          "Table": "HU_CERTIFICATE",
+          "BufferTable": "HU_CERTIFICATE_IMPORT",
+          "RenderOrder": 1,
+          "ImportOrder": 1,
+          "HeaderBgColor": "#358ccb",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "ID" ],
+          "RenderColumns": [
+            "PROFILE_ID",
+            "EMPLOYEE_ID",
+            "IS_PRIME",
+            "TYPE_CERTIFICATE",
+            "NAME",
+            "EFFECT_FROM",
+            "EFFECT_TO",
+            "TRAIN_FROM_DATE",
+            "TRAIN_TO_DATE",
+            "LEVEL_ID",
+            "LEVEL_TRAIN",
+            "CONTENT_TRAIN",
+            "SCHOOL_ID",
+            "YEAR",
+            "MARK",
+            "TYPE_TRAIN",
+            "CLASSIFICATION",
+            "REMARK"
+
+          ],
+          "RequiredColumns": [
+            "EMPLOYEE_ID",
+            "PROFILE_ID",
+            "IS_PRIME",
+            "TYPE_CERTIFICATE",
+            "EFFECT_FROM",
+            "EFFECT_TO",
+            "TRAIN_FROM_DATE",
+            "TRAIN_TO_DATE",
+            "LEVEL_ID",
+            "SCHOOL_ID"
+          ],
+          "UniqueIndexes": [
+
+          ],
+          "Rules": [
+            {
+              "Column": "PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "EMPLOYEE_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "PROFILE_ID"
+            },
+            {
+              "Column": "LEVEL_ID",
+              "SysOtherListTypeCode": "LEARNING_LEVEL"
+            },
+            {
+              "Column": "LEVEL_TRAIN",
+              "SysOtherListTypeCode": "MAJOR"
+            },
+            {
+              "Column": "TYPE_TRAIN",
+              "SysOtherListTypeCode": "TRAINING_FORM"
+            },
+            {
+              "Column": "SCHOOL_ID",
+              "SysOtherListTypeCode": "GRADUATE_SCHOOL"
+            },
+            {
+              "Column": "TYPE_CERTIFICATE",
+              "SysOtherListTypeCode": "TYPE_BCCC"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

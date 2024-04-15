@@ -1,0 +1,26 @@
+HU_EMPLOYEE	1	NATIONALITY_ID
+HU_EMPLOYEE	1	NATIVE_ID
+HU_EMPLOYEE	1	QUALIFICATIONID
+HU_EMPLOYEE	1	RELIGION_ID
+HU_EMPLOYEE	1	SCHOOLID
+HU_EMPLOYEE	1	TRAINING_FORM_ID
+HU_WORKING	1	TYPE_ID
+HU_POS_PAPER	1	PAPER_ID
+HU_EMPLOYEE	1	GENDER_ID
+HU_EMPLOYEE	1	LEARNING_LEVEL_ID
+HU_EMPLOYEE	1	MARITAL_STATUS_ID
+
+select 
+    t.name as TableWithForeignKey, 
+    fk.constraint_column_id as FK_PartNo, c.
+    name as ForeignKeyColumn 
+from 
+    sys.foreign_key_columns as fk
+inner join 
+    sys.tables as t on fk.parent_object_id = t.object_id
+inner join 
+    sys.columns as c on fk.parent_object_id = c.object_id and fk.parent_column_id = c.column_id
+where 
+    fk.referenced_object_id = (select object_id 
+                               from sys.tables 
+                               where name = 'SYS_OTHER_LIST')

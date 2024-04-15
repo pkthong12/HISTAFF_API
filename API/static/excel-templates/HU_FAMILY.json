@@ -1,0 +1,134 @@
+{
+  "ExFiles": [
+    {
+      "ExCode": "HU_FAMILY",
+      "DataStartRow": 6,
+      "RowsToPrepare": 1000,
+      "RenderOtherListReferences": true,
+      "RenderAdministrativePlaces": false,
+      "BuildOrgTree": false,
+      "BuildPositions": false,
+
+      "ExDirectReferences": [
+        {
+          "Table": "HU_EMPLOYEE_CV",
+          "UniqueIndexColumns": [ "FULL_NAME", "ID_NO" ]
+        },
+        {
+          "Table": "HU_EMPLOYEE",
+          "UniqueIndexColumns": [ "CODE" ]
+        },
+        {
+          "Table": "HU_NATION",
+          "UniqueIndexColumns": [ "NAME" ],
+          "Condition": "(IS_ACTIVE = 1)"
+        },
+        {
+          "Table": "HU_WARD",
+          "UniqueIndexColumns": [ "NAME" ]
+        }
+      ],
+      "ExIndirectReferences": [
+        {
+          "ParentTable": "HU_EMPLOYEE_CV",
+          "ChildTable": "HU_EMPLOYEE",
+          "ChildKey": "PROFILE_ID",
+          "ParentUniqueIndexColumns": [ "FULL_NAME", "ID_NO" ],
+          "ChildUniqueIndexColumns": [ "CODE" ]
+        },
+        {
+          "ParentTable": "HU_PROVINCE",
+          "ChildTable": "HU_DISTRICT",
+          "ChildKey": "PROVINCE_ID",
+          "ParentUniqueIndexColumns": [ "NAME" ],
+          "ChildUniqueIndexColumns": [ "NAME" ]
+        },
+        {
+          "ParentTable": "HU_DISTRICT",
+          "ChildTable": "HU_WARD",
+          "ChildKey": "DISTRICT_ID",
+          "ParentUniqueIndexColumns": [ "NAME" ],
+          "ChildUniqueIndexColumns": [ "NAME" ]
+        }
+      ],
+
+      "ExTables": [
+        {
+          "Table": "HU_FAMILY",
+          "BufferTable": "HU_FAMILY_IMPORT",
+          "RenderOrder": 1,
+          "ImportOrder": 1,
+          "HeaderBgColor": "#358ccb",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "ID" ],
+          "RenderColumns": [
+            "PROFILE_ID",
+            "EMPLOYEE_ID",
+            "FULLNAME",
+            "RELATIONSHIP_ID",
+            "BIRTH_DATE",
+            "GENDER",
+            "PIT_CODE",
+            "SAME_COMPANY",
+            "IS_DEAD",
+            "IS_DEDUCT",
+            "REGIST_DEDUCT_DATE",
+            "DEDUCT_FROM",
+            "DEDUCT_TO",
+            "ID_NO",
+            "CAREER",
+            "NATIONALITY",
+            "BIRTH_CER_PLACE",
+            "BIRTH_CER_PROVINCE",
+            "BIRTH_CER_DISTRICT",
+            "BIRTH_CER_WARD",
+            "NOTE"
+          ],
+          "RequiredColumns": [
+            "FULLNAME",
+            "RELATIONSHIP_ID",
+            "BIRTH_DATE"
+          ],
+          "UniqueIndexes": [],
+          "Rules": [
+            {
+              "Column": "PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "EMPLOYEE_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "PROFILE_ID"
+            },
+            {
+              "Column": "RELATIONSHIP_ID",
+              "SysOtherListTypeCode": "RELATION"
+            },
+            {
+              "Column": "GENDER",
+              "SysOtherListTypeCode": "GENDER"
+            },
+            {
+              "Column": "NATIONALITY",
+              "DirectReference": "HU_NATION"
+            },
+            {
+              "Column": "BIRTH_CER_PROVINCE",
+              "DirectReference": "HU_PROVINCE"
+            },
+            {
+              "Column": "BIRTH_CER_DISTRICT",
+              "IndirectReference": [ "HU_PROVINCE", "HU_DISTRICT" ],
+              "IndirectColumn": "BIRTH_CER_PROVINCE"
+            },
+            {
+              "Column": "BIRTH_CER_WARD",
+              "IndirectReference": [ "HU_DISTRICT", "HU_WARD" ],
+              "IndirectColumn": "BIRTH_CER_DISTRICT"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

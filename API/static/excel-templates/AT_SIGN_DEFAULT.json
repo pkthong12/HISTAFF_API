@@ -1,0 +1,81 @@
+{
+  "ExFiles": [
+    {
+      "ExCode": "AT_SIGN_DEFAULT",
+      "DataStartRow": 6,
+      "RowsToPrepare": 1000,
+      "RenderOtherListReferences": false,
+      "RenderAdministrativePlaces": false,
+      "BuildOrgTree": false,
+      "BuildPositions": false,
+
+      "ExDirectReferences": [
+        {
+          "Table": "HU_EMPLOYEE_CV",
+          "UniqueIndexColumns": [ "FULL_NAME", "ID_NO" ]
+        },
+        {
+          "Table": "HU_EMPLOYEE",
+          "UniqueIndexColumns": [ "CODE" ]
+        },
+        {
+          "Table": "AT_SHIFT",
+          "UniqueIndexColumns": [ "NAME", "CODE" ],
+          "Condition": "(IS_ACTIVE = 1)"
+        }
+      ],
+      "ExIndirectReferences": [
+        {
+          "ParentTable": "HU_EMPLOYEE_CV",
+          "ChildTable": "HU_EMPLOYEE",
+          "ChildKey": "PROFILE_ID",
+          "ParentUniqueIndexColumns": [ "FULL_NAME", "ID_NO" ],
+          "ChildUniqueIndexColumns": [ "CODE" ],
+          "Condition": "(WORK_STATUS_ID != 1028)"
+        }
+      ],
+      "ExTables": [
+        {
+          "Table": "AT_SIGN_DEFAULT",
+          "BufferTable": "AT_SIGN_DEFAULT_IMPORT",
+          "RenderOrder": 1,
+          "ImportOrder": 1,
+          "HeaderBgColor": "#358ccb",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "EMPLOYEE_ID" ],
+          "RenderColumns": [
+            "PROFILE_ID",
+            "EMPLOYEE_ID",
+            "SIGN_DEFAULT",
+            "EFFECT_DATE_FROM",
+            "EFFECT_DATE_TO",
+            "NOTE"
+          ],
+          "RequiredColumns": [
+            "EMPLOYEE_ID",
+            "SIGN_DEFAULT",
+            "EFFECT_DATE_FROM"
+          ],
+          "UniqueIndexes": [
+          ],
+          "Rules": [
+            {
+              "Column": "PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "EMPLOYEE_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "PROFILE_ID"
+            },
+            {
+              "Column": "SIGN_DEFAULT",
+              "DirectReference": "AT_SHIFT"
+            }
+          ]
+        }
+
+      ]
+    }
+  ]
+}

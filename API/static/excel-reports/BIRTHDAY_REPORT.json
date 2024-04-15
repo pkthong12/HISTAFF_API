@@ -1,0 +1,128 @@
+{
+  "Root": {
+    "ClassName": "BIRTHDAY_REPORT",
+    "ParameterValues": [
+      {
+        "FeildName": "P_ORG_ID",
+        "DataType": "VarChar",
+        "DtoName": "ListOrgIds"
+      },
+      {
+        "FeildName": "P_START_DATE",
+        "DataType": "DateTime2",
+        "DtoName": "DateStart"
+      },
+      {
+        "FeildName": "P_END_DATE",
+        "DataType": "DateTime2",
+        "DtoName": "DateEnd"
+      }
+    ],
+    "FontFamily": "Times New Roman",
+    "Size": 9,
+    "FontBolds": [
+      "A1:H1",
+      "A2:H3",
+      "A6:H6"
+    ],
+    "FontItalic": [
+      "A4:H5"
+    ],
+    "ErCode": "BC_SINH_NHAT",
+    "HeaderRow": 6,
+    "HeaderTitles": [
+      {
+        "Text": "ER_HEADER_TITLE_COMPANY_NAME",
+        "Cell": "A1:H1"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_NAME_BIRTHDAY_REPORT",
+        "Cell": "A2:H2"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_FROM_DATE_TO_DATE",
+        "Cell": "A4:H4"
+      }
+    ],
+    "HeaderGridTitles": [
+      {
+        "Text": "ER_ORDER_NUM",
+        "Cell": "A6:A6"
+      },
+      {
+        "Text": "ER_EMP_CODE",
+        "Cell": "B6:B6"
+      },
+      {
+        "Text": "ER_FULL_NAME",
+        "Cell": "C6:C6"
+      },
+      {
+        "Text": "ER_POSITION",
+        "Cell": "D6:D6"
+      },
+      {
+        "Text": "ER_ORG_UNIT",
+        "Cell": "E6:E6"
+      },
+      {
+        "Text": "ER_BIRTHDAY",
+        "Cell": "F6:F6"
+      },
+      {
+        "Text": "ER_PHONE_NUMBER",
+        "Cell": "G6:G6"
+      },
+      {
+        "Text": "ER_BANK_NO",
+        "Cell": "H6:H6"
+      }
+    ],
+    "MegreCellRange": [
+      "A1:H1",
+      "A2:H3",
+      "A4:H5"
+    ],
+    "HorizontalAlignmentCenter": [
+      "A2:H3",
+      "A4:H5",
+      "A6:H6"
+    ],
+    "HorizontalAlignmentLeft": [
+      "A1:H1"
+    ],
+    "VerticalAlignmentCenter": [
+      "A2:H3",
+      "A4:H5",
+      "A6:H6"
+    ],
+
+    "RowHeighs": [
+      {
+        "RowNumber": 6,
+        "Height": 27
+      }
+    ],
+    "RangeAutoFit": "A7:H7",
+    "BorderHeader": "A6:H6",
+    "FontSizeSpecifics": [
+      {
+        "Cell": "A1:H1",
+        "Size": 14
+      },
+      {
+        "Cell": "A2:H3",
+        "Size": 14
+      },
+      {
+        "Cell": "A4:H5",
+        "Size": 12
+      },
+      {
+        "Cell": "A6:H6",
+        "Size": 10
+      }
+    ]
+  }
+
+}

@@ -1,0 +1,162 @@
+{
+  "ExFiles": [
+    {
+      "ExCode": "HU_WORKING",
+      "DataStartRow": 6,
+      "RowsToPrepare": 1000,
+      "RenderOtherListReferences": true,
+      "RenderAdministrativePlaces": false,
+      "BuildOrgTree": true,
+      "BuildPositions": true,
+
+      "ExDirectReferences": [
+        {
+          "Table": "HU_EMPLOYEE_CV",
+          "UniqueIndexColumns": [ "FULL_NAME", " ID_NO" ]
+        },
+        {
+          "Table": "HU_SALARY_LEVEL",
+          "UniqueIndexColumns": [ "NAME", "CODE" ]
+        },
+        {
+          "Table": "HU_WORKING",
+          "UniqueIndexColumns": [ "DECISION_NO" ]
+        },
+        {
+          "Table": "HU_ORGANIZATION",
+          "UniqueIndexColumns": ["NAME","CODE"]
+        },
+        {
+          "Table": "HU_EMPLOYEE",
+          "UniqueIndexColumns": [ "CODE" ]
+        },
+        {
+          "Table": "HU_POSITION",
+          "UniqueIndexColumns": ["NAME", "CODE"]
+        }
+      ],
+      "ExIndirectReferences": [
+        {
+          "ParentTable": "HU_EMPLOYEE_CV",
+          "ChildTable": "HU_EMPLOYEE",
+          "ChildKey": "PROFILE_ID",
+          "ParentUniqueIndexColumns": [ "FULL_NAME", "ID_NO" ],
+          "ChildUniqueIndexColumns": [ "CODE" ]
+        },
+        {
+          "ParentTable": "HU_EMPLOYEE",
+          "ChildTable": "HU_WORKING",
+          "ChildKey": "WAGE_ID",
+          "ParentUniqueIndexColumns": [ "CODE" ],
+          "ChildUniqueIndexColumns": [ "DECISION_NO" ],
+          "ChildCondition": "(IS_WAGE = -1 AND STATUS_ID = 994)"
+        },
+        {
+          "ParentTable": "HU_EMPLOYEE",
+          "ChildTable": "HU_POSITION",
+          "ChildKey": "MASTER",
+          "ParentUniqueIndexColumns": [ "CODE" ],
+          "ChildUniqueIndexColumns": [ "NAME", "CODE" ]
+        },
+        {
+          "ParentTable": "HU_ORGANIZATION",
+          "ChildTable": "HU_POSITION",
+          "ChildKey": "ORG_ID",
+          "ParentUniqueIndexColumns": [ "NAME", "CODE" ],
+          "ChildUniqueIndexColumns": [ "NAME", "CODE" ],
+          "ChildCondition": "(MASTER IS NULL AND INTERIM IS NULL)"
+        }
+
+      ],
+
+      "ExTables": [
+        {
+          "Table": "HU_WORKING",
+          "BufferTable": "HU_WORKING_IMPORT",
+          "RenderOrder": 1,
+          "ImportOrder": 1,
+          "HeaderBgColor": "#358ccb",
+          "HeaderTextColor": "white",
+          "IdentityColumns": ["DECISION_NO", "EMPLOYEE_ID"],
+          "RenderColumns": [
+            "PROFILE_ID",
+            "EMPLOYEE_ID",
+            "CUR_POSITION_ID",
+            "ORG_ID",
+            "POSITION_ID",
+            "TYPE_ID",
+            "DECISION_NO",
+            "IS_RESPONSIBLE",
+            "EMPLOYEE_OBJ_ID",
+            "EFFECT_DATE",
+            "EXPIRE_DATE",
+            "WAGE_ID",
+            "SIGN_PROFILE_ID",
+            "SIGN_ID",
+            "SIGN_DATE",
+            "NOTE"
+
+          ],
+          "RequiredColumns": [
+            "EMPLOYEE_ID",
+            "DECISION_NO",
+            "TYPE_ID"
+          ],
+          "UniqueIndexes": [ ],
+          "Rules": [
+            {
+              "Column": "TYPE_ID",
+              "SysOtherListTypeCode": "TYPE_DECISION"
+            },
+            {
+              "Column": "EMPLOYEE_OBJ_ID",
+              "SysOtherListTypeCode": "OBJECT_EMPLOYEE"
+            },
+            {
+              "Column": "PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "EMPLOYEE_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "PROFILE_ID"
+            },
+            {
+              "Column": "CUR_POSITION_ID",
+              "IndirectReference": [ "HU_EMPLOYEE", "HU_POSITION" ],
+              "IndirectColumn": "EMPLOYEE_ID"
+            },
+            {
+              "Column": "WAGE_ID",
+              "IndirectReference": [ "HU_EMPLOYEE", "HU_WORKING" ],
+              "IndirectColumn": "EMPLOYEE_ID"
+            },
+            {
+              "Column": "SIGN_PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "SIGN_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "SIGN_PROFILE_ID"
+            },
+            {
+              "Column": "EMPLOYEE_OBJECT_ID",
+              "SysOtherListTypeCode": "OBJECT_EMPLOYEE"
+            },
+            {
+              "Column": "ORG_ID",
+              "DirectReference": "HU_ORGANIZATION"
+            },
+            {
+              "Column": "POSITION_ID",
+              "IndirectReference": [ "HU_ORGANIZATION", "HU_POSITION" ],
+              "IndirectColumn": "ORG_ID"
+            }
+
+          ]
+        }
+      ]
+    }
+  ]
+}

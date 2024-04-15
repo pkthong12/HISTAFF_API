@@ -1,0 +1,607 @@
+﻿{
+  "Root": {
+    "ClassName": "BM3_REPORT",
+    "ParameterValues": [
+      {
+        "FeildName": "P_ORG_ID",
+        "DataType": "VarChar",
+        "DtoName": "ListOrgIds"
+      },
+      {
+        "FeildName": "P_YEAR",
+        "DataType": "Int",
+        "DtoName": "Year"
+      },
+      {
+        "FeildName": "P_EMPLOYEE_ID",
+        "DataType": "VarChar",
+        "DtoName": "EmployeeDeclare"
+      },
+      {
+        "FeildName": "P_EMPLOYEE_REPRESENTATIVE_ID",
+        "DataType": "VarChar",
+        "DtoName": "EmployeeRepresentative"
+      }
+    ],
+    "FontFamily": "Times New Roman",
+    "Size": 12.0,
+    "ErCode": "BM3",
+    "HeaderRow": 5,
+    "HeaderTitles": [
+      {
+        "Text": "ER_HEADER_TITLE_COMPANY_NAME",
+        "Cell": "A1:B1"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_BM3",
+        "Cell": "E1:F1"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_BM3_NAME",
+        "Cell": "A3:F3"
+      }
+    ],
+    "HeaderGridTitles": [
+      {
+        "Text": "ER_ORDER_NUM",
+        "Cell": "A5:A5"
+      },
+      {
+        "Text": "ER_TARGETS",
+        "Cell": "B5:B5"
+      },
+      {
+        "Text": "ER_UNIT",
+        "Cell": "C5:C5"
+      },
+      {
+        "Text": "ER_REPORT_NO_BM3",
+        "Cell": "D5:E5"
+      },
+      {
+        "Text": "ER_PLAN_BM3",
+        "Cell": "D5:D5"
+      },
+      {
+        "Text": "ER_PLAN",
+        "Cell": "D6:D6"
+      },
+      {
+        "Text": "ER_PERFORM",
+        "Cell": "E6:E6"
+      },
+      {
+        "Text": "ER_PLAN_YEAR",
+        "Cell": "F5:F5"
+      },
+      {
+        "Text": "ER_TITLE_1",
+        "Cell": "A7:A7"
+      },
+      {
+        "Text": "ER_TITLE_I",
+        "Cell": "A8:A8"
+      },
+      {
+        "Text": "ER_TITLE_1",
+        "Cell": "A9:A9"
+      },
+      {
+        "Text": "ER_TITLE_I2",
+        "Cell": "A10:A10"
+      },
+      {
+        "Text": "ER_TITLE_I3",
+        "Cell": "A11:A11"
+      },
+      {
+        "Text": "ER_TITLE_I4",
+        "Cell": "A12:A12"
+      },
+      {
+        "Text": "ER_TITLE_I5",
+        "Cell": "A13:A13"
+      },
+      {
+        "Text": "ER_TITLE_I6",
+        "Cell": "A14:A14"
+      },
+      {
+        "Text": "ER_TITLE_I7",
+        "Cell": "A15:A15"
+      },
+      {
+        "Text": "ER_TITLE_I8",
+        "Cell": "A16:A16"
+      },
+      {
+        "Text": "ER_TITLE_I9",
+        "Cell": "A17:A17"
+      },
+      {
+        "Text": "ER_TITLE_I10",
+        "Cell": "A18:A18"
+      },
+      {
+        "Text": "ER_TITLE_II",
+        "Cell": "A19:A19"
+      },
+      {
+        "Text": "ER_TITLE_1",
+        "Cell": "A20:A20"
+      },
+      {
+        "Text": "ER_TITLE_I53",
+        "Cell": "A21:A21"
+      },
+      {
+        "Text": "ER_TITLE_I63",
+        "Cell": "A22:A22"
+      },
+      {
+        "Text": "ER_TITLE_I73",
+        "Cell": "A23:A23"
+      },
+      {
+        "Text": "ER_TITLE_II83",
+        "Cell": "A24:A24"
+      },
+      {
+        "Text": "ER_TITLE_II93",
+        "Cell": "A25:A25"
+      },
+      {
+        "Text": "ER_TITLE_II93",
+        "Cell": "A27:A27"
+      },
+      {
+        "Text": "ER_TITLE_II93",
+        "Cell": "A28:A28"
+      },
+      {
+        "Text": "ER_TITLE_I3",
+        "Cell": "A29:A29"
+      },
+      {
+        "Text": "ER_TITLE_I2",
+        "Cell": "A26:A26"
+      },
+      {
+        "Text": "ER_TITLE_I2",
+        "Cell": "B7:B7"
+      },
+      {
+        "Text": "ER_TITLE_I4",
+        "Cell": "D7:D7"
+      },
+      {
+        "Text": "ER_TITLE_I5",
+        "Cell": "E7:E7"
+      },
+      {
+        "Text": "ER_TITLE_I6",
+        "Cell": "F7:F7"
+      },
+      {
+        "Text": "ER_TITLE_B",
+        "Cell": "B8:B8"
+      },
+      {
+        "Text": "ER_TITLE_BM1",
+        "Cell": "B9:B9"
+      },
+      {
+        "Text": "ER_TITLE_BM2",
+        "Cell": "B10:B10"
+      },
+      {
+        "Text": "ER_TITLE_BM3",
+        "Cell": "B11:B11"
+      },
+      {
+        "Text": "ER_TITLE_BM4",
+        "Cell": "B12:B12"
+      },
+      {
+        "Text": "ER_TITLE_BM5",
+        "Cell": "B13:B13"
+      },
+      {
+        "Text": "ER_TITLE_BM6",
+        "Cell": "B14:B14"
+      },
+      {
+        "Text": "ER_TITLE_BM7",
+        "Cell": "B15:B15"
+      },
+      {
+        "Text": "ER_TITLE_BMI",
+        "Cell": "B16:B16"
+      },
+      {
+        "Text": "ER_TITLE_BMI1",
+        "Cell": "B17:B17"
+      },
+      {
+        "Text": "ER_TITLE_BMI2",
+        "Cell": "B18:B18"
+      },
+      {
+        "Text": "ER_TITLE_BMI3",
+        "Cell": "B19:B19"
+      },
+      {
+        "Text": "ER_TITLE_BMI4",
+        "Cell": "B20:B20"
+      },
+      {
+        "Text": "ER_TITLE_BMI5",
+        "Cell": "B21:B21"
+      },
+      {
+        "Text": "ER_TITLE_BMI6",
+        "Cell": "B22:B22"
+      },
+      {
+        "Text": "ER_TITLE_BMI7",
+        "Cell": "B23:B23"
+      },
+      {
+        "Text": "ER_TITLE_BMI8",
+        "Cell": "B24:B24"
+      },
+      {
+        "Text": "ER_TITLE_BMI9",
+        "Cell": "B25:B25"
+      },
+      {
+        "Text": "ER_TITLE_BMI10",
+        "Cell": "B26:B26"
+      },
+      {
+        "Text": "ER_TITLE_BMI11",
+        "Cell": "B27:B27"
+      },
+      {
+        "Text": "ER_TITLE_BMI12",
+        "Cell": "B28:B28"
+      },
+      {
+        "Text": "ER_TITLE_BMI13",
+        "Cell": "B29:B29"
+      },
+      {
+        "Text": "ER_TITLE_BMI14",
+        "Cell": "B30:B30"
+      },
+      {
+        "Text": "ER_TITLE_III",
+        "Cell": "A30:A30"
+      },
+      {
+        "Text": "ER_TITLE_IV",
+        "Cell": "A34:A34"
+      },
+      {
+        "Text": "ER_TITLE_BMI15",
+        "Cell": "B31:B31"
+      },
+      {
+        "Text": "ER_TITLE_1",
+        "Cell": "A31:A31"
+      },
+      {
+        "Text": "ER_TITLE_BMI16",
+        "Cell": "B32:B32"
+      },
+      {
+        "Text": "ER_TITLE_BMI17",
+        "Cell": "B33:B33"
+      },
+      {
+        "Text": "ER_TITLE_C2",
+        "Cell": "C35:C35"
+      },
+      {
+        "Text": "ER_TITLE_C23",
+        "Cell": "C36:C36"
+      },
+      {
+        "Text": "ER_TITLE_C23",
+        "Cell": "C37:C37"
+      },
+      {
+        "Text": "ER_TITLE_BMI18",
+        "Cell": "B34:B34"
+      },
+      {
+        "Text": "ER_TITLE_BMI19",
+        "Cell": "B35:B35"
+      },
+      {
+        "Text": "ER_TITLE_BMI20",
+        "Cell": "B36:B36"
+      },
+      {
+        "Text": "ER_TITLE_BMI21",
+        "Cell": "B37:B37"
+      },
+      {
+        "Text": "ER_TITLE_2",
+        "Cell": "A32:A32"
+      },
+      {
+        "Text": "ER_TITLE_3",
+        "Cell": "A33:A33"
+      },
+      {
+        "Text": "ER_TITLE_I3",
+        "Cell": "C7:C7"
+      },
+      {
+        "Text": "ER_TITLE_CM1",
+        "Cell": "C9:C9"
+      },
+      {
+        "Text": "ER_TITLE_C2",
+        "Cell": "C10:C10"
+      },
+      {
+        "Text": "ER_TITLE_C2",
+        "Cell": "C11:C11"
+      },
+      {
+        "Text": "ER_TITLE_C2",
+        "Cell": "C12:C12"
+      },
+      {
+        "Text": "ER_TITLE_C2",
+        "Cell": "C13:C13"
+      },
+      {
+        "Text": "ER_TITLE_C2",
+        "Cell": "C15:C15"
+      },
+      {
+        "Text": "ER_TITLE_C173",
+        "Cell": "C17:C17"
+      },
+      {
+        "Text": "ER_TITLE_C173",
+        "Cell": "C18:C18"
+      },
+      {
+        "Text": "ER_TITLE_C193",
+        "Cell": "C21:C21"
+      },
+      {
+        "Text": "ER_TITLE_C223",
+        "Cell": "C22:C22"
+      },
+      {
+        "Text": "ER_TITLE_BI14",
+        "Cell": "B40:B40"
+      },
+      {
+        "Text": "ER_TITLE_C23",
+        "Cell": "C24:C24"
+      },
+      {
+        "Text": "ER_TITLE_C2",
+        "Cell": "C25:C25"
+      },
+      {
+        "Text": "ER_TITLE_C193",
+        "Cell": "C27:C27"
+      },
+      {
+        "Text": "ER_TITLE_C23",
+        "Cell": "C28:C28"
+      },
+      {
+        "Text": "ER_TITLE_C23",
+        "Cell": "C31:C31"
+      },
+      {
+        "Text": "ER_TITLE_C23",
+        "Cell": "C32:C32"
+      },
+      {
+        "Text": "ER_TITLE_C2",
+        "Cell": "C29:C29"
+      },
+      {
+        "Text": "ER_TITLE_C2",
+        "Cell": "C33:C33"
+      },
+      {
+        "Text": "ER_TITLE_C31",
+        "Cell": "E40:F40"
+      },
+      {
+        "Text": "ER_TITLE_C32",
+        "Cell": "B38:B38"
+      },
+      {
+        "Text": "ER_TITLE_1",
+        "Cell": "A35:A35"
+      },
+      {
+        "Text": "ER_TITLE_I2",
+        "Cell": "A36:A36"
+      },
+      {
+        "Text": "ER_TITLE_I3",
+        "Cell": "A37:A37"
+      },
+      {
+        "Text": "ER_TITLE_C193",
+        "Cell": "C31:C31"
+      }
+    ],
+
+    "FooterTitles": [
+      {
+        "Text": "ER_FOOTER_PLACE_DATE_NOW",
+        "Cell": "E39:F39"
+      }
+    ],
+
+    "MegreCellRange": [
+      "A1:B1",
+      "E1:F1",
+      "A3:F3",
+      "D5:E5",
+      "A5:A6",
+      "B5:B6",
+      "C5:C6",
+      "F5:F6",
+      "E39:F39",
+      "E40:F40"
+    ],
+    "VerticalAlignmentCenter": [
+      "E1:F1",
+      "A3:F3",
+      "A5:F6",
+      "A7:A28",
+      "B7:C7",
+      "C8:C28",
+      "C30:C30",
+      "B27:B27",
+      "B31:C31",
+      "B32:B32",
+      "C32:F32",
+      "A30:A30",
+      "A31:A31",
+      "A32:A32",
+      "A33:A33",
+      "A34:A34",
+      "C29:C29",
+      "D7:D7",
+      "E7:E7",
+      "F7:F7",
+      "A29:A29",
+      "C31:C31",
+      "C33:C33",
+      "A35:A35",
+      "A36:A36",
+      "A37:A37",
+      "C35:C35",
+      "C36:C36",
+      "C37:C37"
+    ],
+    "HorizontalAlignmentCenter": [
+      "E1:F1",
+      "A3:F3",
+      "A29:A29",
+      "A5:F6",
+      "A7:A28",
+      "B7:C7",
+      "C8:F28",
+      "C30:C30",
+      "C32:F32",
+      "A30:A30",
+      "A31:A31",
+      "A32:A32",
+      "A33:A33",
+      "A34:A34",
+      "C29:C29",
+      "D7:D7",
+      "E7:E7",
+      "F7:F7",
+      "A29:A29",
+      "C31:C31",
+      "C33:C33",
+      "A35:A35",
+      "A36:A36",
+      "A37:A37",
+      "C35:C35",
+      "C36:C36",
+      "C37:C37"
+    ],
+    "WrapText": [
+      "A3:A3",
+      "E6:E6",
+      "B5:B5",
+      "B13:B13",
+      "B15:B15",
+      "B25:B25",
+      "B26:B26"
+    ],
+    "RowHeighs": [
+      {
+        "RowNumber": 3,
+        "Height": 40
+      },
+      {
+        "RowNumber": 6,
+        "Height": 32
+      },
+      {
+        "RowNumber": 13,
+        "Height": 32
+      },
+      {
+        "RowNumber": 27,
+        "Height": 32
+      }
+    ],
+    "ColumnWidths": [
+      {
+        "ColumnNumber": 1,
+        "Width": 12
+      },
+      {
+        "ColumnNumber": 2,
+        "Width": 58
+      },
+      {
+        "ColumnNumber": 3,
+        "Width": 12
+      },
+      {
+        "ColumnNumber": 4,
+        "Width": 20
+      },
+      {
+        "ColumnNumber": 5,
+        "Width": 20
+      },
+      {
+        "ColumnNumber": 6,
+        "Width": 35
+      }
+    ],
+    "BorderHeader": "A5:F37",
+    "FontBolds": [
+      "A1:F1",
+      "A3:F3",
+      "A5:F5",
+      "A8:B8",
+      "A19:A19",
+      "B19:B19",
+      "B40:B40",
+      "E40:F40",
+      "A30:A30",
+      "B30:B30",
+      "A34:A34",
+      "B34:B34",
+      "D6:D6",
+      "E6:E6"
+    ],
+    "FontItalic": [
+      "B38:B38",
+      "E39:F39"
+    ],
+    "FontSizeSpecifics": [
+      {
+        "Cell": "B38:B38",
+        "Size": 11
+      },
+      {
+        "Cell": "A1:F1",
+        "Size": 11
+      }
+    ]
+  }
+}

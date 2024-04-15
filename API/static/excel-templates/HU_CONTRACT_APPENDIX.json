@@ -1,0 +1,141 @@
+{
+  "ExFiles": [
+    {
+      "ExCode": "HU_CONTRACT_APPENDIX",
+      "DataStartRow": 6,
+      "RowsToPrepare": 1000,
+      "RenderOtherListReferences": true,
+      "RenderAdministrativePlaces": false,
+      "BuildOrgTree": true,
+      "BuildPositions": true,
+
+      "ExDirectReferences": [
+        {
+          "Table": "HU_CONTRACT_TYPE",
+          "UniqueIndexColumns": [ "NAME" ],
+          "Condition": "(TYPE_ID = 27 AND IS_ACTIVE = 1 AND CODE != 'PLHDLD')"
+        },
+        {
+          "Table": "HU_EMPLOYEE_CV",
+          "UniqueIndexColumns": [ "FULL_NAME", "ID_NO" ]
+        },
+        {
+          "Table": "HU_POSITION",
+          "UniqueIndexColumns": [ "NAME", "CODE" ]
+        },
+        {
+          "Table": "HU_WORKING",
+          "UniqueIndexColumns": [ "DECISION_NO" ]
+        },
+        {
+          "Table": "HU_CONTRACT",
+          "UniqueIndexColumns": [ "CONTRACT_NO" ]
+        }
+      ],
+      "ExIndirectReferences": [
+        {
+          "ParentTable": "HU_EMPLOYEE_CV",
+          "ChildTable": "HU_EMPLOYEE",
+          "ChildKey": "PROFILE_ID",
+          "ParentUniqueIndexColumns": [ "FULL_NAME", "ID_NO" ],
+          "ChildUniqueIndexColumns": [ "CODE" ]
+        },
+        {
+          "ParentTable": "HU_EMPLOYEE",
+          "ChildTable": "HU_WORKING",
+          "ChildKey": "EMPLOYEE_ID",
+          "ParentUniqueIndexColumns": [ "CODE" ],
+          "ChildUniqueIndexColumns": [ "DECISION_NO" ],
+          "ChildCondition": "(IS_WAGE = -1 AND STATUS_ID = 994)"
+        },
+        {
+          "ParentTable": "HU_EMPLOYEE",
+          "ChildTable": "HU_CONTRACT",
+          "ChildKey": "EMPLOYEE_ID",
+          "ParentUniqueIndexColumns": [ "CODE" ],
+          "ChildUniqueIndexColumns": [ "CONTRACT_NO" ],
+          "ChildCondition": "(STATUS_ID = 994)"
+        }
+      ],
+
+      "ExTables": [
+        {
+          "Table": "HU_FILECONTRACT",
+          "BufferTable": "HU_FILECONTRACT_IMPORT",
+          "RenderOrder": 1,
+          "ImportOrder": 1,
+          "HeaderBgColor": "#358ccb",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "ID" ],
+          "RenderColumns": [
+            "PROFILE_ID",
+            "EMPLOYEE_ID",
+            "ID_CONTRACT",
+            "CONTRACT_NO",
+            "APPEND_TYPEID",
+            "WORKING_ID",
+            "START_DATE",
+            "EXPIRE_DATE",
+            "SIGNER_POSITION",
+            "SIGN_PROFILE_ID",
+            "SIGN_ID",
+            "SIGN_DATE",
+            "NOTE"
+          ],
+          "RequiredColumns": [
+            "ID_CONTRACT",
+            "EMPLOYEE_ID",
+            "CONTRACT_NO",
+            "PROFILE_ID",
+            "CONTRACT_TYPE_ID",
+            "SIGN_PROFILE_ID",
+            "SIGN_ID",
+            "SIGN_DATE",
+            "WORKING_ID",
+            "START_DATE"
+          ],
+          "UniqueIndexes": [],
+          "Rules": [
+            {
+              "Column": "APPEND_TYPEID",
+              "DirectReference": "HU_CONTRACT_TYPE"
+            },
+            {
+              "Column": "SIGNER_POSITION",
+              "DirectReference": "HU_POSITION"
+            },
+            {
+              "Column": "PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "EMPLOYEE_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "PROFILE_ID"
+            },
+            {
+              "Column": "ID_CONTRACT",
+              "IndirectReference": [ "HU_EMPLOYEE", "HU_CONTRACT" ],
+              "IndirectColumn": "EMPLOYEE_ID"
+            },
+            {
+              "Column": "SIGN_PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "SIGN_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "SIGN_PROFILE_ID"
+            },
+            {
+              "Column": "WORKING_ID",
+              "IndirectReference": [ "HU_EMPLOYEE", "HU_WORKING" ],
+              "IndirectColumn": "EMPLOYEE_ID"
+            }
+          ]
+        }
+
+      ]
+    }
+  ]
+}

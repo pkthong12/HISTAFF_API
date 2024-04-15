@@ -1,0 +1,17 @@
+Success configuration cases:
+
+=================================================================================
+
+Publish settings:
+- target framework: net7.0
+- deployment mode: framework-dependent
+- target runtime: Portable
+
+Windows server 2019 standard
+IIS 10.0.17763.1
+dotnet-hosting-7.0.12-win.exe
+IIS manager => Application pools => select VNS_BE => dblclick => 
+{
+	NET CRL version: No managed code, Manage pipeline mode: Itegrated
+}
+=================================================================================

@@ -1,0 +1,241 @@
+{
+  "ExFiles": [
+    {
+      "ExCode": "HU_WORKING_HSL_PC",
+      "DataStartRow": 6,
+      "RowsToPrepare": 1000,
+      "RenderOtherListReferences": true,
+      "RenderAdministrativePlaces": false,
+      "BuildOrgTree": false,
+      "BuildPositions": false,
+      "ExDirectReferences": [
+        {
+          "Table": "HU_EMPLOYEE_CV",
+          "UniqueIndexColumns": [ "FULL_NAME", "ID_NO" ]
+        },
+        {
+          "Table": "HU_SALARY_TYPE",
+          "UniqueIndexColumns": [ "NAME", "CODE" ]
+        },
+        {
+          "Table": "HU_SALARY_SCALE",
+          "UniqueIndexColumns": [ "CODE" ],
+          "Condition": "(IS_ACTIVE = 1)"
+        },
+        {
+          "Table": "HU_SALARY_LEVEL",
+          "UniqueIndexColumns": [ "NAME" ]
+        },
+        {
+          "Table": "HU_ALLOWANCE",
+          "UniqueIndexColumns": [ "CODE" ],
+          "Condition": "(IS_ACTIVE = 1 and IS_SAL = 1)"
+        }
+      ],
+
+      "ExConsequentReferences": [
+        {
+          "Table": "HU_SALARY_SCALE",
+          "Condition": "(IS_ACTIVE = 1)",
+          "ColumnToLookup": "NAME",
+          "ConsequentReferenceName": "HU_SALARY_SCALE__NAME"
+        }
+      ],
+
+      "ExIndirectReferences": [
+        {
+          "ParentTable": "HU_EMPLOYEE_CV",
+          "ChildTable": "HU_EMPLOYEE",
+          "ChildKey": "PROFILE_ID",
+          "ParentUniqueIndexColumns": [ "FULL_NAME", "ID_NO" ],
+          "ChildUniqueIndexColumns": [ "CODE" ]
+        },
+        {
+          "ParentTable": "HU_SALARY_SCALE",
+          "ChildTable": "HU_SALARY_RANK",
+          "ChildKey": "SALARY_SCALE_ID",
+          "ParentUniqueIndexColumns": [ "CODE" ],
+          "ChildUniqueIndexColumns": [ "NAME" ]
+        },
+        {
+          "ParentTable": "HU_SALARY_RANK",
+          "ChildTable": "HU_SALARY_LEVEL",
+          "ChildKey": "SALARY_RANK_ID",
+          "ParentUniqueIndexColumns": [ "NAME" ],
+          "ChildUniqueIndexColumns": [ "NAME" ]
+        }
+      ],
+
+      "ExTables": [
+        {
+          "Table": "HU_WORKING",
+          "Version": "2",
+          "BufferTable": "HU_WORKING_HSL_PC_IMPORT",
+          "RenderOrder": 1,
+          "ImportOrder": 1,
+          "HeaderBgColor": "#358ccb",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "ID" ],
+          "RenderColumns": [
+            "PROFILE_ID",
+            "EMPLOYEE_ID",
+            "TYPE_ID",
+            "DECISION_NO",
+            "EFFECT_DATE",
+            "EXPIRE_DATE",
+            "EXPIRE_UPSAL_DATE",
+            "SHORT_TEMP_SALARY",
+            "SALARY_TYPE_ID",
+            "TAXTABLE_ID",
+            "SALARY_SCALE_ID",
+            "SALARY_SCALE_NAME",
+            "SALARY_RANK_ID",
+            "SALARY_LEVEL_ID",
+            "SALARY_SCALE_DCV_ID",
+            "SALARY_SCALE_DCV_NAME",
+            "SALARY_RANK_DCV_ID",
+            "SALARY_LEVEL_DCV_ID",
+            "SAL_PERCENT",
+            "SIGN_PROFILE_ID",
+            "SIGN_ID",
+            "SIGN_DATE",
+            "NOTE"
+          ],
+          "RequiredColumns": [
+            "EMPLOYEE_ID"
+          ],
+          "UniqueIndexes": [],
+          "Rules": [
+            {
+              "Column": "PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "EMPLOYEE_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "PROFILE_ID"
+            },
+            {
+              "Column": "TYPE_ID",
+              "SysOtherListTypeCode": "WAGE_TYPE"
+            },
+            {
+              "Column": "SALARY_TYPE_ID",
+              "DirectReference": "HU_SALARY_TYPE"
+            },
+            {
+              "Column": "TAXTABLE_ID",
+              "SysOtherListTypeCode": "TAXTABLE"
+            },
+            {
+              "Column": "SALARY_SCALE_ID",
+              "DirectReference": "HU_SALARY_SCALE"
+            },
+            {
+              "Column": "SALARY_SCALE_NAME",
+              "ConsequentReference": "HU_SALARY_SCALE__NAME",
+              "ConsequentBaseColumnR1C1Offset": -1
+            },
+            {
+              "Column": "SALARY_RANK_ID",
+              "IndirectReference": [ "HU_SALARY_SCALE", "HU_SALARY_RANK" ],
+              "IndirectColumn": "SALARY_SCALE_ID"
+            },
+            {
+              "Column": "SALARY_LEVEL_ID",
+              "IndirectReference": [ "HU_SALARY_RANK", "HU_SALARY_LEVEL" ],
+              "IndirectColumn": "SALARY_RANK_ID"
+            },
+            {
+              "Column": "SALARY_SCALE_DCV_ID",
+              "DirectReference": "HU_SALARY_SCALE"
+            },
+            {
+              "Column": "SALARY_SCALE_DCV_NAME",
+              "ConsequentReference": "HU_SALARY_SCALE__NAME",
+              "ConsequentBaseColumnR1C1Offset": -1
+            },
+            {
+              "Column": "SALARY_RANK_DCV_ID",
+              "IndirectReference": [ "HU_SALARY_SCALE", "HU_SALARY_RANK" ],
+              "IndirectColumn": "SALARY_SCALE_DCV_ID"
+            },
+            {
+              "Column": "SALARY_LEVEL_DCV_ID",
+              "IndirectReference": [ "HU_SALARY_RANK", "HU_SALARY_LEVEL" ],
+              "IndirectColumn": "SALARY_RANK_DCV_ID"
+            },
+            {
+              "Column": "SIGN_PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "SIGN_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "SIGN_PROFILE_ID"
+            }
+          ]
+        },
+        {
+          "Table": "HU_WORKING_ALLOW",
+          "BufferTable": "HU_WORKING_ALLOW_IMPORT",
+          "RenderOrder": 2,
+          "ImportOrder": 2,
+          "HeaderBgColor": "#F37540",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "ID" ],
+          "RenderColumns": [
+            "ALLOWANCE_ID1",
+            "COEFFICIENT1",
+            "EFFECT_DATE1",
+            "EXPIRE_DATE1",
+
+            "ALLOWANCE_ID2",
+            "COEFFICIENT2",
+            "EFFECT_DATE2",
+            "EXPIRE_DATE2",
+
+            "ALLOWANCE_ID3",
+            "COEFFICIENT3",
+            "EFFECT_DATE3",
+            "EXPIRE_DATE3",
+
+            "ALLOWANCE_ID4",
+            "COEFFICIENT4",
+            "EFFECT_DATE4",
+            "EXPIRE_DATE4",
+
+            "ALLOWANCE_ID5",
+            "COEFFICIENT5",
+            "EFFECT_DATE5",
+            "EXPIRE_DATE5"
+          ],
+          "RequiredColumns": [],
+          "UniqueIndexes": [],
+          "Rules": [
+            {
+              "Column": "ALLOWANCE_ID1",
+              "DirectReference": "HU_ALLOWANCE"
+            },
+            {
+              "Column": "ALLOWANCE_ID2",
+              "DirectReference": "HU_ALLOWANCE"
+            },
+            {
+              "Column": "ALLOWANCE_ID3",
+              "DirectReference": "HU_ALLOWANCE"
+            },
+            {
+              "Column": "ALLOWANCE_ID4",
+              "DirectReference": "HU_ALLOWANCE"
+            },
+            {
+              "Column": "ALLOWANCE_ID5",
+              "DirectReference": "HU_ALLOWANCE"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

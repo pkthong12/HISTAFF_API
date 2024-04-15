@@ -1,0 +1,140 @@
+{
+  "Root": {
+    "ClassName": "PAYROLL_KSPN_REPORT",
+    "ParameterValues": [
+      {
+        "FeildName": "P_YEAR",
+        "DataType": "Int",
+        "DtoName": "Year"
+      },
+      {
+        "FeildName": "P_MONTH",
+        "DataType": "Int",
+        "DtoName": "Month"
+      }
+    ],
+    "FontFamily": "Times New Roman",
+    "Size": 12,
+    "FontBolds": [
+      "A1:P1",
+      "A2:P2",
+      "A4:P4",
+      "A5:P5",
+      "A8:P8"
+    ],
+    "ErCode": "BC_LUONG_KSPN",
+    "HeaderRow": 8,
+    "HeaderTitles": [
+      {
+        "Text": "ER_HEADER_TITLE_COMPANY_NAME",
+        "Cell": "A1:C1"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_NAME_PAYROLL_KSPN_REPORT",
+        "Cell": "A4:P4"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_MONTH_YEAR",
+        "Cell": "A5:P5"
+      }
+    ],
+    "HeaderGridTitles": [
+      {
+        "Text": "ER_ORDER_NUM",
+        "Cell": "A8:A8"
+      },
+      {
+        "Text": "ER_FULL_NAME",
+        "Cell": "B8:B8"
+      },
+      {
+        "Text": "ER_POSITION",
+        "Cell": "C8:C8"
+      },
+      {
+        "Text": "ER_SALARY_RANK",
+        "Cell": "D8:D8"
+      },
+      {
+        "Text": "ER_SALARY",
+        "Cell": "E8:E8"
+      },
+      {
+        "Text": "ER_SALARY_RATE",
+        "Cell": "F8:F8"
+      },
+      {
+        "Text": "ER_WORKING_HOLIDAY",
+        "Cell": "G8:G8"
+      },
+      {
+        "Text": "ER_HOLIDAY_OFF",
+        "Cell": "H8:H8"
+      },
+      {
+        "Text": "ER_WORKING_DAYS",
+        "Cell": "I8:I8"
+      },
+      {
+        "Text": "ER_ANNUAL_LEAVE",
+        "Cell": "J8:J8"
+      },
+      {
+        "Text": "ER_HOLIDAY_PAY",
+        "Cell": "K8:K8"
+      },
+      {
+        "Text": "ER_TOTAL_WORKING_DAYS",
+        "Cell": "L8:L8"
+      },
+      {
+        "Text": "ER_NET_SALARY",
+        "Cell": "M8:M8"
+      },
+      {
+        "Text": "ER_SOCIAL_INSURANCE_CONTRIBUTION",
+        "Cell": "N8:N8"
+      },
+      {
+        "Text": "ER_REMAINING_AMOUNT",
+        "Cell": "O8:O8"
+      },
+      {
+        "Text": "ER_NOTE",
+        "Cell": "P8:P8"
+      }
+    ],
+    "MegreCellRange": [
+      "A1:E1",
+      "A4:P4",
+      "A5:P5"
+    ],
+    "HorizontalAlignmentCenter": [
+      "A4:P4",
+      "A5:P5",
+      "A8:P8"
+    ],
+    "HorizontalAlignmentLeft": [
+      "A1:I1"
+    ],
+    "VerticalAlignmentCenter": [
+      "A8:P8"
+    ],
+
+    "RowHeighs": [
+      {
+        "RowNumber": 8,
+        "Height": 16
+      }
+    ],
+    "RangeAutoFit": "A8:P8",
+    "BorderHeader": "A8:P8"
+  },
+
+  "FontSizeSpecifics": [
+    {
+      "Cell": "A8:P8",
+      "Size": 16
+    }
+  ]
+}

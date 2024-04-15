@@ -1,0 +1,419 @@
+{
+  "ExFiles": [
+    {
+      "ExCode": "STAFF_PROFILE",
+      "DataStartRow": 6,
+      "RowsToPrepare": 1000,
+      "RenderOtherListReferences": true,
+      "RenderAdministrativePlaces": true,
+      "BuildOrgTree": true,
+      "BuildPositions": true,
+
+      "ExDirectReferences": [
+        {
+          "Table": "HU_BANK",
+          "UniqueIndexColumns": [ "NAME" ]
+        },
+        {
+          "Table": "HU_BANK_BRANCH",
+          "UniqueIndexColumns": [ "NAME", "CODE" ]
+        },
+        {
+          "Table": "HU_WARD",
+          "UniqueIndexColumns": [ "NAME", "CODE" ]
+        },
+        {
+          "Table": "HU_CONTRACT_TYPE",
+          "UniqueIndexColumns": [ "NAME" ]
+        },
+        {
+          "Table": "HU_POSITION",
+          "UniqueIndexColumns": [ "NAME", "CODE" ],
+          "Condition": "(MASTER IS NULL AND INTERIM IS NULL)"
+        },
+        {
+          "Table": "INS_WHEREHEALTH",
+          "UniqueIndexColumns": [ "NAME_VN" ]
+        },
+        {
+          "Table": "INS_REGION",
+          "UniqueIndexColumns": [ "REGION_CODE" ]
+        }
+      ],
+      "ExIndirectReferences": [
+        {
+          "ParentTable": "HU_NATION",
+          "ChildTable": "HU_PROVINCE",
+          "ChildKey": "NATION_ID",
+          "ParentUniqueIndexColumns": [ "NAME" ],
+          "ChildUniqueIndexColumns": [ "NAME", "CODE" ]
+        },
+        {
+          "ParentTable": "HU_PROVINCE",
+          "ChildTable": "HU_DISTRICT",
+          "ChildKey": "PROVINCE_ID",
+          "ParentUniqueIndexColumns": [ "NAME", "CODE" ],
+          "ChildUniqueIndexColumns": [ "NAME", "CODE" ]
+        },
+        {
+          "ParentTable": "HU_DISTRICT",
+          "ChildTable": "HU_WARD",
+          "ChildKey": "DISTRICT_ID",
+          "ParentUniqueIndexColumns": [ "NAME", "CODE" ],
+          "ChildUniqueIndexColumns": [ "NAME", "CODE" ]
+        },
+        {
+          "ParentTable": "HU_BANK",
+          "ChildTable": "HU_BANK_BRANCH",
+          "ChildKey": "BANK_ID",
+          "ParentUniqueIndexColumns": [ "NAME" ],
+          "ChildUniqueIndexColumns": [ "NAME", "CODE" ]
+        },
+        {
+          "ParentTable": "HU_ORGANIZATION",
+          "ChildTable": "HU_POSITION",
+          "ChildKey": "ORG_ID",
+          "ParentUniqueIndexColumns": [ "NAME", "CAST(ID AS VARCHAR)" ],
+          "ChildUniqueIndexColumns": [ "NAME", "CODE" ],
+          "ChildCondition": "(MASTER IS NULL AND INTERIM IS NULL)"
+        }
+      ],
+
+      "ExTables": [
+        {
+          "Table": "HU_EMPLOYEE_CV",
+          "BufferTable": "HU_EMPLOYEE_CV_IMPORT",
+          "RenderOrder": 1,
+          "ImportOrder": 1,
+          "HeaderBgColor": "#358ccb",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "ID_NO" ],
+          "RenderColumns": [
+            "FULL_NAME",
+            "OTHER_NAME",
+            "GENDER_ID",
+            "NATIONALITY_ID",
+            "RELIGION_ID",
+            "DOMICILE",
+            "NATIVE_ID",
+            "BIRTH_DATE",
+            "BIRTH_PLACE",
+            "BIRTH_REGIS_ADDRESS",
+            "PROVINCE_ID",
+            "DISTRICT_ID",
+            "WARD_ID",
+            "ADDRESS",
+            "CUR_PROVINCE_ID",
+            "CUR_DISTRICT_ID",
+            "CUR_WARD_ID",
+            "CUR_ADDRESS",
+            "EMAIL",
+            "ID_NO",
+            "ID_DATE",
+            "ID_PLACE",
+            "PASS_NO",
+            "PASS_DATE",
+            "PASS_EXPIRE",
+            "PASS_PLACE",
+            "MARITAL_STATUS_ID",
+            "IS_MEMBER",
+            "TAX_CODE",
+            "TAX_CODE_DATE",
+            "TAX_CODE_ADDRESS",
+            "BLOOD_GROUP",
+            "HEIGHT",
+            "WEIGHT",
+            "BLOOD_PRESSURE",
+            "HEALTH_TYPE",
+            "LEFT_EYE",
+            "RIGHT_EYE",
+            "HEART",
+            "EXAMINATION_DATE",
+            "HEALTH_NOTES",
+            "VISA_NO",
+            "VISA_DATE",
+            "VISA_EXPIRE",
+            "VISA_PLACE",
+            "INSURENCE_NUMBER",
+            "INS_CARD_NUMBER",
+            "INS_WHEREHEALTH_ID",
+            "FAMILY_MEMBER",
+            "FAMILY_POLICY",
+            "SCHOOL_OF_WORK",
+            "VETERANS",
+            "TITLE_CONFERRED",
+            "PRISON_NOTE",
+            "FAMILY_DETAIL",
+            "YELLOW_FLAG",
+            "RELATIONS",
+            "YOUTH_SAVE_NATION_POSITION",
+            "YOUTH_SAVE_NATION_DATE",
+            "YOUTH_SAVE_NATION_ADDRESS",
+            "IS_UNIONIST",
+            "UNIONIST_POSITION",
+            "UNIONIST_DATE",
+            "UNIONIST_ADDRESS",
+            "IS_JOIN_YOUTH_GROUP",
+            "YOUTH_GROUP_POSITION",
+            "YOUTH_GROUP_ADDRESS",
+            "MEMBER_POSITION",
+            "MEMBER_ADDRESS",
+            "MEMBER_DATE",
+            "MEMBER_OFFICAL_DATE",
+            "LIVING_CELL",
+            "CARD_NUMBER",
+            "RESUME_NUMBER",
+            "ENLISTMENT_DATE",
+            "DISCHARGE_DATE",
+            "HIGHEST_MILITARY_POSITION",
+            "VATERANS_POSITION",
+            "VATERANS_MEMBER_DATE",
+            "VATERANS_ADDRESS",
+            "POLITICAL_THEORY",
+            "CURRENT_PARTY_COMMITTEE",
+            "PARTYTIME_PARTY_COMMITTEE",
+            "EDUCATION_LEVEL_ID",
+            "COMPUTER_SKILL_ID",
+            "LICENSE_ID",
+            "HOUSEHOLD_NUMBER",
+            "HOUSEHOLD_CODE",
+            "MOBILE_PHONE",
+            "MOBILE_PHONE_LAND",
+            "WORK_EMAIL",
+            "BANK_ID",
+            "BANK_BRANCH",
+            "BANK_NO",
+            "BANK_ID_2",
+            "BANK_BRANCH_2",
+            "BANK_NO_2",
+            "MAIN_INCOME",
+            "OTHER_SOURCES",
+            "LAND_GRANTED",
+            "TAX_GRANTED_HOUSE",
+            "TOTAL_AREA",
+            "SELF_PURCHASE_LAND",
+            "SELF_BUILD_HOUSE",
+            "TOTAL_APP_AREA",
+            "LAND_FOR_PRODUCTION",
+            "ADDITIONAL_INFOMATION"
+
+          ],
+          "RequiredColumns": [
+            "FULL_NAME",
+            "ID_NO"
+          ],
+          "UniqueIndexes": [
+            [ "ID_NO" ],
+            [ "TAX_CODE" ],
+            [ "ITIME_ID" ]
+          ],
+          "Rules": [
+            {
+              "Column": "GENDER_ID",
+              "SysOtherListTypeCode": "GENDER"
+            },
+            {
+              "Column": "ID_PLACE",
+              "IndirectReference": [ "HU_NATION", "HU_PROVINCE" ],
+              "IndirectValue": 1
+            },
+            {
+              "Column": "COMPUTER_SKILL_ID",
+              "SysOtherListTypeCode": "RC_COMPUTER_LEVEL"
+            },
+            {
+              "Column": "LICENSE_ID",
+              "SysOtherListTypeCode": "BLX"
+            },
+            {
+              "Column": "NATIONALITY_ID",
+              "SysOtherListTypeCode": "NATIONALITY"
+            },
+            {
+              "Column": "MARITAL_STATUS_ID",
+              "SysOtherListTypeCode": "FAMILY_STATUS"
+            },
+            {
+              "Column": "QUALIFICATION_ID",
+              "SysOtherListTypeCode": "MAJOR"
+            },
+            {
+              "Column": "QUALIFICATION_ID_2",
+              "SysOtherListTypeCode": "MAJOR"
+            },
+            {
+              "Column": "QUALIFICATION_ID_3",
+              "SysOtherListTypeCode": "MAJOR"
+            },
+            {
+              "Column": "LEARNING_LEVEL_ID",
+              "SysOtherListTypeCode": "LEARNING_LEVEL"
+            },
+            {
+              "Column": "NATIVE_ID",
+              "SysOtherListTypeCode": "NATION"
+            },
+            {
+              "Column": "RELIGION_ID",
+              "SysOtherListTypeCode": "RELIGION"
+            },
+            {
+              "Column": "EDUCATION_LEVEL_ID",
+              "SysOtherListTypeCode": "EDUCATION_LEVEL"
+            },
+            {
+              "Column": "SCHOOL_ID",
+              "SysOtherListTypeCode": "GRADUATE_SCHOOL"
+            },
+            {
+              "Column": "SCHOOL_ID_2",
+              "SysOtherListTypeCode": "GRADUATE_SCHOOL"
+            },
+            {
+              "Column": "SCHOOL_ID_3",
+              "SysOtherListTypeCode": "GRADUATE_SCHOOL"
+            },
+            {
+              "Column": "TRAINING_FORM_ID",
+              "SysOtherListTypeCode": "TRAINING_FORM"
+            },
+            {
+              "Column": "TRAINING_FORM_ID_2",
+              "SysOtherListTypeCode": "TRAINING_FORM"
+            },
+            {
+              "Column": "TRAINING_FORM_ID_3",
+              "SysOtherListTypeCode": "TRAINING_FORM"
+            },
+            {
+              "Column": "LANGUAGE_ID",
+              "SysOtherListTypeCode": "LANGUAGE"
+            },
+            {
+              "Column": "LANGUAGE_ID_2",
+              "SysOtherListTypeCode": "LANGUAGE"
+            },
+            {
+              "Column": "LANGUAGE_ID_3",
+              "SysOtherListTypeCode": "LANGUAGE"
+            },
+            {
+              "Column": "LANGUAGE_LEVEL_ID",
+              "SysOtherListTypeCode": "LANGUAGE_LEVEL"
+            },
+            {
+              "Column": "LANGUAGE_LEVEL_ID_2",
+              "SysOtherListTypeCode": "LANGUAGE_LEVEL"
+            },
+            {
+              "Column": "LANGUAGE_LEVEL_ID_3",
+              "SysOtherListTypeCode": "LANGUAGE_LEVEL"
+            },
+            {
+              "Column": "PROVINCE_ID",
+              "IndirectReference": [ "HU_NATION", "HU_PROVINCE" ],
+              "IndirectValue": 1
+            },
+            {
+              "Column": "DISTRICT_ID",
+              "IndirectReference": [ "HU_PROVINCE", "HU_DISTRICT" ],
+              "IndirectColumn": "PROVINCE_ID"
+            },
+            {
+              "Column": "WARD_ID",
+              "IndirectReference": [ "HU_DISTRICT", "HU_WARD" ],
+              "IndirectColumn": "DISTRICT_ID"
+            },
+            {
+              "Column": "CUR_PROVINCE_ID",
+              "IndirectReference": [ "HU_NATION", "HU_PROVINCE" ],
+              "IndirectValue": 1
+            },
+            {
+              "Column": "CUR_DISTRICT_ID",
+              "IndirectReference": [ "HU_PROVINCE", "HU_DISTRICT" ],
+              "IndirectColumn": "CUR_PROVINCE_ID"
+            },
+            {
+              "Column": "CUR_WARD_ID",
+              "IndirectReference": [ "HU_DISTRICT", "HU_WARD" ],
+              "IndirectColumn": "CUR_DISTRICT_ID"
+            },
+            {
+              "Column": "BANK_ID",
+              "DirectReference": "HU_BANK"
+            },
+            {
+              "Column": "BANK_BRANCH",
+              "IndirectReference": [ "HU_BANK", "HU_BANK_BRANCH" ],
+              "IndirectColumn": "BANK_ID"
+            },
+            {
+              "Column": "BANK_ID_2",
+              "DirectReference": "HU_BANK"
+            },
+            {
+              "Column": "BANK_BRANCH_2",
+              "IndirectReference": [ "HU_BANK", "HU_BANK_BRANCH" ],
+              "IndirectColumn": "BANK_ID_2"
+            },
+            {
+              "Column": "INS_WHEREHEALTH_ID",
+              "DirictReference": "INS_WHEREHEALTH"
+            },
+            {
+              "Column": "TAX_CODE_ADDRESS",
+              "IndirectReference": [ "HU_NATION", "HU_PROVINCE" ],
+              "IndirectValue": 1
+            }
+           
+          ]
+        },
+        {
+          "Table": "HU_EMPLOYEE",
+          "BufferTable": "HU_EMPLOYEE_IMPORT",
+          "RenderOrder": 2,
+          "ImportOrder": 2,
+          "HeaderBgColor": "#F37540",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "CODE", "ITIME_ID" ],
+          "RenderColumns": [
+            "CODE",
+            "EMPLOYEE_OBJECT_ID",
+            "ITIME_ID",
+            "ORG_ID",
+            "POSITION_ID",
+            "PROFILE_CODE",
+            "INSURENCE_AREA"
+
+          ],
+          "RequiredColumns": [
+            "CODE"
+          ],
+          "UniqueIndexes": [
+            [ "CODE" ]
+          ],
+          "Rules": [
+            {
+              "Column": "ORG_ID",
+              "OrgTreeReference": true
+            },
+            {
+              "Column": "POSITION_ID",
+              "IndirectReference": [ "HU_ORGANIZATION", "HU_POSITION" ],
+              "IndirectColumn": "ORG_ID"
+            },
+            {
+              "Column": "EMPLOYEE_OBJECT_ID",
+              "SysOtherListTypeCode": "OBJECT_EMPLOYEE"
+            },
+            {
+              "Column": "INSURENCE_AREA",
+              "SysOtherListTypeCode": "INS_REGION"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

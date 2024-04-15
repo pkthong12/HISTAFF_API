@@ -1,0 +1,14 @@
+﻿Mã NV,Tên nhân viên,Chức danh,Phòng ban,Ngày vào công ty,Số tháng thâm niên,Phép thâm niên,Phép năm trước chuyển sang,Phép năm trước chuyển sang đã nghỉ,Ngày hết phép năm trước,Phép năm trước còn lại được sử dụng,Phép chuẩn năm nay,Quỹ phép năm nay được sử dụng,Phép năm đã dùng,Quỹ phép còn lại,Phép đã nghỉ  T1,Phép đã nghỉ  T2,Phép đã nghỉ  T3,Phép đã nghỉ  T4,Phép đã nghỉ  T5,Phép đã nghỉ  T6,Phép đã nghỉ  T7,Phép đã nghỉ  T8,Phép đã nghỉ  T9,Phép đã nghỉ  T10,Phép đã nghỉ  T11,Phép đã nghỉ  T12
+HPOT00889,LÊ PHI VĨ,Thành viên Hội đồng Quản trị độc lập,Văn phòng,2015-01-30T00:00:00,121,1,0,0,2023-03-31T00:00:00,0,12,13,0,13,0,0,0,0,0,0,0,0,0,0,0,0
+HPOT00872,PHẠM HỮU HẢI,Chuyên viên Hành chính,Phòng Hành chính,2023-11-01T00:00:00,1,0,0,0,2023-03-31T00:00:00,0,2,2,0,2,0,0,0,0,0,0,0,0,0,0,0,0
+BCG0015,Nguyễn Chí Công ,Phó Tổng Giám đốc phụ trách tài chính,Ban điều hành,2023-10-24T00:00:00,2,0,0,0,2023-03-31T00:00:00,0,2,2,0,2,0,0,0,0,0,0,0,0,0,0,0,0
+0001603,Võ Nhật Anh ,Thành viên Hội đồng Quản trị,Công đồng quản trị,2023-11-01T00:00:00,1,0,0,0,2023-03-31T00:00:00,0,2,2,0,2,0,0,0,0,0,0,0,0,0,0,0,0
+null0010,Hoàng Ngọc Anh ,Kế toán,Ban Tài chính - Kế toán,2021-01-01T00:00:00,35,0,0,0,2023-03-31T00:00:00,0,12,12,3,9,0,0,0,0,0,0,0,0,0,2,1,0
+040004,Nguyễn Đình Công ,Chuyên viên Hành chính,Công ty thép,2023-11-01T00:00:00,1,0,0,0,2023-03-31T00:00:00,0,2,2,0,2,0,0,0,0,0,0,0,0,0,0,0,0
+8E4073D5,Nguyễn Văn Anh ,Chủ tịch Ủy ban Đào tạo Văn hóa Thể thao và Đời sống Tập đoàn,Trụ sở chính,2023-10-01T00:00:00,2,0,0,0,2023-03-31T00:00:00,0,3,3,0,3,0,0,0,0,0,0,0,0,0,0,0,0
+040006,Hàn Tuấn Ngọc ,Thành viên Hội đồng Quản trị,Công ty sản xuất,2023-10-01T00:00:00,2,0,0,0,2023-03-31T00:00:00,0,3,3,0,3,0,0,0,0,0,0,0,0,0,0,0,0
+010062,David Hoàng,Trưởng phòng Hành chính - Nhân sự,Khối Hỗ trợ kinh doanh,2023-11-03T00:00:00,1,0,0,0,2023-03-31T00:00:00,0,2,2,0,2,0,0,0,0,0,0,0,0,0,0,0,0
+010063,Nguyễn Thị Phương Anh,Chuyên viên Văn phòng Hội đồng quản trị,Văn phòng Hội đồng quản trị,2022-02-14T00:00:00,22,0,0,0,2023-03-31T00:00:00,0,12,12,0,12,0,0,0,0,0,0,0,0,0,0,0,0
+170025,Tà Dương,Phó Chủ tịch Ủy ban nguồn vốn,Phòng họp Nam Định 1,2023-10-01T00:00:00,2,0,0,0,2023-03-31T00:00:00,0,3,3,0.5,2.5,0,0,0,0,0,0,0,0,0,0,0.5,0
+150026,Nguyễn Hồng Nhung (TL),Chuyên viên Kế toán thuế 1,Ban Tài chính - Kế toán,2021-01-01T00:00:00,35,0,0,0,2023-03-31T00:00:00,0,12,12,0,12,0,0,0,0,0,0,0,0,0,0,0,0
+150027,Nguyễn Hồng Nhung (TL1),Chuyên viên Kế toán thuế 1,Ban Tài chính - Kế toán,2022-01-01T00:00:00,23,0,0,0,2023-03-31T00:00:00,0,12,12,2.5,9.5,0,0,2.5,0,0,0,0,0,0,0,0,0

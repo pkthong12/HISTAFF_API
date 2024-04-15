@@ -1,0 +1,34 @@
+﻿USE [HISTAFF_SQL_DEV]
+GO
+/****** Object:  StoredProcedure [dbo].[XLS_READ_CHILD_BY_PARENT_KEY_VALUE_AND_COLUMNS_FORMULA]    Script Date: 11/9/2023 7:20:08 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- ================================================
+--Thủ tục này trả lại một dataset với đầu vào là 4 tham số
+--1) @P_PARENT_KEY_VALUE: Giá trị ID của bảng cha. Ví dụ: 256
+--2) @P_CHILD_TABLE: Tên bảng con, ví dụ "HU_DISTRICT"
+--3) @P_CHILD_KEY Tên cột FK ở bảng con, ví dụ "PROVINCE_ID"
+--4) @P_TEXT_FORMULA: Công thức cho chuỗi cột được ghép lại để lấy giá trị unique từ bảng con, ví dụ: '[' + NAME + '], [' + CODE + ']'
+--Kết quả sẽ được tiếp tục xử lý bằng LINQ TO OBJECT tại Backend
+-- ================================================
+ALTER PROCEDURE [dbo].[XLS_READ_CHILD_BY_PARENT_KEY_VALUE_AND_COLUMNS_FORMULA]
+	-- Add the parameters for the stored procedure here
+	@P_PARENT_KEY_VALUE BIGINT,
+	@P_CHILD_TABLE VARCHAR(50),
+	@P_CHILD_KEY VARCHAR(50),
+	@P_TEXT_FORMULA VARCHAR(255),
+	@P_CONDITION VARCHAR(255)
+
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+	DECLARE @SQL VARCHAR(MAX) = 'SELECT Text, Value FROM (SELECT Text=' + @P_TEXT_FORMULA + ', Value=ID FROM ' + @P_CHILD_TABLE + ' WHERE ' + @P_CONDITION + ' AND ' + @P_CHILD_KEY + '=' + CAST(@P_PARENT_KEY_VALUE AS VARCHAR(10)) +') a ORDER BY a.Text';
+
+    -- Insert statements for procedure here
+	EXEC(@SQL);
+
+END

@@ -1,0 +1,107 @@
+{
+  "ExFiles": [
+    {
+      "ExCode": "INS_INFORMATION",
+      "DataStartRow": 6,
+      "RowsToPrepare": 1000,
+      "RenderOtherListReferences": true,
+      "RenderAdministrativePlaces": false,
+      "BuildOrgTree": false,
+      "BuildPositions": false,
+
+      "ExDirectReferences": [
+        {
+          "Table": "HU_EMPLOYEE_CV",
+          "UniqueIndexColumns": [ "FULL_NAME", "ID_NO" ]
+        },
+        {
+          "Table": "HU_EMPLOYEE",
+          "UniqueIndexColumns": [ "CODE" ]
+        },
+        {
+          "Table": "INS_WHEREHEALTH",
+          "UniqueIndexColumns": [ "NAME_VN", "CODE" ]
+        }
+      ],
+      "ExIndirectReferences": [
+        {
+          "ParentTable": "HU_EMPLOYEE_CV",
+          "ChildTable": "HU_EMPLOYEE",
+          "ChildKey": "PROFILE_ID",
+          "ParentUniqueIndexColumns": [ "FULL_NAME", "ID_NO" ],
+          "ChildUniqueIndexColumns": [ "CODE" ]
+        }
+      ],
+
+      "ExTables": [
+        {
+          "Table": "INS_INFORMATION",
+          "BufferTable": "INS_INFORMATION_IMPORT",
+          "RenderOrder": 1,
+          "ImportOrder": 1,
+          "HeaderBgColor": "#358ccb",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "ID" ],
+          "RenderColumns": [
+            "PROFILE_ID",
+            "EMPLOYEE_ID",
+            "SENIORITY_INSURANCE",
+            "BHXH_FROM_DATE",
+            "BHXH_TO_DATE",
+            "BHXH_STATUS_ID",
+            "BHXH_SUPPLIED_DATE",
+            "BHXH_GRANT_DATE",
+            "BHXH_DELIVERER",
+            "BHXH_STORAGE_NUMBER",
+            "BHXH_REIMBURSEMENT_DATE",
+            "BHXH_RECEIVER",
+            "BHXH_NOTE",
+            "BHYT_FROM_DATE",
+            "BHYT_TO_DATE",
+            "BHYT_STATUS_ID",
+            "BHYT_EFFECT_DATE",
+            "BHYT_EXPIRE_DATE",
+            "BHYT_WHEREHEALTH_ID",
+            "BHYT_RECEIVED_DATE",
+            "BHYT_RECEIVER",
+            "BHYT_REIMBURSEMENT_DATE",
+            "BHTN_FROM_DATE",
+            "BHTN_TO_DATE",
+            "BHTNLD_BNN_FROM_DATE",
+            "BHTNLD_BNN_TO_DATE"
+          ],
+          "RequiredColumns": [
+            "BHXH_FROM_DATE",
+            "BHYT_FROM_DATE",
+            "BHTN_FROM_DATE",
+            "BHTNLD_BNN_FROM_DATE"
+          ],
+          "UniqueIndexes": [],
+          "Rules": [
+            {
+              "Column": "PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "EMPLOYEE_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "PROFILE_ID"
+            },
+            {
+              "Column": "BHXH_STATUS_ID",
+              "SysOtherListTypeCode": "BHXH_STATUS"
+            },
+            {
+              "Column": "BHYT_STATUS_ID",
+              "SysOtherListTypeCode": "BHYT_STATUS"
+            },
+            {
+              "Column": "BHYT_WHEREHEALTH_ID",
+              "DirectReference": "INS_WHEREHEALTH"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,468 @@
+PROCEDURE GET_WELFARE_AUTO(P_USERNAME   IN NVARCHAR2,
+                             P_ORGID      IN NUMBER,
+                             P_ISDISSOLVE IN NUMBER,
+                             P_WELFARE_ID IN NUMBER,
+                             P_PERIOD_ID  IN NUMBER,
+                             P_CALCULATE_DATE IN DATE) IS
+    P_FROMDATE DATE;
+    P_TODATE DATE;
+    P_CONG_CHUAM NUMBER;
+    BEGIN
+    
+    SELECT A.START_DATE, A.END_DATE
+      INTO P_FROMDATE, P_TODATE
+      FROM AT_PERIOD A
+     WHERE A.ID = P_PERIOD_ID;
+    BEGIN
+     SELECT ROUND(SUM(NVL(T.PERIOD_STANDARD,0))/12) INTO P_CONG_CHUAN_NAM
+     FROM AT_PERIOD T
+     WHERE YEAR = TO_CHAR(P_TODATE,'YYYY');
+     EXCEPTION 
+        WHEN NO_DATA_FOUND THEN
+          P_CONG_CHUAN_NAM := 1;
+     END;
+    PKG_COMMON_LIST.INSERT_CHOSEN_ORG(P_USERNAME, P_ORGID, P_ISDISSOLVE);
+    -- L?Y C?NG TH?C T?NH S? C?NG
+
+  INSERT INTO HU_WELFARE_AUTO_TEMP
+      WITH 
+      CONTRACT_TYPE AS
+      (SELECT C.CONTRACT_TYPE_ID
+          FROM HU_WELFARE_LIST_GW C
+         WHERE C.HU_WELFARE_LIST_ID = P_WELFARE_ID
+           AND C.CONTRACT_TYPE_ID > 0),
+
+      WELFARE_GW AS
+      (SELECT G.GENDER_ID
+          FROM HU_WELFARE_LIST_GW G
+         WHERE G.HU_WELFARE_LIST_ID = P_WELFARE_ID
+           AND G.GENDER_ID > 0),
+      WELFARE_JOB AS
+      (SELECT J.POSITION_ID
+        FROM HU_WELFARE_LIST_JOB J
+       WHERE J.HU_WELFARE_LIST_ID = P_WELFARE_ID
+          AND J.POSITION_ID > 0),
+      DISPLINE as
+      (
+         select D.id,EMP.HU_employee_ID,period_ID,STATUS_ID from HU_DISCIPLINE D
+         left join HU_DISCIPLINE_EMP EMP on D.id= EMP.HU_DISCIPLINE_ID
+         where D.STATUS_ID=716 and D.period_id=P_PERIOD_ID
+      ),
+      FAMILY AS
+       (SELECT FL.EMPLOYEE_ID,
+               FL.IS_AUTO,
+               COUNT(FL.EMPLOYEE_ID) COUNT_FAMILY
+          FROM (SELECT FL.EMPLOYEE_ID, FL.IS_AUTO
+                  FROM (SELECT F.EMPLOYEE_ID,
+                               F.ID,
+                               --MONTHS_BETWEEN(L.START_DATE, F.BIRTH_DATE) AGE,
+                               MONTHS_BETWEEN(P_CALCULATE_DATE, F.NGAY_SINH) AGE,
+                               --NVL(L.CHILD_OLD_TO,
+                                   --MONTHS_BETWEEN(L.START_DATE, F.BIRTH_DATE) / 12) * 12 CHILD_OLD_TO,
+                               NVL(L.CHILD_OLD_TO,
+                                   MONTHS_BETWEEN(P_CALCULATE_DATE, F.NGAY_SINH)) CHILD_OLD_TO,
+                               --NVL(L.CHILD_OLD_FROM,
+                                   --MONTHS_BETWEEN(L.START_DATE, F.BIRTH_DATE) / 12) * 12 CHILD_OLD_FROM,
+                               NVL(L.CHILD_OLD_FROM,
+                                   MONTHS_BETWEEN(P_CALCULATE_DATE, F.NGAY_SINH)) CHILD_OLD_FROM,
+                               CASE
+                                 WHEN L.CHILD_OLD_FROM IS NOT NULL OR
+                                      L.CHILD_OLD_TO IS NOT NULL THEN
+                                  '1'
+                                 ELSE
+                                  '0'
+                               END IS_AUTO
+                          FROM HU_FAMILY F, HU_WELFARE_LIST L
+                         WHERE
+                         L.ID = P_WELFARE_ID
+           AND L.IS_AUTO = -1 and
+                         F.QUAN_HE = 422
+                           AND F.NGAY_SINH IS NOT NULL
+                           AND (L.CHILD_OLD_FROM IS NOT NULL OR
+                               L.CHILD_OLD_TO IS NOT NULL)
+                         GROUP BY F.EMPLOYEE_ID,
+                                  F.ID,
+                                  L.START_DATE,
+                                  F.NGAY_SINH,
+                                  L.CHILD_OLD_TO,
+                                  L.CHILD_OLD_FROM) FL
+                 WHERE (FL.CHILD_OLD_FROM IS NOT NULL AND
+                       FL.CHILD_OLD_TO IS NOT NULL AND
+                       AGE BETWEEN FL.CHILD_OLD_FROM AND FL.CHILD_OLD_TO)
+                    OR (FL.CHILD_OLD_FROM IS NULL AND AGE <= FL.CHILD_OLD_TO)
+                    OR (FL.CHILD_OLD_TO IS NULL AND AGE >= FL.CHILD_OLD_FROM)) FL
+         GROUP BY FL.EMPLOYEE_ID, FL.IS_AUTO),
+         /*CTD AS
+           (
+           SELECT ROW_NUMBER() OVER(PARTITION BY EMPLOYEE_ID ORDER BY START_DATE DESC) RN, D.*
+           FROM HU_DELAY_CONTRACT D
+           ),*/
+      EMPLOYEE AS
+
+       (SELECT E.ID,
+               E.EMPLOYEE_CODE,
+               E.FULLNAME_VN,
+               TL.NAME_VN TITLE_NAME,
+               T.ID CONTACT_ID,
+               T.NAME CONTRACT_TYPE_NAME,
+               CV.GENDER,
+               CASE WHEN TER.EFFECT_DATE IS NOT NULL AND TER.LAST_DATE < P_CALCULATE_DATE THEN 0
+               ELSE 
+               CASE
+                 WHEN E.JOIN_DATE IS NOT NULL THEN
+                   CASE WHEN NVL(WEL.IS_TAX_FOR_YEAR,0) = -1 THEN
+                       CASE WHEN TO_CHAR(E.JOIN_DATE ,'YYYYMMDD') < '20220101' THEN
+                             ROUND(MONTHS_BETWEEN(P_CALCULATE_DATE,
+                                        TO_DATE('01012022',
+                                                'DDMMYYYY'))) - NVL(SO_THANG_KLOCT_TT,0)--TRU S? th?ng ngh? kh?ng luong v? ngh? ?m
+                       ELSE
+                          ROUND(MONTHS_BETWEEN(P_CALCULATE_DATE,
+                                        E.JOIN_DATE)) - NVL(SO_THANG_KLOCT_TT,0)--TRU S? th?ng ngh? kh?ng luong v? ngh? ?m
+                       END
+                   ELSE
+                      CASE
+                        WHEN EXTRACT(DAY FROM E.JOIN_DATE) < 15 THEN
+                         MONTHS_BETWEEN(TO_DATE('01' ||
+                                                TO_CHAR(P_CALCULATE_DATE, 'MMYYYY'),
+                                                'DDMMYYYY'),
+                                        TO_DATE('01' ||
+                                                TO_CHAR(E.JOIN_DATE, 'MMYYYY'),
+                                                'DDMMYYYY'))
+                        ELSE
+                         MONTHS_BETWEEN(TO_DATE('01' ||
+                                                TO_CHAR(P_CALCULATE_DATE, 'MMYYYY'),
+                                                'DDMMYYYY'),
+                                        TO_DATE('01' ||
+                                                TO_CHAR(E.JOIN_DATE, 'MMYYYY'),
+                                                'DDMMYYYY'))
+                      END
+                  END
+                 ELSE
+                  0
+               END END SENIORITY,
+               CASE WHEN TER.EFFECT_DATE IS NOT NULL AND TER.LAST_DATE < P_CALCULATE_DATE THEN 0
+               ELSE 
+               CASE WHEN NVL(WEL.IS_TAX_FOR_YEAR,0) = -1 THEN
+                       CASE WHEN TO_CHAR(E.JOIN_DATE ,'YYYYMMDD') < '20220101' THEN
+                             ROUND(MONTHS_BETWEEN(P_CALCULATE_DATE,
+                                        TO_DATE('01012022',
+                                                'DDMMYYYY'))) - NVL(SO_THANG_KLOCT_TT,0)--TRU S? th?ng ngh? kh?ng luong v? ngh? ?m
+                       ELSE
+                          ROUND(MONTHS_BETWEEN(P_CALCULATE_DATE,
+                                                E.JOIN_DATE)) - NVL(SO_THANG_KLOCT_TT,0)--TRU S? th?ng ngh? kh?ng luong v? ngh? ?m
+                       END
+                   ELSE
+                       TO_NUMBER(CASE
+                             /*-- TH CO 2 TAM HOAN HD LONG NHAU VE KHOANG THOI GIAN
+                             WHEN DELAY2.EMPLOYEE_ID IS NOT NULL AND DELAY2.IS_DELAY = 1 THEN
+                                DELAY2.SO_THANG*/
+                             WHEN DELAY.EXPIRE_DATE IS NOT NULL THEN
+                                 /*MONTHS_BETWEEN(TO_DATE('01' ||
+                                                        TO_CHAR(P_CALCULATE_DATE, 'MMYYYY'),
+                                                        'DDMMYYYY'),
+                                                TO_DATE('01' ||
+                                                        TO_CHAR(DELAY.EXPIRE_DATE, 'MMYYYY'),
+                                                        'DDMMYYYY'))*/
+                                 --http://192.168.60.35:8080/browse/BSR-2054                       
+                                 ROUND((P_CALCULATE_DATE - DELAY.EXPIRE_DATE)/30)                         
+                             WHEN AB.START_DATE IS NOT NULL THEN
+                               MONTHS_BETWEEN(TO_DATE('01' ||
+                                                        TO_CHAR(P_CALCULATE_DATE, 'MMYYYY'),
+                                                        'DDMMYYYY'),
+                                                TO_DATE('01' ||
+                                                        TO_CHAR(AB.START_DATE, 'MMYYYY'),
+                                                        'DDMMYYYY'))
+                             WHEN E.ORG_ID IN (2,3,2507) AND K.EFFECT_DATE IS NOT NULL THEN
+                                     MONTHS_BETWEEN(TO_DATE('01' ||
+                                                        TO_CHAR(P_CALCULATE_DATE, 'MMYYYY'),
+                                                        'DDMMYYYY'),
+                                                TO_DATE('01' ||
+                                                        TO_CHAR(K.EFFECT_DATE, 'MMYYYY'),
+                                                        'DDMMYYYY')) 
+                              ELSE 0
+                           END)
+               END END SO_THANG_NEW,
+               CV.BIRTH_DATE,
+               GENDER.NAME_VN GENDER_NAME,
+               WEL.MONEY,
+               (P_CALCULATE_DATE - DELAY.Expire_Date)/30 SOTHANG,
+               CASE WHEN DELAY.EMPLOYEE_ID  IS NOT NULL AND DELAY.EXPIRE_DATE >= P_CALCULATE_DATE THEN -1
+                    ELSE 0
+               END IS_TAMHOAN,
+               WEL.ID HU_WELFARE_LIST_ID,
+               TER.REASON_ID,
+               E.TER_EFFECT_DATE,
+               E.WORK_STATUS
+          FROM HU_EMPLOYEE E
+         LEFT JOIN (SELECT ROW_NUMBER() OVER(PARTITION BY C.EMPLOYEE_ID ORDER BY C.START_DATE DESC) RN,C.*  
+                   FROM HU_DELAY_CONTRACT C
+                   WHERE C.STATUS_ID = 471
+                   AND C.START_DATE <= P_FROMDATE) DELAY
+         ON DELAY.EMPLOYEE_ID = E.ID AND DELAY.RN = 1
+         /*LEFT JOIN (
+                     SELECT D1.EMPLOYEE_ID,
+                            CASE WHEN D1.START_DATE <= D2.EXPIRE_DATE THEN 1 ELSE 0 END IS_DELAY,
+                            MONTHS_BETWEEN(TO_DATE('01' ||
+                                                                  TO_CHAR(TO_DATE('22/01/2023','DD/MM/YYYY'), 'MMYYYY'),
+                                                                  'DDMMYYYY'),
+                                                          TO_DATE('01' ||
+                                                                  TO_CHAR(D2.START_DATE, 'MMYYYY'),
+                                                                  'DDMMYYYY')) SO_THANG
+                     FROM
+                     (
+                       SELECT *
+                       FROM CTD D1 WHERE RN = 1
+                      ) D1
+                      LEFT JOIN
+                      (
+                       SELECT *
+                       FROM CTD D1 WHERE RN = 2
+                      ) D2 ON D1.EMPLOYEE_ID = D2.EMPLOYEE_ID
+                      WHERE D1.START_DATE <= D2.EXPIRE_DATE
+                   ) DELAY2
+            ON DELAY2.EMPLOYEE_ID = E.ID*/
+         LEFT JOIN HU_JOBPOSITION JO
+            ON E.JOBPOSITION_ID = JO.ID
+         LEFT JOIN HU_TITLE TL
+            ON TL.ID = JO.TITLE_ID
+         LEFT JOIN HU_ORGANIZATION O
+            ON E.ORG_ID = O.ID
+         LEFT JOIN HU_EMPLOYEE_CV CV
+            ON CV.EMPLOYEE_ID = E.ID
+         LEFT JOIN OT_OTHER_LIST GENDER
+            ON CV.GENDER = GENDER.ID
+         LEFT JOIN HU_CONTRACT C
+            ON E.CONTRACT_ID = C.ID
+         LEFT JOIN HU_CONTRACT_TYPE T
+            ON T.ID = C.CONTRACT_TYPE_ID
+         LEFT JOIN  HU_WELFARE_LIST WEL ON 1 = 1
+         LEFT JOIN HU_TERMINATE TER ON TER.EMPLOYEE_ID = E.ID
+         LEFT JOIN (SELECT * FROM (
+              SELECT K.*,
+              ROW_NUMBER() OVER(PARTITION BY K.EMPLOYEE_ID ORDER BY K.EFFECT_DATE ) RN
+               FROM HU_WORKING K 
+              WHERE K.STATUS_ID = 447 AND K.EFFECT_DATE <=  P_TODATE) WHERE RN = 1) K ON K.EMPLOYEE_ID = E.ID
+          LEFT JOIN (SELECT * FROM (
+              SELECT K.*,
+              ROW_NUMBER() OVER(PARTITION BY K.EMPLOYEE_ID ORDER BY K.EFFECT_DATE DESC) RN
+               FROM HU_WORKING K 
+              WHERE K.STATUS_ID = 447 AND K.IS_WAGE = -1  AND K.EFFECT_DATE <=  P_TODATE) WHERE RN = 1) K2 ON K2.EMPLOYEE_ID = E.ID 
+         LEFT JOIN (SELECT * FROM (
+                         SELECT ROW_NUMBER() OVER (
+                         PARTITION BY EMPLOYEE_CODE
+                         ORDER BY START_DATE
+                         ) ROW_NUM
+                         ,CV.* FROM HUV_CONTRACT CV ) WHERE ROW_NUM = 1) AB ON AB.EMPLOYEE_CODE = E.EMPLOYEE_CODE
+          LEFT JOIN (
+           SELECT T.*,
+               CASE WHEN  SO_THANG_KLOCT - FLOOR(SO_THANG_KLOCT)  >= 0.5 THEN  
+                                                  FLOOR(SO_THANG_KLOCT) + 0.5
+                                                  WHEN  SO_THANG_KLOCT - FLOOR(SO_THANG_KLOCT)  < 0.5 THEN  
+                                                  FLOOR(SO_THANG_KLOCT)    
+                                                  ELSE
+                                                  SO_THANG_KLOCT
+                                                  END SO_THANG_KLOCT_TT
+           FROM (
+           SELECT NVL(SUM(NVL(WORKING_KL,0) + NVL(WORKING_O,0)),0)/NVL(P_CONG_CHUAN_NAM,1) SO_THANG_KLOCT,--CHUA CO CONG CHUYEN CONG TAC, CHECK SAU
+                  SUM(NVL(WORKING_HN,0)) WORKING_HN,
+                  EMPLOYEE_ID
+           FROM AT_TIME_TIMESHEET_MONTHLY M
+           INNER JOIN AT_PERIOD P
+                 ON P.ID = M.PERIOD_ID
+           WHERE TO_CHAR(P.START_DATE,'YYYY') = TO_CHAR(P_CALCULATE_DATE,'YYYY')
+           AND TO_CHAR(P.END_DATE,'YYYYMMDD') <= TO_CHAR(P_CALCULATE_DATE,'YYYYMMDD')
+           GROUP BY M.EMPLOYEE_ID) T
+           ) MO
+           ON MO.EMPLOYEE_ID = E.ID  
+       WHERE E.JOIN_DATE IS NOT NULL AND  
+           ((E.WORK_STATUS IS NULL) OR
+               (E.WORK_STATUS IS NOT NULL AND
+               (E.WORK_STATUS <> 257 OR
+               (E.WORK_STATUS = 257 AND
+               E.TER_EFFECT_DATE > P_FROMDATE)
+               OR TER.REASON_ID IN (114896,102210,5721) -- Lay them TH nghi huu
+               )))
+           AND NVL(E.WORK_STATUS,0) <> 114894 --http://192.168.60.35:8080/browse/BSR-1837
+           AND (NVL(E.WORK_STATUS,0) <> 114623 OR (NVL(E.WORK_STATUS,0) = 114623 AND (NVL(DELAY.ID,0) = 0 OR (NVL(DELAY.ID,0) > 0 
+               AND NVL(DELAY.EXPIRE_DATE,P_FROMDATE) < P_FROMDATE))))
+           AND WEL.IS_AUTO = -1 AND (NVL(P_WELFARE_ID,0) = 0 OR (NVL(P_WELFARE_ID,0) > 0 AND P_WELFARE_ID = WEL.ID))
+           AND ((WEL.END_DATE IS NULL AND WEL.START_DATE <= P_FROMDATE)
+           OR (WEL.START_DATE >= P_FROMDATE AND WEL.START_DATE <= P_TODATE)
+           OR (WEL.END_DATE IS NOT NULL AND WEL.END_DATE >= P_FROMDATE AND WEL.END_DATE <= P_TODATE))
+           AND (K2.EMPLOYEE_ID IS NULL OR (K2.EMPLOYEE_ID IS NOT NULL AND (NVL(K2.cost_support,0) + NVL(K2.luong_quan_ly,0) + NVL(K2.sal_total,0)) > 0))
+               )
+
+
+      SELECT E.ID,
+             E.EMPLOYEE_CODE,
+             E.FULLNAME_VN EMPLOYEE_NAME,
+             E.BIRTH_DATE,
+             E.TITLE_NAME,
+             F.COUNT_FAMILY COUNT_CHILD,
+             E.GENDER_NAME,
+             E.SENIORITY,
+             E.CONTRACT_TYPE_NAME,
+             
+             CASE
+               WHEN IS_TAMHOAN = -1
+                 THEN 0
+                 ELSE
+                    CASE
+                       WHEN
+                         ( W.SO_THANG_TH_TU  IS NULL OR (W.SO_THANG_TH_TU  IS NOT NULL AND NVL(E.SO_THANG_NEW,0) >= W.SO_THANG_TH_TU) )
+                         AND ( W.THAM_NIEN_TU  IS NULL OR (W.THAM_NIEN_TU  IS NOT NULL AND NVL(E.SO_THANG_NEW,0) >= W.THAM_NIEN_TU) )
+                         --AND (W.THAM_NIEN_TU  IS NOT NULL AND NVL(E.SO_THANG_NEW,0) >= W.THAM_NIEN_TU )--KHONG BAT BUOC
+                         AND (E.GENDER = WGENDER.GENDER_NU OR E.GENDER = WGENDER.GENDER_NAM )
+                         THEN (NVL(E.MONEY,0) * NVL(W.RECEIVE_PERCENT,0))/100
+                       WHEN
+                         (W.SO_THANG_TH_TU1 IS NULL OR (W.SO_THANG_TH_TU1  IS NOT NULL AND NVL(E.SO_THANG_NEW,0) < W.SO_THANG_TH_TU1) )
+                         AND (W.THAM_NIEN_TU1 IS NULL OR (W.THAM_NIEN_TU1  IS NOT NULL AND NVL(E.SO_THANG_NEW,0) <= W.THAM_NIEN_TU1) )
+                         --AND (W.THAM_NIEN_TU1  IS NOT NULL AND NVL(E.SO_THANG_NEW,0) < W.THAM_NIEN_TU1 )
+                         AND (E.GENDER = WGENDER.GENDER_NU1 OR E.GENDER = WGENDER.GENDER_NAM1)
+                         THEN (NVL(E.MONEY,0) * NVL(W.RECEIVE_PERCENT1,0))/100
+                        WHEN NVL(E.REASON_ID,0) > 0 AND NVL(W.RECEIVE_PERCENT3,0) > 0 THEN
+                             (NVL(E.MONEY,0) * NVL(W.RECEIVE_PERCENT3,0))/100
+                        ELSE 0
+                        END
+             END MONEY,
+             F.COUNT_FAMILY * E.MONEY MONEYTOTAL,
+             P_USERNAME,
+             E.HU_WELFARE_LIST_ID AS WELFARE_ID,
+             P_PERIOD_ID,
+             F.COUNT_FAMILY AS CHILD_AGE,
+             P_CALCULATE_DATE CALCULATE_DATE,
+             W.IS_DOCUMENT_OFF,
+             0 NUMBER_MANUAL,
+             NVL(E.SO_THANG_NEW,0),
+             CASE
+               WHEN IS_TAMHOAN = -1
+                 THEN 0
+                 ELSE
+                    CASE
+                       WHEN
+                         (W.SO_THANG_TH_TU  IS NOT NULL AND NVL(SOTHANG,0) >= W.SO_THANG_TH_TU )
+                         AND (W.THAM_NIEN_TU  IS NOT NULL AND NVL(E.SO_THANG_NEW,0) >= W.THAM_NIEN_TU )
+                         THEN 0
+                       WHEN
+                         (W.SO_THANG_TH_TU1  IS NOT NULL AND NVL(SOTHANG,0) < W.SO_THANG_TH_TU1 )
+                         AND (W.THAM_NIEN_TU1  IS NOT NULL AND NVL(E.SO_THANG_NEW,0) < W.THAM_NIEN_TU1 )
+                         THEN -1
+                        ELSE 0
+                        END
+             END IS50
+        FROM EMPLOYEE E
+        LEFT JOIN AT_PERIOD AT
+          ON AT.ID = P_PERIOD_ID
+        LEFT JOIN (SELECT *
+                     FROM (SELECT W.ID,
+                                  W.EMPLOYEE_ID,
+                                  W.EFFECT_DATE,
+                                  W.EXPIRE_DATE,
+                                  W.WORK_POSITION_ID,
+                                  ROW_NUMBER() OVER(PARTITION BY W.EMPLOYEE_ID ORDER BY W.EFFECT_DATE DESC, W.CREATED_DATE DESC) AS ROW_NUMBER
+                             FROM HU_WORKING W
+                            WHERE W.STATUS_ID = 447
+                              AND W.EFFECT_DATE <= P_CALCULATE_DATE) W1
+                    WHERE W1.ROW_NUMBER = 1) WO
+          ON E.ID = WO.EMPLOYEE_ID
+        LEFT JOIN FAMILY F
+          ON E.ID = F.EMPLOYEE_ID
+       LEFT JOIN  HU_WELFARE_LIST W ON W.ID = E.HU_WELFARE_LIST_ID
+       LEFT JOIN (SELECT HU_WELFARE_LIST_ID, 
+                         MAX(CASE WHEN GENDER_ID = 566 THEN  GENDER_ID ELSE 0 END) GENDER_NU,
+                         MAX(CASE WHEN GENDER_ID = 565 THEN  GENDER_ID ELSE 0 END) GENDER_NAM,
+                         MAX(CASE WHEN GENDER_ID1 = 566 THEN  GENDER_ID1 ELSE 0 END) GENDER_NU1,
+                         MAX(CASE WHEN GENDER_ID1 = 565 THEN  GENDER_ID1 ELSE 0 END) GENDER_NAM1
+                  FROM HU_WELFARE_LIST_GW T 
+                  WHERE 1=1--T.HU_WELFARE_LIST_ID = 4177
+                  AND (GENDER_ID > 0 OR GENDER_ID1 > 0)
+                  GROUP BY HU_WELFARE_LIST_ID) WGENDER ON WGENDER.HU_WELFARE_LIST_ID = E.HU_WELFARE_LIST_ID
+       WHERE ((W.CHILD_OLD_FROM IS NULL AND W.CHILD_OLD_TO IS NULL) OR
+             ((W.CHILD_OLD_FROM IS NOT NULL OR W.CHILD_OLD_TO IS NOT NULL) AND
+             NVL(F.COUNT_FAMILY, 0) > 0))
+         AND ((E.SENIORITY >= W.SENIORITY AND W.SENIORITY IS NOT NULL) OR
+             W.SENIORITY IS NULL)
+         AND ((E.GENDER IN ((SELECT G.GENDER_ID
+                          FROM HU_WELFARE_LIST_GW G
+                         WHERE G.HU_WELFARE_LIST_ID = E.HU_WELFARE_LIST_ID
+                           AND G.GENDER_ID > 0)) AND
+             W.GENDER IS NOT NULL) OR W.GENDER IS NULL)
+         AND ((E.GENDER IN ((SELECT G.GENDER_ID1
+                          FROM HU_WELFARE_LIST_GW G
+                         WHERE G.HU_WELFARE_LIST_ID = E.HU_WELFARE_LIST_ID
+                           AND G.GENDER_ID1 > 0)) AND
+             W.GENDER1 IS NOT NULL) OR W.GENDER1 IS NULL)    
+         /*AND ((C.CONTRACT_TYPE_ID IN ((SELECT C.CONTRACT_TYPE_ID
+                                    FROM HU_WELFARE_LIST_GW C
+                                   WHERE C.HU_WELFARE_LIST_ID = E.HU_WELFARE_LIST_ID
+                                     AND C.CONTRACT_TYPE_ID > 0)) AND
+             W.CONTRACT_TYPE IS NOT NULL) OR W.CONTRACT_TYPE IS NULL) */
+         --DK3
+         AND (E.REASON_ID IS NULL OR (E.REASON_ID IS NOT NULL AND 
+         ((E.REASON_ID IN ((SELECT G.OBJ_ID_3
+                          FROM HU_WELFARE_LIST_GW G
+                         WHERE G.HU_WELFARE_LIST_ID = E.HU_WELFARE_LIST_ID
+                           AND NVL(G.OBJ_ID_3,0) > 0)) AND
+             W.OBJ_ID_3 IS NOT NULL)
+           OR TO_CHAR(E.TER_EFFECT_DATE,'YYYYMM') = TO_CHAR(P_FROMDATE,'YYYYMM')  )))
+          AND (
+                  (W.RECEIVE_PERCENT3 IS NULL AND W.OBJ_ID_3 IS NULL AND (E.WORK_STATUS <> 257 OR (E.WORK_STATUS = 257 AND E.TER_EFFECT_DATE >= P_FROMDATE)))
+                                   OR ((W.RECEIVE_PERCENT3 IS NOT NULL AND W.OBJ_ID_3 IS NOT NULL) AND 1=1)
+              );
+    FOR C IN (SELECT * FROM HU_WELFARE_AUTO_TEMP WHERE ID = 19881)
+      LOOP
+        DBMS_OUTPUT.PUT_LINE('EMPLOYEE_ID: ' || C.ID);
+      END LOOP;
+    INSERT INTO HU_WELFARE_AUTO
+      (ID,
+       EMPLOYEE_ID,
+       WELFARE_ID,
+       MONEY,
+       PERIOD_ID,
+       SENIORITY,
+       GENDER,
+       COUNT_CHILD,
+       CONTRACT_TYPE_NAME,
+       MONEY_APPROVED,
+       IS_PAY,
+       CHILD_AGE,
+       CALCULATE_DATE,
+       IS_DOCUMENT_OFF,
+       NUMBER_MANUAL,
+       IS_IMPORT,
+       SO_THANG_TINH_TU_THOI_DIEM_TAM_HOAN,
+       CREATED_DATE,
+       CREATED_BY,
+       CREATED_LOG,
+       IS50
+       )
+      SELECT SEQ_HU_WELFARE_AUTO.NEXTVAL,
+             T.ID,
+             T.WELFARE_ID,
+             T.MONEY,
+             P_PERIOD_ID PERIOD_ID,
+             ROUND(T.SENIORITY, 2) SENIORITY,
+             T.GENDER_NAME,
+             NVL(T.COUNT_CHILD, 0) COUNT_CHILD,
+             T.CONTRACT_TYPE_NAME,
+             0 MONEY_APPROVED,
+             WL.IN_SALARY_WITH_TAX IS_PAY,
+             T.CHILD_AGE,
+             T.CALCULATE_DATE,
+             T.IS_DOCUMENT_OFF,
+             T.NUMBER_MANUAL,
+             0 IS_IMPORT,
+             NVL(T.SO_THANG_TINH_TU_THOI_DIEM_TAM_HOAN,0),
+             SYSDATE,
+             P_USERNAME,
+             P_USERNAME,
+             --CASE WHEN NVL(WL.RECEIVE_PERCENT1,0) > 0 THEN -1 ELSE 0 END IS50
+             T.IS50
+        FROM HU_WELFARE_AUTO_TEMP T
+        LEFT JOIN HU_WELFARE_LIST WL
+          ON WL.ID = T.WELFARE_ID
+       WHERE T.USING_USER = P_USERNAME;
+
+    DELETE HU_WELFARE_AUTO_TEMP A WHERE A.USING_USER = P_USERNAME;
+
+  END;

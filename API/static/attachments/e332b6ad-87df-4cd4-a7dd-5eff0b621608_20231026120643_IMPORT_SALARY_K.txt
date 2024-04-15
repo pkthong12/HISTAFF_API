@@ -1,0 +1,47 @@
+PROCEDURE IMPORT_SALARY(P_SALARY_GROUP_ID  IN NUMBER,
+                          P_PERIOD_SALARY_ID IN NUMBER,
+                          P_YEAR             IN NUMBER,
+                          P_EMPLOYEE_ID      IN NVARCHAR2,
+                          P_CREATED_USER     IN NVARCHAR2,
+                          P_CREATED_LOG      IN NVARCHAR2,
+                          P_LISTCOL          IN NVARCHAR2,
+                          P_LISTVAL          IN NVARCHAR2) IS
+    PV_SQL   CLOB;
+    PV_COUNT NUMBER;
+  BEGIN
+    IF P_LISTCOL = '' OR P_LISTCOL IS NULL THEN
+        RETURN;
+    END IF;
+    IF P_LISTVAL = '' OR P_LISTVAL IS NULL THEN
+        RETURN;
+    END IF;
+    SELECT COUNT(S.EMPLOYEE_ID)
+      INTO PV_COUNT
+      FROM PA_IMPORT_SALARY S
+     WHERE (S.PERIOD_SALARY_ID = P_PERIOD_SALARY_ID AND
+           S.EMPLOYEE_ID = P_EMPLOYEE_ID AND
+           S.SALARY_GROUP_ID = P_SALARY_GROUP_ID);
+    IF NVL(PV_COUNT, 0) = 0 THEN
+      PV_SQL := 'INSERT INTO PA_IMPORT_SALARY (PA_IMPORT_SALARY_ID, SALARY_GROUP_ID, PERIOD_SALARY_ID, EMPLOYEE_ID, CREATED_USER, CREATED_DATE, CREATED_LOG,' ||
+                P_LISTCOL || ')
+        VALUES (SEQ_PA_IMPORT_SALARY.NEXTVAL, ' ||
+                P_SALARY_GROUP_ID || ',' || P_PERIOD_SALARY_ID || ',''' ||
+                P_EMPLOYEE_ID || ''',''' || P_CREATED_USER ||
+                ''', SYSDATE,''' || P_CREATED_LOG || ''',' || P_LISTVAL || ')';
+    ELSE
+      PV_SQL := 'UPDATE PA_IMPORT_SALARY SET (MODIFIED_BY,MODIFIED_DATE,MODIFIED_LOG, ' ||
+                P_LISTCOL || ')
+         = (SELECT ''' || P_CREATED_USER || ''', SYSDATE,''' ||
+                P_CREATED_LOG || ''',' || P_LISTVAL ||
+                ' FROM DUAL)
+         WHERE PERIOD_SALARY_ID = ' || P_PERIOD_SALARY_ID || '  
+                AND EMPLOYEE_ID = ''' || P_EMPLOYEE_ID ||
+                '''  
+                AND SALARY_GROUP_ID = ' || P_SALARY_GROUP_ID;
+    END IF;
+    DELETE SQL_TEST;
+    COMMIT;
+    INSERT INTO SQL_TEST VALUES (PV_SQL, SYSDATE);
+    COMMIT;
+    EXECUTE IMMEDIATE TO_CHAR(PV_SQL);
+  END IMPORT_SALARY;

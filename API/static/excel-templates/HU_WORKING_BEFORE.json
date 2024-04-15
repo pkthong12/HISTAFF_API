@@ -1,0 +1,72 @@
+{
+  "ExFiles": [
+    {
+      "ExCode": "HU_WORKING_BEFORE",
+      "DataStartRow": 6,
+      "RowsToPrepare": 1000,
+      "RenderOtherListReferences": false,
+      "RenderAdministrativePlaces": false,
+      "BuildOrgTree": true,
+      "BuildPositions": true,
+
+      "ExDirectReferences": [
+        {
+          "Table": "HU_EMPLOYEE_CV",
+          "UniqueIndexColumns": [ "FULL_NAME","ID_NO" ]
+        },
+        {
+          "Table": "HU_EMPLOYEE",
+          "UniqueIndexColumns": [ "CODE" ]
+        }
+      ],
+      "ExIndirectReferences": [
+        {
+          "ParentTable": "HU_EMPLOYEE_CV",
+          "ChildTable": "HU_EMPLOYEE",
+          "ChildKey": "PROFILE_ID",
+          "ParentUniqueIndexColumns": [ "FULL_NAME", "ID_NO" ],
+          "ChildUniqueIndexColumns": [ "CODE" ]
+        }
+      ],
+
+      "ExTables": [
+        {
+          "Table": "HU_WORKING_BEFORE",
+          "BufferTable": "HU_WORKING_BEFORE_IMPORT",
+          "RenderOrder": 1,
+          "ImportOrder": 1,
+          "HeaderBgColor": "#358ccb",
+          "HeaderTextColor": "white",
+          "IdentityColumns": [ "ID" ],
+          "RenderColumns": [
+            "PROFILE_ID",
+            "EMPLOYEE_ID",
+            "COMPANY_NAME",
+            "TITLE_NAME",
+            "FROM_DATE",
+            "END_DATE",
+            "TER_REASON"
+          ],
+          "RequiredColumns": [
+            "COMPANY_NAME",
+            "TITLE_NAME",
+            "FROM_DATE",
+            "END_DATE"
+          ],
+          "UniqueIndexes": [],
+          "Rules": [
+            {
+              "Column": "PROFILE_ID",
+              "DirectReference": "HU_EMPLOYEE_CV"
+            },
+            {
+              "Column": "EMPLOYEE_ID",
+              "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
+              "IndirectColumn": "PROFILE_ID"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
