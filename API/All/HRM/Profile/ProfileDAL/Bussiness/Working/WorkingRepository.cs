@@ -404,7 +404,6 @@ namespace ProfileDAL.Repositories
                                    EmployeeObjId = p.EMPLOYEE_OBJ_ID,
                                    EmployeeObjName = eo.NAME,
                                    IsResponsible = p.IS_RESPONSIBLE,
-                                   IsResponsibleSalary = p.IS_RESPONSIBLE_SALARY,
                                    WorkPlaceName = co.WORK_ADDRESS,
                                }).FirstOrDefaultAsync();
                 }
