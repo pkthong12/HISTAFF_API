@@ -23,60 +23,60 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace ProfileAPI.List
 {
-	[HiStaffAuthorize]
-	[ApiExplorerSettings(GroupName = "002-PROFILE-POSITION")]
-	[ApiController]
-	[Route("api/[controller]/[action]")]
+    [HiStaffAuthorize]
+    [ApiExplorerSettings(GroupName = "002-PROFILE-POSITION")]
+    [ApiController]
+    [Route("api/[controller]/[action]")]
 
-	public class HuPositionController : BaseController1
-	{
-		private IHttpContextAccessor _accessor;
-		private readonly GenericUnitOfWork _uow;
-		private readonly ProfileDbContext _profileDbContext;
-		private IGenericRepository<HU_POSITION, PositionInputDTO> _genericRepository;
+    public class HuPositionController : BaseController1
+    {
+        private IHttpContextAccessor _accessor;
+        private readonly GenericUnitOfWork _uow;
+        private readonly ProfileDbContext _profileDbContext;
+        private IGenericRepository<HU_POSITION, PositionInputDTO> _genericRepository;
         private AppSettings _appSettings;
-		public HuPositionController(IProfileUnitOfWork unitOfWork, IHttpContextAccessor accessor, ProfileDbContext coreDbContext, IOptions<AppSettings> options) : base(unitOfWork)
-		{
-			_accessor = accessor;
-			_uow = new GenericUnitOfWork(coreDbContext);
-			_genericRepository = _uow.GenericRepository<HU_POSITION, PositionInputDTO>();
+        public HuPositionController(IProfileUnitOfWork unitOfWork, IHttpContextAccessor accessor, ProfileDbContext coreDbContext, IOptions<AppSettings> options) : base(unitOfWork)
+        {
+            _accessor = accessor;
+            _uow = new GenericUnitOfWork(coreDbContext);
+            _genericRepository = _uow.GenericRepository<HU_POSITION, PositionInputDTO>();
             _appSettings = options.Value;
-			_profileDbContext = coreDbContext;
-		}
-		[HttpPost]
-		public async Task<IActionResult> QueryList(GenericQueryListDTO<PositionViewNoPagingDTO> request)
-		{
-			try
-			{
-				var response = await _unitOfWork.PositionRepository.SinglePhaseQueryList(request);
+            _profileDbContext = coreDbContext;
+        }
+        [HttpPost]
+        public async Task<IActionResult> QueryList(GenericQueryListDTO<PositionViewNoPagingDTO> request)
+        {
+            try
+            {
+                var response = await _unitOfWork.PositionRepository.SinglePhaseQueryList(request);
 
-				if (response.ErrorType != EnumErrorType.NONE)
-				{
-					return Ok(new FormatedResponse()
-					{
-						ErrorType = response.ErrorType,
-						MessageCode = response.MessageCode ?? CommonMessageCode.NOT_ALL_CASES_CATCHED,
-						StatusCode = EnumStatusCode.StatusCode400,
-					});
-				}
-				else
-				{
-					return Ok(new FormatedResponse()
-					{
-						InnerBody = response
-					});
-				}
-			}
-			catch (Exception ex)
-			{
-				return Ok(new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message });
-			}
-		}
-		[HttpPost]
-		public async Task<IActionResult> Create(PositionInputDTO model)
-		{
-			try
-			{
+                if (response.ErrorType != EnumErrorType.NONE)
+                {
+                    return Ok(new FormatedResponse()
+                    {
+                        ErrorType = response.ErrorType,
+                        MessageCode = response.MessageCode ?? CommonMessageCode.NOT_ALL_CASES_CATCHED,
+                        StatusCode = EnumStatusCode.StatusCode400,
+                    });
+                }
+                else
+                {
+                    return Ok(new FormatedResponse()
+                    {
+                        InnerBody = response
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Ok(new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message });
+            }
+        }
+        [HttpPost]
+        public async Task<IActionResult> Create(PositionInputDTO model)
+        {
+            try
+            {
                 var sid = Request.Sid(_appSettings);
                 var validate = _profileDbContext.Positions.Where(x => x.CODE.ToLower().Equals(model.code.ToLower()) && x.ID != model.Id).Count();
                 if (validate > 0)
@@ -86,11 +86,11 @@ namespace ProfileAPI.List
                 var r = await _unitOfWork.PositionRepository.CreateAsync(model);
                 if (r.StatusCode == "200")
                 {
-                    if(model.isTDV == true)
+                    if (model.isTDV == true)
                     {
                         var org = (from p in _profileDbContext.Organizations
-                                         where p.ID == model.OrgId
-                                         select p).SingleOrDefault();
+                                   where p.ID == model.OrgId
+                                   select p).SingleOrDefault();
                         org!.HEAD_POS_ID = (long)r.Data!.GetType().GetProperty("ID")!.GetValue(r.Data, null)!;
                         await _profileDbContext.SaveChangesAsync();
                     }
@@ -101,21 +101,21 @@ namespace ProfileAPI.List
                     return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = r.Error, StatusCode = EnumStatusCode.StatusCode400 });
                 }
             }
-			catch (Exception ex)
-			{
-				return Ok(new FormatedResponse() { MessageCode = ex.Message, ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500 });
-			}
-		}
-		[HttpGet]
-		public async Task<ActionResult> Get(int Id)
-		{
-			var r = await _unitOfWork.PositionRepository.GetById(Id);
+            catch (Exception ex)
+            {
+                return Ok(new FormatedResponse() { MessageCode = ex.Message, ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500 });
+            }
+        }
+        [HttpGet]
+        public async Task<ActionResult> Get(int Id)
+        {
+            var r = await _unitOfWork.PositionRepository.GetById(Id);
             return Ok(new FormatedResponse() { InnerBody = r.Data });
-			//return ResponseResult(r);
-		}
-		[HttpPost]
-		public async Task<ActionResult> Update([FromBody] PositionInputDTO param)
-		{
+            //return ResponseResult(r);
+        }
+        [HttpPost]
+        public async Task<ActionResult> Update([FromBody] PositionInputDTO param)
+        {
             var oldData = await _profileDbContext.Positions.Where(p => p.ID == param.Id).FirstOrDefaultAsync();
             var listPosition = _profileDbContext.Positions.Where(p => p.ORG_ID == param.OrgId);
             if (oldData!.IS_TDV == true && param.isTDV == false)
@@ -130,7 +130,7 @@ namespace ProfileAPI.List
                 item.IS_TDV = false;
             }
             await _profileDbContext.SaveChangesAsync();
-			var r = await _unitOfWork.PositionRepository.UpdateAsync(param);
+            var r = await _unitOfWork.PositionRepository.UpdateAsync(param);
             if (r.StatusCode == "200")
             {
                 if (param.isTDV == true)
@@ -148,34 +148,33 @@ namespace ProfileAPI.List
                 return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = r.Error, StatusCode = EnumStatusCode.StatusCode400 });
             }
         }
-		[HttpPost]
-		public async Task<IActionResult> DeleteIds(IdsRequest model)
-		{
-			try
-			{
+        [HttpPost]
+        public async Task<IActionResult> DeleteIds(IdsRequest model)
+        {
+            try
+            {
                 bool isCheckDataUsing = false;
-                bool isCheckNoneActive = false; 
-				if (model.Ids != null)
-				{
+                bool isCheckNoneActive = false;
+                if (model.Ids != null)
+                {
                     model.Ids.ForEach(item =>
                     {
-                        var getDataActive = _uow.Context.Set<HU_POSITION>().Where(x => x.ID == item && x.IS_ACTIVE == true).FirstOrDefault();
-                                                 
-                        var getDataUsing = (from p in _uow.Context.Set<HU_POSITION>().Where(x => x.ID == item)
-                                                from e in _uow.Context.Set<HU_EMPLOYEE>().Where(x => x.POSITION_ID == p.ID)
-                                                select new { Id = p.ID }).ToList();
-                        if(getDataActive != null)
+                        var getDataActive = _uow.Context.Set<HU_POSITION>().FirstOrDefault(x => x.ID == item && x.IS_ACTIVE == true);
+
+                        var getDataUsing = _uow.Context.Set<HU_EMPLOYEE>().FirstOrDefault(x => x.POSITION_ID == item);
+
+                        if (getDataActive != null)
                         {
                             isCheckNoneActive = true;
                             return;
                         }
-                        if(getDataUsing.Count > 0)
+                        if (getDataUsing != null)
                         {
                             isCheckDataUsing = true;
                             return;
                         }
                     });
-                    if(isCheckDataUsing == true) 
+                    if (isCheckDataUsing == true)
                     {
                         return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.CAN_NOT_DELETE_RECORDS_HAVE_USE });
                     }
@@ -185,43 +184,43 @@ namespace ProfileAPI.List
                     }
                     else
                     {
-					    var response = await _genericRepository.DeleteIds(_uow, model.Ids);
-					    return Ok(response);
+                        var response = await _genericRepository.DeleteIds(_uow, model.Ids);
+                        return Ok(response);
 
                     }
-				}
-				else
-				{
-					return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.DELETE_REQUEST_NULL_ID });
-				}
-			}
-			catch (Exception ex)
-			{
-				return Ok(new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message });
-			}
-		}
+                }
+                else
+                {
+                    return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.DELETE_REQUEST_NULL_ID });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Ok(new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message });
+            }
+        }
 
-		[HttpGet]
-		public async Task<IActionResult> GetScales()
-		{
-			try
-			{
-				var query = await (from p in _profileDbContext.GroupPositions.Where(x => x.IS_ACTIVE.HasValue && x.IS_ACTIVE.Value)
-								   select new
-								   {
-									   Id = p.ID,
-									   Name = p.NAME
-								   }).ToListAsync();
-				return Ok(new FormatedResponse()
-				{
-					InnerBody = query
-				});
-			}
-			catch (Exception ex)
-			{
-				return Ok(new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message });
-			}
-		}
+        [HttpGet]
+        public async Task<IActionResult> GetScales()
+        {
+            try
+            {
+                var query = await (from p in _profileDbContext.GroupPositions.Where(x => x.IS_ACTIVE.HasValue && x.IS_ACTIVE.Value)
+                                   select new
+                                   {
+                                       Id = p.ID,
+                                       Name = p.NAME
+                                   }).ToListAsync();
+                return Ok(new FormatedResponse()
+                {
+                    InnerBody = query
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message });
+            }
+        }
         [HttpGet]
         public async Task<IActionResult> GetPositionByOrgId(long orgId)
         {
@@ -234,7 +233,7 @@ namespace ProfileAPI.List
                 List<HU_POSITION> list = new List<HU_POSITION>();
                 foreach (var item in masterNotNull)
                 {
-                    if(_profileDbContext.Workings.Where(x => x.EMPLOYEE_ID == item.MASTER && workingIds.Contains(x.TYPE_ID) && x.STATUS_ID == statusWorking.ID && x.EFFECT_DATE > DateTime.Now).Any() || _profileDbContext.Terminates.Where(x => x.EMPLOYEE_ID == item.MASTER && x.STATUS_ID == statusWorking.ID && x.EFFECT_DATE > DateTime.Now).Any())
+                    if (_profileDbContext.Workings.Where(x => x.EMPLOYEE_ID == item.MASTER && workingIds.Contains(x.TYPE_ID) && x.STATUS_ID == statusWorking.ID && x.EFFECT_DATE > DateTime.Now).Any() || _profileDbContext.Terminates.Where(x => x.EMPLOYEE_ID == item.MASTER && x.STATUS_ID == statusWorking.ID && x.EFFECT_DATE > DateTime.Now).Any())
                     {
                         list.Add(item);
                     }
@@ -287,25 +286,24 @@ namespace ProfileAPI.List
         {
             try
             {
-                decimal num;
-                string str;
-                var rs = "P001";
-
-                var entity = _uow.Context.Set<HU_POSITION>().AsNoTracking().AsQueryable();
-                var joined = (from p in entity
-                              where (p.CODE != null || p.CODE != "") && p.CODE.Length == 4
-                              select new HuPositionDTO
-                              {
-                                  Id = p.ID,
-                                  Name = p.NAME,
-                                  Code = p.CODE
-                              }).ToList();
-                var maxCode = (from p in joined where Regex.IsMatch(p.Code, @"(P)(\d{3}$)") orderby p.Code.Substring(1, 3) descending select p.Code.Substring(1, 3)).FirstOrDefault();
-                if (maxCode != null)
+                
+                string newCode = "";
+                if (await _profileDbContext.Positions.CountAsync() == 0)
                 {
-                    rs = "P" + (int.Parse(maxCode) + 1).ToString("000");
+                    newCode = "VEAM00001";
                 }
-                return Ok(new FormatedResponse() { InnerBody = new { Code = rs } });
+                else
+                {
+                    string lastestData = _profileDbContext.Positions.OrderByDescending(t => t.CODE).First().CODE!.ToString();
+
+                    string newNumber = (Int32.Parse(lastestData.Substring(4)) + 1).ToString();
+                    while (newNumber.Length < 5)
+                    {
+                        newNumber = "0" + newNumber;
+                    }
+                    newCode = lastestData.Substring(0, 4) + newNumber;
+                }
+                return Ok(new FormatedResponse() { InnerBody = new { Code = newCode } });
             }
             catch (Exception ex)
             {
@@ -313,10 +311,10 @@ namespace ProfileAPI.List
             }
         }
 
-		[HttpPost]
-		public async Task<ActionResult> SwapMasterInterim(PositionInputDTO param)
-		{
-			var r = await _unitOfWork.PositionRepository.SwapMasterInterim(param);
+        [HttpPost]
+        public async Task<ActionResult> SwapMasterInterim(PositionInputDTO param)
+        {
+            var r = await _unitOfWork.PositionRepository.SwapMasterInterim(param);
             if (r.StatusCode == "200")
             {
                 return Ok(new FormatedResponse() { InnerBody = r.Data, MessageCode = CommonMessageCode.SWAP_SUCCESS, StatusCode = EnumStatusCode.StatusCode200 });
@@ -347,12 +345,52 @@ namespace ProfileAPI.List
             var r = await _unitOfWork.PositionRepository.CheckTdvAsync(request);
             if (r.StatusCode == "200")
             {
-                return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, InnerBody=r.InnerBody, StatusCode = EnumStatusCode.StatusCode200 });
+                return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, InnerBody = r.InnerBody, StatusCode = EnumStatusCode.StatusCode200 });
             }
             else
             {
                 return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = r.Error, StatusCode = EnumStatusCode.StatusCode204 });
             }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> TransferPosition(PositionInputDTO request)
+        {
+            if (request.OrgIdTransfer == null || request.ListId == null || request.UserId == null) return BadRequest();
+            var response = await _unitOfWork.PositionRepository.TransferPosition(listTransfer: request.ListId, (long)request.OrgIdTransfer, (string)request.UserId);
+            return Ok(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CloningPosition(PositionInputDTO request)
+        {
+            if (request.OrgIdTransfer == null || request.ListId == null || request.UserId == null || request.Amount == null) return BadRequest();
+            var response = await _unitOfWork.PositionRepository.CloningPosition(request.ListId, (long)request.OrgIdTransfer, (int)request.Amount, request.UserId);
+            return Ok(response);    
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> PositionTransferSave(PositionInputDTO request)
+        {
+            if(request.UserId == null ) return BadRequest();
+            var response = await _unitOfWork.PositionRepository.PositionTransferSave((string)request.UserId);
+            return Ok(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> PositionTransferRevert(PositionInputDTO request)
+        {
+            if (request.UserId == null) return BadRequest();
+            var response  = await _unitOfWork.PositionRepository.PositionTransferRevert((string)request.UserId);
+            return Ok(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> PositionTransferDelete(PositionInputDTO request)
+        {
+            if (request.UserId == null) return BadRequest();
+             _unitOfWork.PositionRepository.PositionTransferDelete((string)request.UserId);
+            return Ok();
         }
         /* [HttpPost]
          public async Task<IActionResult> Create(PositionViewDTO model)

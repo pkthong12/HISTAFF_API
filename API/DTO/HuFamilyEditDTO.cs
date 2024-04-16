@@ -49,6 +49,5 @@ namespace API.DTO
         public string? Reason { get; set; }
         public bool? IsSavePortal { get; set; }
         public int? JobOrderNum { get; set; }
-        public string[]? ModelChanges { get; set; }
     }
 }

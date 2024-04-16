@@ -147,35 +147,43 @@ namespace API.Controllers.HuEvaluate
         {
             try
             {
-                if(dto.EmployeeId != null)
+                if (dto.Point <= 100 && dto.Point >= 0)
                 {
-                    var getDataByEmpId = _dbContext.HuEvaluates.Where(x => x.EMPLOYEE_ID == dto.EmployeeId && x.YEAR == dto.Year && x.EVALUATE_TYPE == dto.EvaluateType).ToList();
-                    if(getDataByEmpId.Count > 0)
+                    if(dto.EmployeeId != null)
                     {
-                        return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.DUBLICATE_VALUE_EVALUATE_TYPE_YEAR_EMPLOYEE_CONCURRENT_ID };
+                        var getDataByEmpId = _dbContext.HuEvaluates.Where(x => x.EMPLOYEE_ID == dto.EmployeeId && x.YEAR == dto.Year && x.EVALUATE_TYPE == dto.EvaluateType).ToList();
+                        if(getDataByEmpId.Count > 0)
+                        {
+                            return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.DUBLICATE_VALUE_EVALUATE_TYPE_YEAR_EMPLOYEE_CONCURRENT_ID };
+                        }
+                        else
+                        {
+                            var response = await _genericRepository.Create(_uow, dto, sid);
+                            return response;
+                        }
+                    }
+                    else if(dto.EmployeeConcurrentId != null)
+                    {
+                        var getDataByEmpConId = _dbContext.HuEvaluates.Where(x => x.EMPLOYEE_CONCURRENT_ID == dto.EmployeeConcurrentId && x.YEAR == dto.Year && x.EVALUATE_TYPE == dto.EvaluateType).ToList();
+                        if(getDataByEmpConId.Count > 0)
+                        {
+                            return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.DUBLICATE_VALUE_EVALUATE_TYPE_YEAR_EMPLOYEE_CONCURRENT_ID };
+                        }
+                        else
+                        {
+                            var response = await _genericRepository.Create(_uow, dto, sid);
+                            return response;
+                        }
                     }
                     else
                     {
-                        var response = await _genericRepository.Create(_uow, dto, sid);
-                        return response;
+                        return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.CREATED_FAILD };
                     }
-                }
-                else if(dto.EmployeeConcurrentId != null)
-                {
-                    var getDataByEmpConId = _dbContext.HuEvaluates.Where(x => x.EMPLOYEE_CONCURRENT_ID == dto.EmployeeConcurrentId && x.YEAR == dto.Year && x.EVALUATE_TYPE == dto.EvaluateType).ToList();
-                    if(getDataByEmpConId.Count > 0)
-                    {
-                        return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.DUBLICATE_VALUE_EVALUATE_TYPE_YEAR_EMPLOYEE_CONCURRENT_ID };
-                    }
-                    else
-                    {
-                        var response = await _genericRepository.Create(_uow, dto, sid);
-                        return response;
-                    }
+                    
                 }
                 else
                 {
-                    return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.CREATED_FAILD };
+                    return new() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.CREATE_OBJECT_NUMBER_IS_NOT_ALLOWED };
                 }
 
             }catch (Exception ex)
@@ -197,55 +205,62 @@ namespace API.Controllers.HuEvaluate
         {
             try
             {
-                if (dto.EmployeeId != null)
+                if (dto.Point <= 100 && dto.Point >= 0)
                 {
-                    var getDataByEmpId = _dbContext.HuEvaluates.Where(x => x.ID == dto.Id && x.EMPLOYEE_ID == dto.EmployeeId && x.EVALUATE_TYPE == dto.EvaluateType && x.YEAR == dto.Year).ToList();
-                    if (getDataByEmpId != null)
+                    if (dto.EmployeeId != null)
                     {
-                        var response = await _genericRepository.Update(_uow, dto, sid, patchMode);
-                        return response;
-
-                    }
-                    else
-                    {
-                        var getDataCheck = _dbContext.HuEvaluates.Where(x => x.EMPLOYEE_ID == dto.EmployeeId && x.EVALUATE_TYPE == dto.EvaluateType && x.YEAR == dto.Year).ToList();
-                        if (getDataCheck.Count > 0)
-                        {
-                            return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.DUBLICATE_VALUE_EVALUATE_TYPE_YEAR_EMPLOYEE_CONCURRENT_ID };
-                        }
-                        else
+                        var getDataByEmpId = _dbContext.HuEvaluates.Where(x => x.ID == dto.Id && x.EMPLOYEE_ID == dto.EmployeeId && x.EVALUATE_TYPE == dto.EvaluateType && x.YEAR == dto.Year).ToList();
+                        if (getDataByEmpId != null)
                         {
                             var response = await _genericRepository.Update(_uow, dto, sid, patchMode);
                             return response;
-                        }
-                    }
-                }
-                else if (dto.EmployeeConcurrentId != null)
-                {
-                    var getDataByEmpConId = _dbContext.HuEvaluates.Where(x => x.ID == dto.Id && x.EMPLOYEE_CONCURRENT_ID == dto.EmployeeConcurrentId && x.EVALUATE_TYPE == dto.EvaluateType && x.YEAR == dto.Year).ToList();
-                    if (getDataByEmpConId != null)
-                    {
-                        var response = await _genericRepository.Update(_uow, dto, sid, patchMode);
-                        return response;
 
-                    }
-                    else
-                    {
-                        var getDataCheck = _dbContext.HuEvaluates.Where(x => x.EMPLOYEE_CONCURRENT_ID == dto.EmployeeConcurrentId && x.EVALUATE_TYPE == dto.EvaluateType && x.YEAR == dto.Year).ToList();
-                        if (getDataCheck.Count > 0)
-                        {
-                            return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.DUBLICATE_VALUE_EVALUATE_TYPE_YEAR_EMPLOYEE_CONCURRENT_ID };
                         }
                         else
                         {
+                            var getDataCheck = _dbContext.HuEvaluates.Where(x => x.EMPLOYEE_ID == dto.EmployeeId && x.EVALUATE_TYPE == dto.EvaluateType && x.YEAR == dto.Year).ToList();
+                            if (getDataCheck.Count > 0)
+                            {
+                                return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.DUBLICATE_VALUE_EVALUATE_TYPE_YEAR_EMPLOYEE_CONCURRENT_ID };
+                            }
+                            else
+                            {
+                                var response = await _genericRepository.Update(_uow, dto, sid, patchMode);
+                                return response;
+                            }
+                        }
+                    }
+                    else if (dto.EmployeeConcurrentId != null)
+                    {
+                        var getDataByEmpConId = _dbContext.HuEvaluates.Where(x => x.ID == dto.Id && x.EMPLOYEE_CONCURRENT_ID == dto.EmployeeConcurrentId && x.EVALUATE_TYPE == dto.EvaluateType && x.YEAR == dto.Year).ToList();
+                        if (getDataByEmpConId != null)
+                        {
                             var response = await _genericRepository.Update(_uow, dto, sid, patchMode);
                             return response;
+
                         }
+                        else
+                        {
+                            var getDataCheck = _dbContext.HuEvaluates.Where(x => x.EMPLOYEE_CONCURRENT_ID == dto.EmployeeConcurrentId && x.EVALUATE_TYPE == dto.EvaluateType && x.YEAR == dto.Year).ToList();
+                            if (getDataCheck.Count > 0)
+                            {
+                                return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.DUBLICATE_VALUE_EVALUATE_TYPE_YEAR_EMPLOYEE_CONCURRENT_ID };
+                            }
+                            else
+                            {
+                                var response = await _genericRepository.Update(_uow, dto, sid, patchMode);
+                                return response;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.UPDATED_FAILD };
                     }
                 }
                 else
                 {
-                    return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.UPDATED_FAILD };
+                    return new() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.CREATE_OBJECT_NUMBER_IS_NOT_ALLOWED };
                 }
             }
             catch (Exception ex)

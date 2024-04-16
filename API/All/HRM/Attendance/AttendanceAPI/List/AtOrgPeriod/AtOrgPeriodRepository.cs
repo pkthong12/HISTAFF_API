@@ -151,12 +151,6 @@ namespace API.Controllers.AtOrgPeriod
             await Task.Run(() => null);
             throw new NotImplementedException();
         }
-
-        public async Task<FormatedResponse> GetStatusByOrgAndPeriod(AtOrgPeriodDTO periodId)
-        {
-            var response = await _dbContext.AtOrgPeriods.AsNoTracking().FirstOrDefaultAsync(x => x.PERIOD_ID == periodId.PeriodId && x.ORG_ID == periodId.OrgId);
-            return new FormatedResponse() { InnerBody = response };
-        }
     }
 }
 

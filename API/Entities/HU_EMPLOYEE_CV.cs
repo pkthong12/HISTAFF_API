@@ -212,6 +212,7 @@ public partial class HU_EMPLOYEE_CV : BASE_ENTITY
     public long? INS_WHEREHEALTH_ID { get; set; }
     public long? COMPUTER_SKILL_ID { get; set; }
     public long? LICENSE_ID { get; set; }
+    public long? DEFENSE_SECURITY_TRAINING { get; set; }
 
 
     public virtual ICollection<HU_EMPLOYEE>? Employees { get; set; }

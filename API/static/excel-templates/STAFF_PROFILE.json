@@ -196,16 +196,19 @@
             "TOTAL_APP_AREA",
             "LAND_FOR_PRODUCTION",
             "ADDITIONAL_INFOMATION"
-
           ],
           "RequiredColumns": [
             "FULL_NAME",
-            "ID_NO"
+            "ID_NO",
+            "GENDER_ID",
+            "BIRTH_DATE",
+            "PROVINCE_ID",
+            "DISTRICT_ID",
+            "WARD_ID",
+            "ADDRESS"
           ],
           "UniqueIndexes": [
-            [ "ID_NO" ],
-            [ "TAX_CODE" ],
-            [ "ITIME_ID" ]
+            [ "ID_NO" ]
           ],
           "Rules": [
             {
@@ -376,7 +379,7 @@
           "ImportOrder": 2,
           "HeaderBgColor": "#F37540",
           "HeaderTextColor": "white",
-          "IdentityColumns": [ "CODE", "ITIME_ID" ],
+          "IdentityColumns": [],
           "RenderColumns": [
             "CODE",
             "EMPLOYEE_OBJECT_ID",
@@ -385,14 +388,13 @@
             "POSITION_ID",
             "PROFILE_CODE",
             "INSURENCE_AREA"
-
           ],
           "RequiredColumns": [
-            "CODE"
+            "ORG_ID",
+            "POSITION_ID",
+            "EMPLOYEE_OBJECT_ID"
           ],
-          "UniqueIndexes": [
-            [ "CODE" ]
-          ],
+          "UniqueIndexes": [],
           "Rules": [
             {
               "Column": "ORG_ID",

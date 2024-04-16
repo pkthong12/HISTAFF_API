@@ -1,5 +1,6 @@
-using API.All.DbContexts;
+﻿using API.All.DbContexts;
 using API.All.Services;
+using API.All.SYSTEM.Common;
 using API.All.SYSTEM.CoreAPI.SysUser;
 using API.DTO;
 using API.Main;
@@ -8,9 +9,11 @@ using CORE.Enum;
 using CORE.GenericUOW;
 using CORE.Services.File;
 using CORE.StaticConstant;
-using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using System.Net.Mail;
+using System.Net;
+using System.Text;
 
 namespace API.Controllers.SysUser
 {
@@ -73,7 +76,7 @@ namespace API.Controllers.SysUser
         public async Task<IActionResult> QueryList(GenericQueryListStringIdDTO<SysUserDTO> request)
         {
             var response = await _SysUserRepository.SinglePhaseQueryList(request);
-            return Ok(new FormatedResponse() { InnerBody = response });
+            return Ok(new FormatedResponse() { InnerBody = response, MessageCode = CommonMessageCode.QUERY_LIST_SUCCESS });
         }
 
         [HttpGet]
@@ -270,12 +273,30 @@ namespace API.Controllers.SysUser
             return Ok(response);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetUserByEmployeeId(long employeeId)
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> SubmitUsernameWhenForgotPassword(ResetPasswordRequest request)
         {
-            var response = await _SysUserRepository.GetUserByEmployeeId(employeeId);
+            var response = await _SysUserRepository.SubmitUsernameWhenForgotPassword(request);
+            return Ok(response);
+        }
+
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> SubmitVerificationCode(ResetPasswordRequest request)
+        {
+            var response = await _SysUserRepository.SubmitVerificationCode(request);
+            return Ok(response);
+        }
+
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> ChangePasswordWhenForgotPassword(ResetPasswordRequest request)
+        {
+            var response = await _SysUserRepository.ChangePasswordWhenForgotPassword(request);
             return Ok(response);
         }
     }
 }
-

@@ -57,6 +57,7 @@ namespace API.DTO
         public bool? IsPortal { get; set; }
 
         public bool? IsWebapp { get; set; }
+        public bool? IsMobile { get; set; }
 
         public long? EmployeeId { get; set; }
 

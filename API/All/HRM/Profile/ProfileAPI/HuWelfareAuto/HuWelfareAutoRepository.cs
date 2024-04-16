@@ -38,6 +38,7 @@ namespace API.Controllers.HuWelfareAuto
                          from ot in _dbContext.HuWelfares.AsNoTracking().Where(x => x.ID == p.WELFARE_ID).DefaultIfEmpty()
                          from g in _dbContext.SysOtherLists.AsNoTracking().Where(x => x.ID == p.GENDER_ID).DefaultIfEmpty()
                              // JOIN OTHER ENTITIES BASED ON THE BUSINESS
+                         orderby j.ORDERNUM
                          select new HuWelfareAutoDTO
                          {
                              Id = p.ID,

@@ -94,7 +94,7 @@ namespace API.Controllers.PaPayrollsheetSumBackdate
                 var period = await _dbContext.AtSalaryPeriods.AsNoTracking().Where(s => s.ID == param.PeriodId).FirstOrDefaultAsync();
                 var periodAdd = await _dbContext.AtSalaryPeriods.AsNoTracking().Where(s => s.ID == param.PeriodAddId).FirstOrDefaultAsync();
 
-                if(periodAdd!.MONTH < period!.MONTH && periodAdd.YEAR == period.YEAR)
+                if(periodAdd!.MONTH < period!.MONTH || periodAdd.YEAR < period.YEAR)
                 {
                     return new FormatedResponse() { MessageCode = CommonMessageCode.PERIOD_ADD_MUST_LESS_THEN_PERIOD, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
                 }

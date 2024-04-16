@@ -102,7 +102,6 @@ namespace API.Controllers.AtNotification
         {
             var sid = Request.Sid(_appSettings);
             if (sid == null) return Unauthorized();
-
             var response = await _AtNotificationRepository.Update(_uow, model, sid);
             return Ok(response);
         }
@@ -159,7 +158,7 @@ namespace API.Controllers.AtNotification
         }
         
         [HttpGet]
-        public async Task<IActionResult> GetCountNotifyUnRead(long employeeId, long? time)
+        public async Task<IActionResult> GetCountNotifyUnRead(long employeeId)
         {
             var response = await _AtNotificationRepository.GetCountNotifyUnRead(employeeId);
             return Ok(response);

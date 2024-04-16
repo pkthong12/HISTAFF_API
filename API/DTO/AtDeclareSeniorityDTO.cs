@@ -22,11 +22,11 @@ namespace API.DTO
 
         public string? MonthDayOffName { get; set; }
 
-        public double? NumberDayOff { get; set; }
+        public decimal? NumberDayOff { get; set; }
 
         public string? ReasonAdjustDayOff { get; set; }
 
-        public double? Total { get; set; }
+        public decimal? Total { get; set; }
 
         public string? CreatedBy { get; set; }
 

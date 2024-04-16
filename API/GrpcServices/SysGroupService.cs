@@ -1,4 +1,5 @@
 using API.All.DbContexts;
+using API.All.SYSTEM.CoreAPI.Authorization;
 using API.DTO;
 using Grpc.Core;
 
@@ -18,40 +19,74 @@ namespace API.GrpcServices
         {
             try
             {
-                var functions = (
-                                from l in _dbContext.SysFunctions.AsNoTracking()
-                                from m in _dbContext.SysModules.AsNoTracking().Where(x => x.ID == l.MODULE_ID)
+                var raw = from gfa in _dbContext.SysGroupFunctionActions.AsNoTracking()
+                                .Where(x => x.GROUP_ID == request.ObjectId)
+                          from fa in _dbContext.SysFunctionActions.AsNoTracking().Where(x => x.FUNCTION_ID == gfa.FUNCTION_ID && x.ACTION_ID == gfa.ACTION_ID)
+                          from f in _dbContext.SysFunctions.AsNoTracking().Where(x => x.ID == gfa.FUNCTION_ID).DefaultIfEmpty()
+                          from m in _dbContext.SysModules.AsNoTracking().Where(x => x.ID == f.MODULE_ID).DefaultIfEmpty()
+                          from a in _dbContext.SysActions.AsNoTracking().Where(x => x.ID == gfa.ACTION_ID).DefaultIfEmpty()
 
-                                    //where l.ROOT_ONLY != true // to be filtered on Frontend
+                          where fa != null && f.ROOT_ONLY != true
 
-                                select new SysFunctionDTO
-                                {
-                                    Id = l.ID,
-                                    ModuleId = l.MODULE_ID,
-                                    ModuleCode = m.CODE,
-                                    GroupId = l.GROUP_ID,
-                                    Code = l.CODE,
-                                    RootOnly = l.ROOT_ONLY,
-                                    Name = l.NAME,
-                                    Path = l.PATH,
-                                    PathFullMatch = l.PATH_FULL_MATCH,
-                                    IsActive = l.IS_ACTIVE,
-                                }).ToList();
+                          select new SysGroupFunctionActionDTO()
+                          {
+                              ModuleCode = m.CODE,
+                              FunctionId = gfa.FUNCTION_ID,
+                              FunctionCode = f.CODE,
+                              ActionId = gfa.ACTION_ID,
+                              ActionCode = a.CODE
+                          };
 
-                functions.ForEach(function =>
+                List<FunctionActionPermissionDTO> result = new();
+                var list = raw.ToList();
+
+                long? functionId = null;
+                string moduleCode = "";
+                string functionCode = "";
+                string functionUrl = "";
+                List<long> actionIds = new();
+                List<string> actionCodes = new();
+                list.ForEach(r =>
                 {
-                    List<string> codes = new();
-                    var actions = from fa in _dbContext.SysFunctionActions.AsNoTracking().Where(x => x.FUNCTION_ID == function.Id)
-                                  from a in _dbContext.SysActions.AsNoTracking().Where(x => x.ID == fa.ACTION_ID).DefaultIfEmpty()
-                                  select new
-                                  {
-                                      code = a.CODE
-                                  };
-                    actions?.ToList().ForEach(a => codes.Add(a.code)); ;
-                    function.actionCodes = codes;
-
+                    moduleCode = r.ModuleCode ?? "";
+                    functionCode = r.FunctionCode ?? "";
+                    functionUrl = r.FunctionUrl ?? "";
+                    if (r.FunctionId != functionId)
+                    {
+                        if (functionId != null)
+                        {
+                            result.Add(new FunctionActionPermissionDTO()
+                            {
+                                FunctionId = (long)functionId,
+                                AllowedActionIds = actionIds,
+                                ModuleCode = moduleCode,
+                                FunctionCode = functionCode,
+                                FunctionUrl = functionUrl,
+                                AllowedActionCodes = actionCodes
+                            });
+                            actionIds = new();
+                            actionCodes = new();
+                            functionId = r.FunctionId;
+                        }
+                    }
+                    functionId = r.FunctionId;
+                    actionIds.Add((r.ActionId ?? 0));
+                    actionCodes.Add(r.ActionCode ?? "");
                 });
-                return Task.FromResult(new QueryFunctionActionPermissionListReply() { StatusCode = 200, InnerBody = JsonConvert.SerializeObject(functions)});
+                // The tail
+                if (functionId != null)
+                {
+                    result.Add(new FunctionActionPermissionDTO()
+                    {
+                        FunctionId = (long)functionId,
+                        AllowedActionIds = actionIds,
+                        ModuleCode = moduleCode,
+                        FunctionCode = functionCode,
+                        FunctionUrl = functionUrl,
+                        AllowedActionCodes = actionCodes
+                    });
+                }
+                return Task.FromResult(new QueryFunctionActionPermissionListReply() { StatusCode = 200, InnerBody = JsonConvert.SerializeObject(result) });
             }
             catch (Exception ex)
             {

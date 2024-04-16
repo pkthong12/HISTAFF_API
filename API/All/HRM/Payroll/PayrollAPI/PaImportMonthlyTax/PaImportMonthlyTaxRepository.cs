@@ -65,6 +65,7 @@ namespace API.Controllers.PaImportMonthlyTax
                            from o in _dbContext.HuOrganizations.Where(x => x.ID == e.ORG_ID)
                            from p in _dbContext.PaImportMonthlyTaxs.Where(x => x.EMPLOYEE_ID == e.ID && x.PERIOD_ID == periodId && x.OBJ_SALARY_ID == objSalId && x.DATE_CALCULATE_ID == datecalId).DefaultIfEmpty()
                            from ob in _dbContext.HuSalaryTypes.Where(x => x.ID == p.OBJ_SALARY_ID).DefaultIfEmpty()
+                           orderby j.ORDERNUM
                            select new PaImportMonthlyTaxDTO
                            {
                                Id = e.ID,
@@ -84,9 +85,28 @@ namespace API.Controllers.PaImportMonthlyTax
                                Clchinh8 = p.CLCHINH8,
                                PeriodId = p.PERIOD_ID,
                                Note = p.NOTE,
+                               Tax20 = p.TAX20,
                                Tax21 = p.TAX21,
+                               Tax23 = p.TAX23,
                                Tax24 = p.TAX24,
                                Tax25 = p.TAX25,
+                               Tax26 = p.TAX26,
+                               Tax27 = p.TAX27,
+                               Tax28 = p.TAX28,
+                               Tax29 = p.TAX29,
+                               Tax30 = p.TAX30,
+                               Tax31 = p.TAX31,
+                               Tax32 = p.TAX32,
+                               Tax33 = p.TAX33,
+                               Tax34 = p.TAX34,
+                               Tax35 = p.TAX35,
+                               Tax36 = p.TAX36,
+                               Tax37 = p.TAX37,
+                               Tax38 = p.TAX38,
+                               Tax41 = p.TAX41,
+                               Tax42 = p.TAX42,
+                               Tax43 = p.TAX43,
+                               Tax44 = p.TAX44,
                                DateCalculate = p.DATE_CALCULATE,
                                DateCalculateId= p.DATE_CALCULATE_ID,
                                JobOrderNum = (int)(j.ORDERNUM ?? 999),

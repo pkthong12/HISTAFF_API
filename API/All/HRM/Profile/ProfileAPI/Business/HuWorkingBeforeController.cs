@@ -33,21 +33,20 @@ namespace ProfileAPI.List
         [HttpPost]
         public async Task<IActionResult> QueryList(GenericQueryListDTO<HuWorkingBeforeDTO> request)
         {
-
             try
             {
-                var entity = _uow.Context.Set<HU_WORKING_BEFORE>().AsNoTracking().AsQueryable();
-                var employees = _uow.Context.Set<HU_EMPLOYEE>().AsNoTracking().AsQueryable();
-                var positions = _uow.Context.Set<HU_POSITION>().AsNoTracking().AsQueryable();
-                var organizations = _uow.Context.Set<HU_ORGANIZATION>().AsNoTracking().AsQueryable();
-                var otherLists = _uow.Context.Set<SYS_OTHER_LIST>().AsNoTracking().AsQueryable();
-                var job = _uow.Context.Set<HU_JOB>().AsNoTracking().AsQueryable();
+                var entity = _uow.Context.Set<HU_WORKING_BEFORE>().AsQueryable();
+                var employees = _uow.Context.Set<HU_EMPLOYEE>().AsQueryable();
+                var positions = _uow.Context.Set<HU_POSITION>().AsQueryable();
+                var organizations = _uow.Context.Set<HU_ORGANIZATION>().AsQueryable();
+                var otherLists = _uow.Context.Set<SYS_OTHER_LIST>().AsQueryable();
+                var job = _uow.Context.Set<HU_JOB>().AsQueryable();
+
                 var joined = from p in entity
                              from e in employees.Where(x => x.ID == p.EMPLOYEE_ID).DefaultIfEmpty()
                              from t in positions.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
                              from o in organizations.Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
                              from j in job.Where(x => x.ID == t.JOB_ID).DefaultIfEmpty()
-                             orderby p.CREATED_DATE descending
                              select new HuWorkingBeforeDTO
                              {
                                  Id = p.ID,
@@ -68,8 +67,9 @@ namespace ProfileAPI.List
                                  UpdatedBy = p.UPDATED_BY,
                                  CreatedDate = p.CREATED_DATE,
                                  UpdatedDate = p.UPDATED_DATE,
-                                 JobOrderNum = (int)(j.ORDERNUM ?? 99)
+                                 JobOrderNum = Convert.ToInt32(j.ORDERNUM ?? 999)
                              };
+
                 var response = await genericReducer.SinglePhaseReduce(joined, request);
                 if (response.ErrorType != EnumErrorType.NONE)
                 {

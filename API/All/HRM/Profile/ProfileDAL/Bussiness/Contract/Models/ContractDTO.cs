@@ -32,6 +32,7 @@ namespace ProfileDAL.ViewModels
         public DateTime? LiquidationDate { get; set; }
         public string? LiquidationReason { get; set; }
         public int? JobOrderNum { get; set; }
+        public long? PosId { get; set; }
 
         //public string CreateBy { get; set; }
         //public string UpdatedBy { get; set; }
@@ -49,7 +50,7 @@ namespace ProfileDAL.ViewModels
         //[Required(ErrorMessage = "{0}_Required")]
         public long? ContractTypeId { get; set; } // Loại Quyết định
         //[Required(ErrorMessage = "{0}_Required")]
-        public DateTime? StartDate { get; set; }
+        public DateTime StartDate { get; set; }
         public DateTime? ExpireDate { get; set; }
         public long? StatusId { get; set; } // Trạng thái
         //[Required(ErrorMessage = "{0}_Required")]

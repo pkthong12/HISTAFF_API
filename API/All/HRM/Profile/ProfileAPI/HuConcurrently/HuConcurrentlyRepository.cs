@@ -5,6 +5,8 @@ using CORE.Enum;
 using CORE.StaticConstant;
 using API.All.DbContexts;
 using CORE.AutoMapper;
+using API.All.SYSTEM.Common;
+using DocumentFormat.OpenXml.Office2010.Excel;
 
 namespace API.Controllers.HuConcurrently
 {
@@ -169,6 +171,12 @@ namespace API.Controllers.HuConcurrently
 
         public async Task<FormatedResponse> Delete(GenericUnitOfWork _uow, long id)
         {
+
+            var data = await _dbContext.HuConcurrentlys.FirstOrDefaultAsync(x => x.ID == id);
+            if(data!.WORKING_ID != null)
+            {
+                return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCodes.CAN_NOT_DELETE_DATA_FROM_HU_WORKING };
+            }
             var response = await _genericRepository.Delete(_uow, id);
             return response;
         }
@@ -181,6 +189,15 @@ namespace API.Controllers.HuConcurrently
 
         public async Task<FormatedResponse> DeleteIds(GenericUnitOfWork _uow, List<long> ids)
         {
+            foreach(var id in ids)
+            {
+                var data = await _dbContext.HuConcurrentlys.FirstOrDefaultAsync(x => x.ID == id);
+                if (data!.WORKING_ID != null)
+                {
+                    return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCodes.CAN_NOT_DELETE_DATA_FROM_HU_WORKING };
+                }
+            }
+            
             var response = await _genericRepository.DeleteIds(_uow, ids);
             return response;
         }
@@ -297,7 +314,7 @@ namespace API.Controllers.HuConcurrently
                                      from e in _uow.Context.Set<HU_EMPLOYEE>().Where(x => x.ID == c.EMPLOYEE_ID).DefaultIfEmpty()
                                      from cv in _uow.Context.Set<HU_EMPLOYEE_CV>().Where(x => x.ID == e.PROFILE_ID).DefaultIfEmpty()
                                      from sys in _uow.Context.Set<SYS_OTHER_LIST>().Where(x => x.ID == c.POSITION_POLITICAL_ID).DefaultIfEmpty()
-                                     select new 
+                                     select new
                                      {
                                          Id = cv.ID,
                                          IsUnionist = cv.IS_UNIONIST,
@@ -309,8 +326,6 @@ namespace API.Controllers.HuConcurrently
                                      }).ToList();
             getListConccurent.ForEach(item =>
             {
-
-
                 if(item.EffectDate >= DateTime.Now)
                 {
                     if (item.SysCode == "00290")
@@ -368,7 +383,7 @@ namespace API.Controllers.HuConcurrently
             });
 
             _uow.Context.UpdateRange(listEmployeeCv);
-            _uow.Context.SaveChanges();
+            _uow.Save();
 
 
         }

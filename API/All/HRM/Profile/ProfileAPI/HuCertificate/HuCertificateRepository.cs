@@ -48,7 +48,7 @@ namespace API.Controllers.HuCertificate
 						 from typeTrain in _dbContext.SysOtherLists.Where(x => x.ID == p.TYPE_TRAIN).DefaultIfEmpty()
 						 from school in _dbContext.SysOtherLists.Where(x => x.ID == p.SCHOOL_ID).DefaultIfEmpty()
 						 from lv in _dbContext.SysOtherLists.Where(x => x.ID == p.LEVEL_ID).DefaultIfEmpty()
-						 orderby p.EFFECT_FROM descending
+						 orderby p.YEAR descending
 						 select new HuCertificateDTO
 						 {
 							 Id = p.ID,
@@ -68,15 +68,18 @@ namespace API.Controllers.HuCertificate
 							 ContentTrain = p.CONTENT_TRAIN,
 							 SchoolName = school.NAME,
 							 Year = p.YEAR,
-							 Mark = p.MARK,
-							 IsPrime = p.IS_PRIME,
+                             YearStr = p.YEAR.ToString(),
+                             Mark = p.MARK,
+                             MarkStr = p.MARK.ToString(),
+                             IsPrime = p.IS_PRIME,
+							 IsLicense = p.IS_LICENSE,
 							 Level = p.LEVEL,
 							 TypeTrainName = typeTrain.NAME,
 							 Remark = p.REMARK,
 							 LevelId= p.LEVEL_ID,
 							 LevelName= lv.NAME,
 							 OrgId= e.ORG_ID,
-							 JobOrderNum = (int)(j.ORDERNUM ?? 99)
+							 JobOderNum = Convert.ToInt32(j.ORDERNUM ?? 999)
 						 };
 
 			var singlePhaseResult = await _genericReducer.SinglePhaseReduce(joined, request);
@@ -127,6 +130,7 @@ namespace API.Controllers.HuCertificate
 									  Year = p.YEAR,
 									  Mark = p.MARK,
 									  IsPrime = p.IS_PRIME,
+									  IsLicense	= p.IS_LICENSE,
 									  Level = p.LEVEL,
 									  Remark = p.REMARK,
 									  EmployeeId= p.EMPLOYEE_ID,
@@ -238,7 +242,7 @@ namespace API.Controllers.HuCertificate
 
 			}
 			var response = await _genericRepository.Create(_uow, dto, sid);
-			                _uow.Commit();
+			_uow.Commit();
             return new FormatedResponse()
             {
                 MessageCode = response.MessageCode,
@@ -286,6 +290,8 @@ namespace API.Controllers.HuCertificate
 				}
 
 			}
+
+			//if(dto.L)
 
 			var response = await _genericRepository.Update(_uow, dto, sid, patchMode);
 			_uow.Commit();

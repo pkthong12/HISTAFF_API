@@ -16,7 +16,10 @@ using System.Security.Cryptography;
 using CoreDAL.Common;
 using API.All.Services;
 using DocumentFormat.OpenXml.Spreadsheet;
-using CORE.AutoMapper;
+using API.All.SYSTEM.Common;
+using System.Net.Mail;
+using System.Net;
+using System.Text;
 
 namespace API.Controllers.SysUser
 {
@@ -66,6 +69,7 @@ namespace API.Controllers.SysUser
                              GroupId = p.GROUP_ID,
                              IsPortal = p.IS_PORTAL,
                              IsWebapp = p.IS_WEBAPP,
+                             IsMobile = p.IS_MOBILE,
                              LeaveJobDate = lj.EFFECT_DATE
                          };
             var singlePhaseResult = await _genericReducer.SinglePhaseReduce(joined, request);
@@ -96,6 +100,7 @@ namespace API.Controllers.SysUser
                             GroupId = groupEss?.ID,
                             Passwordhash = BCrypt.Net.BCrypt.HashPassword(empCv.ID_NO),
                             IsPortal = true,
+                            IsMobile = true,
                             EmployeeCode = employes[i].CODE,
                             Fullname = empCv.FULL_NAME,
                             Avatar = empCv.AVATAR,
@@ -130,23 +135,6 @@ namespace API.Controllers.SysUser
         {
             try
             {
-                foreach (var item in userIds)
-                {
-                    var user = _dbContext.SysUsers.Where(x => x.ID == item).FirstOrDefault();
-                    var e = _dbContext.HuEmployees.Where(x => x.ID == user!.EMPLOYEE_ID).FirstOrDefault();
-                    if (e != null)
-                    {
-                        var cv = _dbContext.HuEmployeeCvs.Where(x => x.ID == e!.PROFILE_ID).FirstOrDefault();
-                        if (cv != null && cv!.WORK_EMAIL == null)
-                        {
-                            return new FormatedResponse() { MessageCode = CommonMessageCode.EMPLOYEE_NOT_WORK_EMAIL, StatusCode = EnumStatusCode.StatusCode400 };
-                        }
-                    } else
-                    {
-                        return new FormatedResponse() { MessageCode = CommonMessageCode.USER_NOT_ASSIGN_EMPLOYEE, StatusCode = EnumStatusCode.StatusCode400 };
-                    }
-
-                }
                 foreach (var userId in userIds)
                 {
                     var user = await _dbContext.SysUsers.Where(x => x.ID == userId).FirstOrDefaultAsync();
@@ -190,9 +178,7 @@ namespace API.Controllers.SysUser
                                     {
                                         if (cv.WORK_EMAIL != null)
                                         {
-                                            var mail = await _dbContext.SeConfigs.FirstOrDefaultAsync();
-                                            var dto = CoreMapper<SeConfigDTO, SE_CONFIG>.EntityToDto(mail!, new SeConfigDTO());
-                                            await _emailService.SendEmailAfterResetPassword(cv.WORK_EMAIL, dto!, randomPassword);
+                                            await _emailService.SendEmailAfterResetPassword(cv.WORK_EMAIL, "datvantay031@gmail.com", randomPassword);
 
                                         }
                                     }
@@ -303,10 +289,12 @@ namespace API.Controllers.SysUser
                                        Id = l.ID,
                                        Avatar = l.AVATAR,
                                        GroupId = l.GROUP_ID,
+                                       Email = l.EMAIL,
                                        Username = l.USERNAME,
                                        Fullname = l.FULLNAME,
                                        IsWebapp = l.IS_WEBAPP,
                                        IsPortal = l.IS_PORTAL,
+                                       IsMobile = l.IS_MOBILE,
                                        IsAdmin = l.IS_ADMIN,
                                        IsRoot = l.IS_ROOT,
                                        EmployeeId = l.EMPLOYEE_ID,
@@ -346,19 +334,6 @@ namespace API.Controllers.SysUser
             try
             {
                 var tryFind = _dbContext.SysUsers.SingleOrDefault(x => x.USERNAME!.ToLower() == request.UserName.ToLower());
-                if (request.EmployeeId != null)
-                {
-                    var checkDataBeforeAdd = await _dbContext.SysUsers.Where(x => x.EMPLOYEE_ID == request.EmployeeId).ToListAsync();
-                    if (checkDataBeforeAdd.Count > 0)
-                    {
-                        return new()
-                        {
-                            ErrorType = EnumErrorType.CATCHABLE,
-                            MessageCode = CommonMessageCode.DUBLICATE_VALUE + "EMPLOYEE",
-                            StatusCode = EnumStatusCode.StatusCode400
-                        };
-                    }
-                }
 
                 if (tryFind != null)
                 {
@@ -398,9 +373,11 @@ namespace API.Controllers.SysUser
                             Id = Guid.NewGuid().ToString(),
                             Username = request.UserName,
                             GroupId = request.GroupId,
+                            Email = request.Email,
                             Passwordhash = BCrypt.Net.BCrypt.HashPassword(request.Password),
                             IsWebapp = request.IsWebapp,
                             IsPortal = request.IsPortal,
+                            IsMobile = request.IsMobile,
                             IsAdmin = request.IsAdmin,
                             EmployeeId = request.EmployeeId,
                             EmployeeCode = request.EmployeeCode,
@@ -443,6 +420,7 @@ namespace API.Controllers.SysUser
                         Passwordhash = BCrypt.Net.BCrypt.HashPassword(request.Password),
                         IsWebapp = request.IsWebapp,
                         IsPortal = request.IsPortal,
+                        IsMobile = request.IsMobile,
                         IsAdmin = request.IsAdmin,
                         EmployeeCode = request.EmployeeCode,
                         Fullname = request.Fullname,
@@ -491,19 +469,6 @@ namespace API.Controllers.SysUser
 
                 var tryFind = _dbContext.SysUsers.SingleOrDefault(x => x.USERNAME!.ToLower() == request.UserName.ToLower() && x.ID != request.Id);
 
-                if (request.EmployeeId != null)
-                {
-                    var checkDataBeforeAdd = await _dbContext.SysUsers.Where(x => x.EMPLOYEE_ID == request.EmployeeId).ToListAsync();
-                    if (checkDataBeforeAdd.Count > 1)
-                    {
-                        return new()
-                        {
-                            ErrorType = EnumErrorType.CATCHABLE,
-                            MessageCode = CommonMessageCode.DUBLICATE_VALUE + " EMPLOYEE",
-                            StatusCode = EnumStatusCode.StatusCode400
-                        };
-                    }
-                }
                 if (tryFind != null)
                 {
                     return new()
@@ -552,8 +517,10 @@ namespace API.Controllers.SysUser
                             Id = request.Id,
                             Username = request.UserName,
                             GroupId = request.GroupId,
+                            Email = request.Email,
                             IsWebapp = request.IsWebapp,
                             IsPortal = request.IsPortal,
+                            IsMobile = request.IsMobile,
                             IsAdmin = request.IsAdmin,
                             EmployeeCode = request.EmployeeCode,
                             EmployeeName = request.EmployeeName,
@@ -594,8 +561,10 @@ namespace API.Controllers.SysUser
                         Id = request.Id,
                         Username = request.UserName,
                         GroupId = request.GroupId,
+                        Email = request.Email,
                         IsWebapp = request.IsWebapp,
                         IsPortal = request.IsPortal,
+                        IsMobile = request.IsMobile,
                         IsAdmin = request.IsAdmin,
                         EmployeeId = request.EmployeeId,
                         EmployeeCode = request.EmployeeCode,
@@ -1173,7 +1142,7 @@ namespace API.Controllers.SysUser
                 _dbContext.SysUsers.UpdateRange(listToLock);
                 await _dbContext.SaveChangesAsync();
                 _dbContext.Database.CommitTransaction();
-                return new() { InnerBody = listToLock, MessageCode = CommonMessageCode.LOCK_ACCOUNTS_SUCCESS };
+                return new() { InnerBody = listToLock };
             } catch (Exception ex)
             {
                 _dbContext.Database.RollbackTransaction();
@@ -1195,12 +1164,12 @@ namespace API.Controllers.SysUser
                 _dbContext.SysUsers.UpdateRange(listToUnlock);
                 await _dbContext.SaveChangesAsync();
                 _dbContext.Database.CommitTransaction();
-                return new() { InnerBody = listToUnlock, MessageCode = CommonMessageCode.UNLOCK_ACCOUNTS_SUCCESS };
+                return new() { InnerBody = listToUnlock };
             }
             catch (Exception ex)
             {
                 _dbContext.Database.RollbackTransaction();
-                return new() { MessageCode = ex.Message, ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500};
+                return new() { MessageCode = ex.Message, ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500 };
             }
         }
 
@@ -1273,32 +1242,182 @@ namespace API.Controllers.SysUser
             }
         }
 
-        public async Task<FormatedResponse> GetUserByEmployeeId(long employeeId)
+
+        public async Task<FormatedResponse> SubmitUsernameWhenForgotPassword(ResetPasswordRequest request)
         {
             try
             {
-                var response = await _dbContext.SysUsers.Where(x => x.EMPLOYEE_ID == employeeId).FirstOrDefaultAsync();
-                return new FormatedResponse() { InnerBody = response };
+                // compare "request.Username"
+                // with field USERNAME of table SYS_USER
+                var user = _dbContext.SysUsers.SingleOrDefault(x => x.USERNAME!.ToLower() == request.Username!.ToLower());
+
+                if (user != null)
+                {
+                    var emailOfUser = (from item in _dbContext.SysUsers.Where(x => x.USERNAME == request.Username)
+                                       from item2 in _dbContext.HuEmployees.Where(x => x.ID == item.EMPLOYEE_ID).DefaultIfEmpty()
+                                       from item3 in _dbContext.HuEmployeeCvs.Where(x => x.ID == item2.PROFILE_ID).DefaultIfEmpty()
+                                       select item3.WORK_EMAIL
+                                       ).FirstOrDefault();
+
+                    if (emailOfUser != null)
+                    {
+                        var verificationCode = Guid.NewGuid().ToString();
+
+                        // write verificationCode into Database
+                        user.CHANGE_PASSWORD_CODE = verificationCode;
+                        _dbContext.SaveChanges();
+
+
+                        MailMessage msg = new();
+                        msg.To.Add(new MailAddress(emailOfUser));
+
+                        msg.From = new MailAddress("uh1016341@miukafoto.com", "no_reply@miukafoto.com");
+                        msg.Subject = "Gửi mã đổi mật khẩu";
+                        msg.Body = $"Mã của bạn là {verificationCode}";
+                        msg.IsBodyHtml = true;
+                        msg.BodyEncoding = Encoding.UTF8;
+
+                        using SmtpClient smtp = new();
+                        var credential = new NetworkCredential
+                        {
+                            UserName = "uh1016341",
+                            Password = "2WF1U4jwxd"
+                        };
+                        smtp.Credentials = credential;
+                        smtp.Host = "webmail.uh.ua";
+                        smtp.Port = 587;
+                        smtp.EnableSsl = true;
+
+                        await smtp.SendMailAsync(msg);
+
+                        return new FormatedResponse()
+                        {
+                            MessageCode = CommonMessageCodes.ALERT_CORRECT_ACCOUNT,
+                            InnerBody = true
+                        };
+                    }
+                    else
+                    {
+                        return new FormatedResponse()
+                        {
+                            ErrorType = EnumErrorType.CATCHABLE,
+                            StatusCode = EnumStatusCode.StatusCode400,
+                            MessageCode = CommonMessageCodes.THERE_IS_NO_COMPANY_EMAIL_IN_YOUR_PROFILE_YET,
+                            InnerBody = false
+                        };
+                    }
+                }
+                else
+                {
+                    return new FormatedResponse()
+                    {
+                        ErrorType = EnumErrorType.CATCHABLE,
+                        StatusCode = EnumStatusCode.StatusCode400,
+                        MessageCode = CommonMessageCodes.ALERT_WRONG_ACCOUNT,
+                        InnerBody = false
+                    };
+                }
             }
             catch (Exception ex)
             {
-
-                return new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message };
+                return new() { MessageCode = ex.Message, ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500 };
             }
-            
         }
 
-        public async void TurnOffAccountUser()
+
+        public async Task<FormatedResponse> SubmitVerificationCode(ResetPasswordRequest request)
         {
-            var sysOtherList = _dbContext.SysOtherLists.SingleOrDefault(x => x.CODE == "DD");
-            var getLeaveJob = await _dbContext.HuTerminates.Where(x => x.EFFECT_DATE <= DateTime.Now && x.STATUS_ID == sysOtherList!.ID).ToListAsync();
-            getLeaveJob.ForEach( item =>
+            try
             {
-                var getSysUserToTurnOff = _dbContext.SysUsers.Where(x => x.EMPLOYEE_ID == item.EMPLOYEE_ID).FirstOrDefault();
-                getSysUserToTurnOff!.IS_LOCK = true;
-                _dbContext.SaveChanges();
-            });
+                var user = await _dbContext.SysUsers.SingleOrDefaultAsync(x => x.USERNAME!.ToLower() == request.Username!.ToLower());
+
+                if (user != null)
+                {
+                    // get field CHANGE_PASSWORD_CODE of table SYS_USER
+                    // then assign into verificationCode
+                    var verificationCode = user.CHANGE_PASSWORD_CODE;
+
+                    if (verificationCode == request.VerificationCode)
+                    {
+                        return new FormatedResponse()
+                        {
+                            InnerBody = true,
+                            MessageCode = CommonMessageCodes.ALERT_CORRECT_VERIFICATION_CODE
+                        };
+                    }
+                    else
+                    {
+                        return new FormatedResponse()
+                        {
+                            ErrorType = EnumErrorType.CATCHABLE,
+                            StatusCode = EnumStatusCode.StatusCode400,
+                            MessageCode = CommonMessageCodes.ALERT_WRONG_VERIFICATION_CODE,
+                            InnerBody = false
+                        };
+                    }
+                }
+                else
+                {
+                    return new FormatedResponse()
+                    {
+                        ErrorType = EnumErrorType.CATCHABLE,
+                        StatusCode = EnumStatusCode.StatusCode400,
+                        MessageCode = CommonMessageCodes.ALERT_WRONG_ACCOUNT,
+                        InnerBody = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new() { MessageCode = ex.Message, ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500 };
+            }
+        }
+
+
+        public async Task<FormatedResponse> ChangePasswordWhenForgotPassword(ResetPasswordRequest request)
+        {
+            try
+            {
+                if (request.NewPassword != request.ConfirmNewPassword)
+                {
+                    return new FormatedResponse()
+                    {
+                        ErrorType = EnumErrorType.CATCHABLE,
+                        MessageCode = CommonMessageCode.PASSWORD_AND_PASSWORD_CONFIRN_DO_NOT_MATCH,
+                        StatusCode = EnumStatusCode.StatusCode400,
+                        InnerBody = false
+                    };
+                }
+
+                var user = await _dbContext.SysUsers.SingleOrDefaultAsync(x => x.USERNAME!.ToLower() == request.Username!.ToLower());
+
+                if (user != null)
+                {
+                    user.PASSWORDHASH = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+                    user.IS_FIRST_LOGIN = false;
+                    _dbContext.SysUsers.Update(user);
+                    _dbContext.SaveChanges();
+                    return new FormatedResponse()
+                    {
+                        MessageCode = CommonMessageCode.SUCCESS_CHANGE_PASSWORD,
+                        InnerBody = true
+                    };
+                }
+                else
+                {
+                    return new FormatedResponse()
+                    {
+                        ErrorType = EnumErrorType.CATCHABLE,
+                        StatusCode = EnumStatusCode.StatusCode400,
+                        MessageCode = CommonMessageCodes.ALERT_WRONG_ACCOUNT,
+                        InnerBody = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new() { MessageCode = ex.Message, ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500 };
+            }
         }
     }
 }
-

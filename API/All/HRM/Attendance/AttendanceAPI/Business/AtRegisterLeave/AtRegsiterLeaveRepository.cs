@@ -73,11 +73,11 @@ namespace API.Controllers.AtRegisterLeave
 
 
             var joined = from p in _dbContext.AtRegisterLeaves.AsNoTracking().Where(x => x.DATE_START!.Value.Date >= startDate.Date && x.DATE_END!.Value.Date <= endDate.Date
-                         || (startDate.Date >= x.DATE_START.Value.Date && startDate.Date <= x.DATE_END!.Value.Date)
+                         || (startDate.Date >= x.DATE_START.Value.Date && startDate.Date <= x.DATE_END!.Value.Date) 
                          || (endDate.Date >= x.DATE_START.Value.Date && startDate.Date <= x.DATE_END!.Value.Date))
                          from e in _dbContext.HuEmployees.Where(x => x.ID == p.EMPLOYEE_ID).DefaultIfEmpty()
                          from o in _dbContext.HuOrganizations.Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
-                             //from ecv in _dbContext.HuEmployeeCvs.Where(x => x.ID == e.PROFILE_ID).DefaultIfEmpty()
+                         //from ecv in _dbContext.HuEmployeeCvs.Where(x => x.ID == e.PROFILE_ID).DefaultIfEmpty()
                          from ot in _dbContext.AtTimeTypes.Where(x => x.ID == p.TYPE_ID).DefaultIfEmpty()
                          from to in _dbContext.SysOtherLists.Where(x => x.ID == p.TYPE_OFF).DefaultIfEmpty()
                          from po in _dbContext.HuPositions.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
@@ -147,7 +147,7 @@ namespace API.Controllers.AtRegisterLeave
                                   Reason = p.REASON,
                                   Note = p.NOTE,
                                   TypeOff = p.TYPE_OFF,
-                                  IsEachDay = p.IS_EACH_DAY
+                                  IsEachDay= p.IS_EACH_DAY
                               }).FirstOrDefault();
 
 
@@ -202,37 +202,35 @@ namespace API.Controllers.AtRegisterLeave
         {
             try
             {
-                var entity = _uow.Context.Set<AT_WORKSIGN>().AsNoTracking();
-                var shift = _uow.Context.Set<AT_SHIFT>().AsNoTracking();
                 var lstDetail = _dbContext.AtRegisterLeaveDetails.Where(x => x.REGISTER_ID == id).ToList();
                 var joined = await (from p in _dbContext.AtRegisterLeaves.AsNoTracking().Where(x => x.ID == id)
-                                    from e in _dbContext.HuEmployees.Where(x => x.ID == p.EMPLOYEE_ID).DefaultIfEmpty()
-                                    from o in _dbContext.HuOrganizations.Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
-                                    from ecv in _dbContext.HuEmployeeCvs.Where(x => x.ID == e.PROFILE_ID).DefaultIfEmpty()
-                                    from ot in _dbContext.AtTimeTypes.Where(x => x.ID == p.TYPE_ID).DefaultIfEmpty()
-                                    from to in _dbContext.SysOtherLists.Where(x => x.ID == p.TYPE_OFF).DefaultIfEmpty()
-                                    from po in _dbContext.HuPositions.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
+                              from e in _dbContext.HuEmployees.Where(x => x.ID == p.EMPLOYEE_ID).DefaultIfEmpty()
+                              from o in _dbContext.HuOrganizations.Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
+                              from ecv in _dbContext.HuEmployeeCvs.Where(x => x.ID == e.PROFILE_ID).DefaultIfEmpty()
+                              from ot in _dbContext.AtTimeTypes.Where(x => x.ID == p.TYPE_ID).DefaultIfEmpty()
+                              from to in _dbContext.SysOtherLists.Where(x => x.ID == p.TYPE_OFF).DefaultIfEmpty()
+                              from po in _dbContext.HuPositions.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
 
-                                    select new
-                                    {
-                                        Id = p.ID,
-                                        EmployeeId = p.EMPLOYEE_ID,
-                                        EmployeeCode = e.CODE,
-                                        EmployeeName = ecv.FULL_NAME,
-                                        DateStart = p.DATE_START,
-                                        DateEnd = p.DATE_END,
-                                        TypeId = p.TYPE_ID,
-                                        TypeName = ot.NAME,
-                                        FileName = p.FILE_NAME,
-                                        Reason = p.REASON,
-                                        Note = p.NOTE,
-                                        OrgId = e.ORG_ID,
-                                        OrgName = o.NAME,
-                                        PositionName = po.NAME,
-                                        TypeOff = p.TYPE_OFF,
-                                        TypeOffName = to.NAME,
-                                        IsEachDay = p.IS_EACH_DAY
-                                    }).ToListAsync();
+                              select new
+                              {
+                                  Id = p.ID,
+                                  EmployeeId = p.EMPLOYEE_ID,
+                                  EmployeeCode = e.CODE,
+                                  EmployeeName = ecv.FULL_NAME,
+                                  DateStart = p.DATE_START,
+                                  DateEnd = p.DATE_END,
+                                  TypeId = p.TYPE_ID,
+                                  TypeName = ot.NAME,
+                                  FileName = p.FILE_NAME,
+                                  Reason = p.REASON,
+                                  Note = p.NOTE,
+                                  OrgId = e.ORG_ID,
+                                  OrgName = o.NAME,
+                                  PositionName = po.NAME,
+                                  TypeOff = p.TYPE_OFF,
+                                  TypeOffName = to.NAME,
+                                  IsEachDay = p.IS_EACH_DAY
+                              }).ToListAsync();
 
                 dynamic objReturn = new ExpandoObject();
 
@@ -258,22 +256,10 @@ namespace API.Controllers.AtRegisterLeave
                     {
                         if (objReturn != null)
                         {
-
-
-                            var shiftDefault = await (from p in entity.Where(p => p.EMPLOYEE_ID == firstItem.EmployeeId && p.WORKINGDAY.Value.Date == lstDetail[i].LEAVE_DATE.Date)
-                                                      from s in shift.Where(x => x.ID == p.SHIFT_ID).DefaultIfEmpty()
-                                                      select new
-                                                      {
-                                                          name = s.NAME,
-                                                          code = s.CODE,
-                                                      }).FirstOrDefaultAsync();
-
                             ((IDictionary<string, object>)objReturn)["dateStart" + (i + 1)] = lstDetail[i].LEAVE_DATE;
                             ((IDictionary<string, object>)objReturn)["dType" + (i + 1)] = lstDetail[i].TYPE_OFF;
                             ((IDictionary<string, object>)objReturn)["shiftCode" + (i + 1)] = _dbContext.AtTimeTypes.FirstOrDefault(x => x.ID == lstDetail[i].MANUAL_ID)?.CODE;
                             ((IDictionary<string, object>)objReturn)["day" + (i + 1)] = lstDetail[i].NUMBER_DAY;
-                            ((IDictionary<string, object>)objReturn)["shift" + (i + 1)] = shiftDefault.name;
-                            ((IDictionary<string, object>)objReturn)["shiftCodeDefault" + (i + 1)] = shiftDefault.code;
                         }
                     }
                 }
@@ -374,11 +360,11 @@ namespace API.Controllers.AtRegisterLeave
                 bool isValid = true;
                 foreach (var itemCheck in listCheck)
                 {
-                    if (dto.DateStart.Value.Date <= dto.DateEnd.Value.Date && dto.DateEnd.Value.Date < itemCheck.DATE_START.Value.Date)
+                    if (dto.DateStart <= dto.DateEnd && dto.DateEnd < itemCheck.DATE_START)
                     {
                         isValid = true;
                     }
-                    else if (dto.DateStart.Value.Date <= dto.DateEnd.Value.Date && dto.DateStart.Value.Date > itemCheck.DATE_END.Value.Date)
+                    else if (dto.DateStart <= dto.DateEnd && dto.DateStart > itemCheck.DATE_END)
                     {
                         isValid = true;
                     }
@@ -443,7 +429,7 @@ namespace API.Controllers.AtRegisterLeave
 
                 _dbContext.RemoveRange(lstDetail);
 
-                for (int i = 0; i <= (dto.DateEnd.Value.Date - dto.DateStart.Value.Date).Days; i++)
+                for (int i = 0; i <= (dto.DateEnd - dto.DateStart).Value.Days; i++)
                 {
                     var dataDetail = new AT_REGISTER_LEAVE_DETAIL();
                     dataDetail.REGISTER_ID = (long)dto.Id;
@@ -596,11 +582,11 @@ namespace API.Controllers.AtRegisterLeave
                     bool isValid = true;
                     foreach (var itemCheck in listCheck)
                     {
-                        if (data.DATE_START.Value.Date <= data.DATE_END.Value.Date && data.DATE_END.Value.Date < itemCheck.DATE_START.Value.Date)
+                        if (data.DATE_START <= data.DATE_END && data.DATE_END < itemCheck.DATE_START)
                         {
                             isValid = true;
                         }
-                        else if (data.DATE_START.Value.Date <= data.DATE_END.Value.Date && data.DATE_START.Value.Date > itemCheck.DATE_END.Value.Date)
+                        else if (data.DATE_START <= data.DATE_END && data.DATE_START > itemCheck.DATE_END)
                         {
                             isValid = true;
                         }
@@ -650,7 +636,7 @@ namespace API.Controllers.AtRegisterLeave
                     var obj = _dbContext.AtRegisterLeaves.Where(x => x.EMPLOYEE_ID == data.EMPLOYEE_ID && x.DATE_START == data.DATE_START && x.DATE_END == data.DATE_END && x.TYPE_OFF == data.TYPE_OFF && x.TYPE_ID == data.TYPE_ID).FirstOrDefault();
                     if (obj != null)
                     {
-                        for (int i = 0; i <= (obj.DATE_END.Value.Date - obj.DATE_START.Value.Date).Days; i++)
+                        for (int i = 0; i <= (obj.DATE_END - obj.DATE_START).Value.Days; i++)
                         {
                             var dataDetail = new AT_REGISTER_LEAVE_DETAIL();
                             dataDetail.REGISTER_ID = obj.ID;
@@ -686,10 +672,7 @@ namespace API.Controllers.AtRegisterLeave
                                           {
                                               Code = s.CODE
                                           }).FirstOrDefaultAsync();
-
-                var typeCode = await _dbContext.AtTimeTypes.AsNoTracking().FirstAsync(p => p.ID == (long?)model["typeId"]);
-
-                if (contractType != null && contractType!.Code == "HDTV" && (typeCode!.CODE == "P" || typeCode!.CODE.Contains("/P") || typeCode!.CODE.Contains("P/")))
+                if (contractType != null && contractType!.Code == "HDTV")
                 {
                     return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.EMPLOYEE_HAVE_PROBATIONARY_CONTRACT, StatusCode = EnumStatusCode.StatusCode400 };
                 }
@@ -743,11 +726,11 @@ namespace API.Controllers.AtRegisterLeave
                 bool isValid = true;
                 foreach (var itemCheck in listCheck)
                 {
-                    if (data.DATE_START.Value.Date <= data.DATE_END.Value.Date && data.DATE_END.Value.Date < itemCheck.DATE_START.Value.Date)
+                    if (data.DATE_START <= data.DATE_END && data.DATE_END < itemCheck.DATE_START)
                     {
                         isValid = true;
                     }
-                    else if (data.DATE_START.Value.Date <= data.DATE_END.Value.Date && data.DATE_START.Value.Date > itemCheck.DATE_END.Value.Date)
+                    else if (data.DATE_START <= data.DATE_END && data.DATE_START > itemCheck.DATE_END)
                     {
                         isValid = true;
                     }
@@ -762,8 +745,7 @@ namespace API.Controllers.AtRegisterLeave
                     {
                         MessageCode = CommonMessageCode.EMPLOYEE_HAVE_EXIST_TIME_REGISTER,
                         InnerBody = model,
-                        StatusCode = EnumStatusCode.StatusCode400,
-                        ErrorType = EnumErrorType.CATCHABLE
+                        StatusCode = EnumStatusCode.StatusCode500
                     };
                 }
                 var checkValidate = await QueryData.ExecuteList("CHECK_VALIDATE_REGISTER_LEAVE",
@@ -786,8 +768,7 @@ namespace API.Controllers.AtRegisterLeave
                         {
                             MessageCode = ListValidates,
                             InnerBody = model,
-                            StatusCode = EnumStatusCode.StatusCode400,
-                            ErrorType = EnumErrorType.CATCHABLE
+                            StatusCode = EnumStatusCode.StatusCode500
                         };
                     }
                 }
@@ -804,7 +785,7 @@ namespace API.Controllers.AtRegisterLeave
                     {
                         if (obj.IS_EACH_DAY ?? false)
                         {
-                            for (int i = 0; i <= (obj.DATE_END.Value.Date  - obj.DATE_START.Value.Date).Days; i++)
+                            for (int i = 0; i <= (obj.DATE_END - obj.DATE_START).Value.Days; i++)
                             {
 
                                 if (model["dType" + (i + 1)] == null)
@@ -840,7 +821,7 @@ namespace API.Controllers.AtRegisterLeave
                         }
                         else
                         {
-                            for (int i = 0; i <= (obj.DATE_END.Value.Date - obj.DATE_START.Value.Date).Days; i++)
+                            for (int i = 0; i <= (obj.DATE_END - obj.DATE_START).Value.Days; i++)
                             {
                                 var dataDetail = new AT_REGISTER_LEAVE_DETAIL();
                                 dataDetail.REGISTER_ID = obj.ID;
@@ -927,7 +908,7 @@ namespace API.Controllers.AtRegisterLeave
                 data.Note = (string?)model["note"];
                 data.Reason = (string?)model["reason"];
                 data.EmployeeId = (long)model["employeeId"];
-                data.IsEachDay = (bool)(model["isEachDay"] == null ? false : model["isEachDay"]);
+                data.IsEachDay = (bool)model["isEachDay"];
                 data.CreatedBy = sid;
                 data.CreatedDate = DateTime.Now;
                 data.UpdatedBy = sid;
@@ -937,11 +918,11 @@ namespace API.Controllers.AtRegisterLeave
                 bool isValid = true;
                 foreach (var itemCheck in listCheck)
                 {
-                    if (data.DateStart.Value.Date <= data.DateEnd.Value.Date && data.DateEnd.Value.Date < itemCheck.DATE_START.Value.Date)
+                    if (data.DateStart <= data.DateEnd && data.DateEnd < itemCheck.DATE_START)
                     {
                         isValid = true;
                     }
-                    else if (data.DateStart.Value.Date <= data.DateEnd.Value.Date && data.DateStart.Value.Date > itemCheck.DATE_END.Value.Date)
+                    else if (data.DateStart <= data.DateEnd && data.DateStart > itemCheck.DATE_END)
                     {
                         isValid = true;
                     }
@@ -994,7 +975,7 @@ namespace API.Controllers.AtRegisterLeave
                 {
                     if (data.IsEachDay ?? false)
                     {
-                        for (int i = 0; i <= (data.DateEnd.Value.Date - data.DateStart.Value.Date).Days; i++)
+                        for (int i = 0; i <= (data.DateEnd - data.DateStart).Value.Days; i++)
                         {
 
                             if (model["dType" + (i + 1)] == null)
@@ -1026,7 +1007,7 @@ namespace API.Controllers.AtRegisterLeave
                     }
                     else
                     {
-                        for (int i = 0; i <= (data.DateEnd.Value.Date - data.DateStart.Value.Date).Days; i++)
+                        for (int i = 0; i <= (data.DateEnd - data.DateStart).Value.Days; i++)
                         {
                             var dataDetail = new AT_REGISTER_LEAVE_DETAIL();
                             dataDetail.REGISTER_ID = (long)data.Id;

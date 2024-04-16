@@ -1,5 +1,4 @@
-﻿using API.DTO;
-using API.Socket;
+﻿using API.Socket;
 using CORE.SignalHub;
 using Microsoft.AspNetCore.SignalR;
 using RegisterServicesWithReflection.Services.Base;
@@ -42,10 +41,10 @@ namespace API.All.Services
 
         }
 
-        public async Task SendEmailAfterResetPassword(string mailTo, SeConfigDTO seConfigDto , string password)
+        public async Task SendEmailAfterResetPassword(string mailTo, string mailFrom, string password)
         {
             MailMessage msg = new();
-            msg.From = new MailAddress(seConfigDto.Value!);
+            msg.From = new MailAddress("uh1016341@miukafoto.com", "vinasteel@gmail.com");
             msg.To.Add(new MailAddress(mailTo));
             msg.Subject = "Email từ thao tác đặt lại mật khẩu mặc định";
             msg.Body = $"Mật khẩu mới của bạn là:" + "<br><br>" +
@@ -57,38 +56,13 @@ namespace API.All.Services
             using SmtpClient smtp = new();
             var credential = new NetworkCredential
             {
-                UserName = seConfigDto.Account,
-                Password = seConfigDto.Password
+                UserName = "uh1016341",
+                Password = "2WF1U4jwxd"
             };
             smtp.Credentials = credential;
-            smtp.Host = seConfigDto.Name!;
-            smtp.Port = seConfigDto.Module!.Value;
-            smtp.EnableSsl = seConfigDto.IsAuthSsl!.Value;
-
-            await smtp.SendMailAsync(msg);
-
-        }
-
-        public async Task SendEmailApprovedAndRefuse(SysMailTemplateDTO sysMailTemplate, SeConfigDTO seConfigDto)
-        {
-            MailMessage msg = new();
-            msg.From = new MailAddress(seConfigDto.Value!);
-            msg.To.Add(new MailAddress(sysMailTemplate.SendTo!));
-            msg.Subject = sysMailTemplate.Title;
-            msg.Body = sysMailTemplate.Content;
-            msg.IsBodyHtml = true;
-            msg.BodyEncoding = Encoding.UTF8;
-
-            using SmtpClient smtp = new();
-            var credential = new NetworkCredential
-            {
-                UserName = seConfigDto.Account,
-                Password = seConfigDto.Password
-            };
-            smtp.Credentials = credential;
-            smtp.Host = seConfigDto.Name!;
-            smtp.Port = seConfigDto.Module!.Value;
-            smtp.EnableSsl = seConfigDto.IsAuthSsl!.Value;
+            smtp.Host = "webmail.uh.ua";
+            smtp.Port = 587;
+            smtp.EnableSsl = true;
 
             await smtp.SendMailAsync(msg);
 

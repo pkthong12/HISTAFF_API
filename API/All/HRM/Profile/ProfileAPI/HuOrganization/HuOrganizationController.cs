@@ -175,6 +175,13 @@ namespace API.Controllers.HuOrganization
             _HuOrganizationRepository.ScanDissolveOrg();
             return Ok();
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetNewCode()
+        {
+            var response = await _HuOrganizationRepository.GetNewCode();
+            return Ok(response);
+        }
     }
 }
 

@@ -394,20 +394,6 @@ namespace API.Controllers.AtWorksign
                 return new FormatedResponse() { MessageCode = CommonMessageCode.START_MUST_LESS_THAN_END, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
             }
 
-            //check ky cong lock or unlock
-            var orgId = await (from e in _dbContext.HuEmployees.AsNoTracking().Where(x => x.ID == dto.EmployeeId) select e.ORG_ID).FirstAsync();
-            var atWorksignId = await (from a in _dbContext.AtWorksigns.AsNoTracking().Where(x => x.EMPLOYEE_ID == dto.EmployeeId && x.PERIOD_ID == dto.PeriodId) select a.PERIOD_ID).FirstAsync();
-            var statusColex = await (from o in _dbContext.AtOrgPeriods.AsNoTracking().Where(x => x.ORG_ID == orgId && x.PERIOD_ID == atWorksignId) select o.STATUSCOLEX).FirstAsync();
-            if(statusColex == 1)
-            {
-                return new FormatedResponse() 
-                { 
-                    MessageCode = CommonMessageCode.THE_WORK_PERIOD_HAS_CEASED_TO_APPLY, 
-                    ErrorType = EnumErrorType.CATCHABLE, 
-                    StatusCode = EnumStatusCode.StatusCode400 
-                };
-            }
-
             TimeSpan range = dto.EndDate!.Value - dto.StartDate!.Value;
 
             List<DateTime> days = new List<DateTime>();

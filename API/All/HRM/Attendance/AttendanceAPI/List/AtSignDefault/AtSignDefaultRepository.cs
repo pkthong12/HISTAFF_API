@@ -32,11 +32,12 @@ namespace API.Controllers.AtSignDefault
                          from pos in _dbContext.HuPositions.AsNoTracking().Where(pos => pos.ID == e.POSITION_ID).DefaultIfEmpty()
                          from j in _dbContext.HuJobs.AsNoTracking().Where(j => j.ID == pos.JOB_ID).DefaultIfEmpty()
                          from o in _dbContext.HuOrganizations.AsNoTracking().Where(org => org.ID == e.ORG_ID).DefaultIfEmpty()
+                         orderby j.ORDERNUM
                          select new AtSignDefaultDTO
                          {
                              Id = p.ID,
                              EmployeeId = p.EMPLOYEE_ID,
-                             OrgId = o.ID,
+                             OrgId = p.ORG_ID,
                              EmployeeCode = e.CODE,
                              EmployeeName = e.Profile!.FULL_NAME,
                              PositionName = pos.NAME,
@@ -89,7 +90,7 @@ namespace API.Controllers.AtSignDefault
                               EmployeeName = e.Profile!.FULL_NAME,
                               PositionName = pos.NAME,
                               OrgName = o.NAME,
-                              OrgId = o.ID,
+                              OrgId = l.ORG_ID,
                               SignDefault = l.SIGN_DEFAULT,
                               EffectDateFrom = l.EFFECT_DATE_FROM,
                               EffectDateTo = l.EFFECT_DATE_TO,

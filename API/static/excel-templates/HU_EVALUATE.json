@@ -54,6 +54,7 @@
           "HeaderTextColor": "white",
           "IdentityColumns": [ "ID" ],
           "RenderColumns": [
+            "EVALUATE_TYPE",
             "YEAR",
             "ORG_ID",
             "POSITION_ID",

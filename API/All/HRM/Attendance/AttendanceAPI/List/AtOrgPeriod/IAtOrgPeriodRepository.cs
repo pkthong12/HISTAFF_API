@@ -8,7 +8,6 @@ namespace API.Controllers.AtOrgPeriod
     {
        Task<GenericPhaseTwoListResponse<AtOrgPeriodDTO>> SinglePhaseQueryList(GenericQueryListDTO<AtOrgPeriodDTO> request);
         Task<FormatedResponse> ReadAllOrgByPeriodId(AtOrgPeriodDTO periodId);
-        Task<FormatedResponse> GetStatusByOrgAndPeriod(AtOrgPeriodDTO periodId);
     }
 }
 

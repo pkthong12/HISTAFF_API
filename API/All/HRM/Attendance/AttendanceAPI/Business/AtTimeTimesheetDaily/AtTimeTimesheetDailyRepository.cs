@@ -39,14 +39,15 @@ namespace API.Controllers.AtTimeTimesheetDaily
 
         public async Task<FormatedResponse> SinglePhaseQueryList(GenericQueryListDTO<AtTimeTimesheetDailyDTO> request)
         {
-            var joined = from p in _dbContext.AtTimeTimesheetDailys
+            var joined = from p in _dbContext.AtTimeTimesheetDailys.AsNoTracking().DefaultIfEmpty()
                          from e in _dbContext.HuEmployees.AsNoTracking().Where(emp => emp.ID == p.EMPLOYEE_ID).DefaultIfEmpty()
                          from o in _dbContext.HuOrganizations.AsNoTracking().Where(o => o.ID == p.ORG_ID).DefaultIfEmpty()
                          from po in _dbContext.HuPositions.AsNoTracking().Where(po => po.ID == p.POSITION_ID).DefaultIfEmpty()
                          from j in _dbContext.HuJobs.AsNoTracking().Where(j => j.ID == po.JOB_ID).DefaultIfEmpty()
                          from s in _dbContext.AtShifts.AsNoTracking().Where(s => s.ID == p.SHIFT_ID).DefaultIfEmpty()
-                         from sb in _dbContext.AtTimeTypes.AsNoTracking().Where(s => s.ID == p.MANUAL_ID).DefaultIfEmpty()
-                         from pe in _dbContext.AtSalaryPeriods.AsNoTracking().Where(s => s.ID == p.PERIOD_ID).DefaultIfEmpty()
+                         from sb in _dbContext.AtTimeTypes.AsNoTracking().Where(sb => sb.ID == p.MANUAL_ID).DefaultIfEmpty()
+                         from pe in _dbContext.AtSalaryPeriods.AsNoTracking().Where(pe => pe.ID == p.PERIOD_ID).DefaultIfEmpty()
+                         orderby j.ORDERNUM, e.CODE
                          select new AtTimeTimesheetDailyDTO
                          {
                              Id = p.ID,
@@ -71,12 +72,12 @@ namespace API.Controllers.AtTimeTimesheetDaily
                              Valin4String = p.VALIN4 == null ? "" : p.VALIN4!.Value.ToString("HH:mm"),
                              Workinghour = p.WORKINGHOUR,// Số giờ làm việc
                              ManualId = p.MANUAL_ID, // Mã công trong ngày
-                             ManualCode = sb.CODE == "X" && p.WORKINGHOUR <= 5 && p.WORKINGHOUR >= 3 && p.LEAVE_ID == null ? sb.CODE + "/2" : sb.CODE,
+                             ManualCode = sb.CODE == "X" && p.WORKINGHOUR <= 5 && p.WORKINGHOUR >= 3 ? sb.CODE + "/2" : sb.CODE,
                              // Kiểu công trong ngày
                              Late = p.LATE, // Số phút đi muộn
                              Comebackout = p.COMEBACKOUT,// Số phút về sớm
                              DimuonVesomThucte = p.DIMUON_VESOM_THUCTE, // Tổng số phút đi muộn về sớm 
-                             OtTotalConvert = p.OT_TOTAL_CONVERT_PAY,// Tổng số giờ làm thêm
+                             OtTotalConvert = p.OT_TOTAL_CONVERT,// Tổng số giờ làm thêm
                              // Số giờ làm thêm tự động tạm tính
                              OtWeekday = p.OT_WEEKDAY, // Số giờ làm thêm thêm ban ngày (ngày thường)
                              OtSunday = p.OT_SUNDAY, // Số giờ làm thêm ban ngày(ngày nghỉ)
@@ -85,7 +86,7 @@ namespace API.Controllers.AtTimeTimesheetDaily
                              OtSundaynight = p.OT_SUNDAYNIGHT, // Số giờ làm thêm ban đêm (ngày nghỉ)
                              OtHolidayNight = p.OT_HOLIDAY_NIGHT, // Số giờ làm thêm ban đêm (ngày Lễ/Tết)
                              IsConfirm = p.IS_CONFIRM ?? false, // Xác nhận
-                             CodeColor = p.CODE_COLOR ?? 0,
+                             CodeColor = p.CODE_COLOR,
                              JobOrderNum = (int)(j.ORDERNUM ?? 999),
                          };
             var searchForShiftStart = "";
@@ -173,9 +174,10 @@ namespace API.Controllers.AtTimeTimesheetDaily
 
             var joined = await (from l in _dbContext.AtTimeTimesheetDailys.AsNoTracking().Where(l => l.ID == id).DefaultIfEmpty()
                                 from e in _dbContext.HuEmployees.AsNoTracking().Where(e => e.ID == l.EMPLOYEE_ID).DefaultIfEmpty()
-                                from p in _dbContext.HuPositions.AsNoTracking().Where(p => p.ID == l.POSITION_ID).DefaultIfEmpty()
-                                from o in _dbContext.HuOrganizations.AsNoTracking().Where(o => o.ID == l.ORG_ID).DefaultIfEmpty()
+                                from p in _dbContext.HuPositions.AsNoTracking().Where(p => p.ID == e.POSITION_ID).DefaultIfEmpty()
+                                from o in _dbContext.HuOrganizations.AsNoTracking().Where(o => o.ID == e.ORG_ID).DefaultIfEmpty()
                                 from sb in _dbContext.AtTimeTypes.AsNoTracking().Where(s => s.ID == l.MANUAL_ID).DefaultIfEmpty()
+                                from op in _dbContext.AtOrgPeriods.AsNoTracking().Where(s => s.PERIOD_ID == l.PERIOD_ID && s.ORG_ID == l.ORG_ID).DefaultIfEmpty()
                                 select new AtTimeTimesheetDailyDTO
                                 {
                                     Id = l.ID,
@@ -191,8 +193,9 @@ namespace API.Controllers.AtTimeTimesheetDaily
                                     ManualId = l.MANUAL_ID,
                                     ManualCode = sb.CODE,
                                     Reason = l.REASON,
-                                    IsConfirm = l.IS_CONFIRM,
-                                    ShiftCode = l.SHIFT_CODE
+                                    ShiftCode = l.SHIFT_CODE,
+                                    OrgStatus = op.STATUSCOLEX ?? 0,
+
                                 }).FirstOrDefaultAsync();
             if (joined != null)
             {
@@ -301,45 +304,51 @@ namespace API.Controllers.AtTimeTimesheetDaily
                     {
                         return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.EMPLOYEE_HAVE_PROBATIONARY_CONTRACT, StatusCode = EnumStatusCode.StatusCode400 };
                     }
-                    // check đăng ký phép không được quá số ngày phép còn lại
-                    // lấy tháng, năm dựa theo ngày làm việc
-                    var currentMonth = dto.Workingday!.Value.Month;
-                    var currentYear = dto.Workingday!.Value.Year;
-                    // lấy ra số ngày phép còn lại
-                    var res = await _dbContext.AtEntitlements.Where(e => e.EMPLOYEE_ID == dto.EmployeeId && e.YEAR == currentYear && e.MONTH == currentMonth).FirstOrDefaultAsync();
-                    double remainingDay = 0;
-                    if (res != null)
-                    {
-                        remainingDay = res.TOTAL_HAVE!.Value;
-                        if (remainingDay == 0)
+
+                    if ( manual!.CODE.Contains("P") || manual!.CODE.Contains("/P") || manual!.CODE.Contains("P/") )
                         {
-                            return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.NOT_ENOUGH_DAY_OFF, StatusCode = EnumStatusCode.StatusCode400 };
+                        // check đăng ký phép không được quá số ngày phép còn lại
+                        // lấy tháng, năm dựa theo ngày làm việc
+                        var currentMonth = dto.Workingday!.Value.Month;
+                        var currentYear = dto.Workingday!.Value.Year;
+                        // lấy ra số ngày phép còn lại
+                        var res = await _dbContext.AtEntitlements.Where(e => e.EMPLOYEE_ID == dto.EmployeeId && e.YEAR == currentYear && e.MONTH == currentMonth).FirstOrDefaultAsync();
+                        double remainingDay = 0;
+                        if (res != null)
+                        {
+                            remainingDay = res.TOTAL_HAVE!.Value;
+                            if (remainingDay == 0)
+                            {
+                                return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.NOT_ENOUGH_DAY_OFF, StatusCode = EnumStatusCode.StatusCode400 };
+                            }
+                            else
+                            {
+                                double totalDayRegister = 0;
+                                if (manual!.CODE == "P")
+                                {
+                                    totalDayRegister = 1;
+                                }
+                                else if (manual!.CODE.Contains("/P") || manual!.CODE.Contains("P/"))
+                                {
+                                    totalDayRegister = 0.5;
+                                }
+
+                                if (totalDayRegister > remainingDay)
+                                {
+                                    return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.NOT_ENOUGH_DAY_OFF, StatusCode = EnumStatusCode.StatusCode400 };
+
+                                }
+                            }
                         }
                         else
                         {
-                            double totalDayRegister = 0;
-                            if(manual!.CODE == "P")
-                            {
-                                totalDayRegister = 1;
-                            }
-                            else if(manual!.CODE.Contains("/P") || manual!.CODE.Contains("P/"))
-                            {
-                                totalDayRegister = 0.5;
-                            }
-
-                            if(totalDayRegister > remainingDay)
-                            {
-                                return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.NOT_ENOUGH_DAY_OFF, StatusCode = EnumStatusCode.StatusCode400 };
-
-                            }
+                            return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.NOT_ENOUGH_DAY_OFF, StatusCode = EnumStatusCode.StatusCode400 };
                         }
                     }
-                    else
-                    {
-                        return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.NOT_ENOUGH_DAY_OFF, StatusCode = EnumStatusCode.StatusCode400 };
-                    }
+
                 }
             }
+
             dto.IsEdit = true;
             dto.CodeColor = 1187;
             var response = await _genericRepository.Update(_uow, dto, sid, patchMode);
@@ -382,7 +391,7 @@ namespace API.Controllers.AtTimeTimesheetDaily
             {
 
                 string cnnString = appSettings.ConnectionStrings.CoreDb;
-                string orgids = "," + string.Join(",", param.ListOrgIds!) + ",";
+                string orgids = string.Join(",", param.ListOrgIds!);
                 DataSet ds = new();
                 using SqlConnection cnn = new(cnnString);
                 using SqlCommand cmd = new();

@@ -459,5 +459,44 @@ namespace ProfileAPI.List
             var response = await _unitOfWork.EmployeeRepository.GetByIdOnPortal(id);
             return Ok(response);
         }
+
+        #region Danh ba nhan su
+        [HttpPost]
+        public async Task<IActionResult> QueryListPersonnelDirectory(GenericQueryListDTO<HuEmployeeDTO> request)
+        {
+            try
+            {
+                var response = await _unitOfWork.EmployeeRepository.QueryListPersonnelDirectory(request);
+
+                if (response.ErrorType != EnumErrorType.NONE)
+                {
+                    return Ok(new FormatedResponse()
+                    {
+                        ErrorType = response.ErrorType,
+                        MessageCode = response.MessageCode ?? CommonMessageCode.NOT_ALL_CASES_CATCHED,
+                        StatusCode = EnumStatusCode.StatusCode400,
+                    });
+                }
+                else
+                {
+                    return Ok(new FormatedResponse()
+                    {
+                        InnerBody = response
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Ok(new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPersonnelDirectoryById(long Id)
+        {
+            var response = await _unitOfWork.EmployeeRepository.GetPersonnelDirectoryById(Id);
+            return Ok(response);
+        }
+        #endregion
     }
 }

@@ -319,31 +319,6 @@ namespace API.Controllers.SysGroup
             throw new NotImplementedException();
         }
 
-        public async Task<FormatedResponse> DeleteAllFunctionActionPermissionByGroupId(long groupId)
-        {
-            try
-            {
-                var getListFunctionActionPermission = await _dbContext.SysGroupFunctionActions.Where(x => x.GROUP_ID == groupId).ToListAsync();
-                var getListSysUserGroupOrg = await _dbContext.SysUserGroupOrgs.Where(x => x.GROUP_ID == groupId).ToListAsync();
-                if (getListFunctionActionPermission.Count > 0 || getListSysUserGroupOrg.Count > 0)
-                {
-                    _dbContext.SysGroupFunctionActions.RemoveRange(getListFunctionActionPermission);
-                    _dbContext.SysUserGroupOrgs.RemoveRange( getListSysUserGroupOrg);
-                    _dbContext.SaveChanges();
-                    return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode200, MessageCode = CommonMessageCode.DELETE_MULTIPLE_RECORD_SUCCESS };
-                }
-                else
-                {
-                    return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.ENTITIES_NOT_FOUND};
-                }
-            }
-            catch (Exception ex)
-            {
-
-                return new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, MessageCode = ex.Message, StatusCode = EnumStatusCode.StatusCode500 };
-            }
-        }
-
     }
 
 }

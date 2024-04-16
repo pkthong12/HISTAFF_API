@@ -61,7 +61,7 @@ namespace API.Controllers.PaPayrollsheetSum
                     P_YEAR = param.Year, //2023,
                     P_PERIOD_ID = param.PeriodId, //2024,
                     P_SAL_OBJ_ID = param.ObjSalaryId, //1382,
-                    P_FUND_ID = param.PayrollFund == null ? "" : param.PayrollFund.ToString(),
+                    P_FUND_ID = param.PayrollFund,
                     P_USERNAME = param.EmployeeCal,
                     P_PAY_DATE = param.PayDate == null ? "" : param.PayDate!.Value.ToString("dd/MM/yyyy"),
                     P_CODE = param.EmployeeCode == null ? "" : param.EmployeeCode,
@@ -123,8 +123,8 @@ namespace API.Controllers.PaPayrollsheetSum
                         P_OBJ_SALARY = param.ObjSalaryId,
                         P_PAYROLL_FUND = param.PayrollFund,
                         P_USER_CAL = param.EmployeeCal,
-                        P_PAY_DATE = param.PayDate
-                    }, false);
+                        P_PAY_DATE = param.PayDate.ToString()
+                    }, false) ;
                 return new() { InnerBody = r[0] };
                 //return new() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.CALCULATE_FAILED };
             }
@@ -322,19 +322,6 @@ namespace API.Controllers.PaPayrollsheetSum
             {
                 return new FormatedResponse() { MessageCode = CommonMessageCode.ENTITY_NOT_FOUND, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
             }
-        }
-
-        public async Task<FormatedResponse> ComparePayrollFund(PaPayrollsheetSumDTO dto)
-        {
-            string listOrgIds = string.Join(",", dto.OrgIds!.ToArray()).ToString();
-            var r = await QueryData.ExecuteList("PKG_COMPARE_PAYROLL_FUND",
-                new
-                {
-                    P_ORG_ID = listOrgIds,
-                    P_SAL_PERIOD = dto.PeriodId,
-                    P_FUND_ID = dto.PayrollFund,
-                }, false);
-           return new FormatedResponse() { InnerBody = r[0] };
         }
     }
 }

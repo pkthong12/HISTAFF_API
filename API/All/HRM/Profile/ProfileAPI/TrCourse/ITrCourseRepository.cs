@@ -8,6 +8,8 @@ namespace API.Controllers.TrCourse
     {
        Task<GenericPhaseTwoListResponse<TrCourseDTO>> SinglePhaseQueryList(GenericQueryListDTO<TrCourseDTO> request);
         Task<FormatedResponse> CreateNewCode();
+
+        Task<FormatedResponse> GetListCourse();
     }
 }
 

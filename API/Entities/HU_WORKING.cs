@@ -20,14 +20,13 @@ public partial class HU_WORKING
 
     public DateTime? EXPIRE_DATE { get; set; }
 
-    public string DECISION_NO { get; set; } = null!;
+    public string? DECISION_NO { get; set; }
 
     public long TYPE_ID { get; set; }
 
     public long? SALARY_TYPE_ID { get; set; }
 
     public long? SALARY_SCALE_ID { get; set; }
-
     /* SALARY_SCALE_NAME: Phục vụ cho việc hiển thị thang bảng lương chức danh
      * Bug này liên quan đến việc Excel không thể chạy được công thức VLOOKUP khi tham số có độ dài nhiều hơn 255 ký tự
     */
@@ -82,7 +81,6 @@ public partial class HU_WORKING
     public int? IS_BHTN { get; set; }
 
     public long? SALARY_SCALE_DCV_ID { get; set; }
-    
     public string? SALARY_SCALE_DCV_NAME { get; set; }
 
     public long? SALARY_RANK_DCV_ID { get; set; }
@@ -104,6 +102,7 @@ public partial class HU_WORKING
     public long? WAGE_ID { get; set; }
 
     public bool? IS_RESPONSIBLE { get; set; }
+    public bool? IS_RESPONSIBLE_SALARY { get; set; }
 
     public DateTime? BASE_DATE { get; set; }
 

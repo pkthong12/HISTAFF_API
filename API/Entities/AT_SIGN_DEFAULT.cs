@@ -6,8 +6,6 @@ namespace API.Entities;
 
 public class AT_SIGN_DEFAULT : BASE_ENTITY
 {
-    public long? PROFILE_ID { get; set; }
-
     public long? EMPLOYEE_ID { get; set; }
 
     public long? ORG_ID { get; set; }

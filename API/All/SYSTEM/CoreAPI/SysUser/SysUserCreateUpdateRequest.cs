@@ -8,10 +8,12 @@ namespace API.All.SYSTEM.CoreAPI.SysUser
         public required string UserName { get; set; }
         public required string Fullname { get; set; }
         public long GroupId { get; set; }
+        public string? Email { get; set; }
         public string? Password { get; set; }
         public string? PasswordConfirm { get; set; }
         public bool IsPortal { get; set; }
         public bool IsWebapp { get; set; }
+        public bool IsMobile { get; set; }
         public bool IsAdmin { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

@@ -6,14 +6,14 @@
       "RowsToPrepare": 1000,
       "RenderOtherListReferences": true,
       "RenderAdministrativePlaces": false,
-      "BuildOrgTree": true,
-      "BuildPositions": true,
+      "BuildOrgTree": false,
+      "BuildPositions": false,
 
       "ExDirectReferences": [
         {
           "Table": "HU_CONTRACT_TYPE",
           "UniqueIndexColumns": [ "NAME" ],
-          "Condition": "(TYPE_ID = 27 AND IS_ACTIVE = 1 AND CODE != 'PLHDLD')"
+          "Condition": "(IS_ACTIVE = 1 AND CODE != 'PLHDLD')"
         },
         {
           "Table": "HU_EMPLOYEE_CV",
@@ -30,6 +30,11 @@
         {
           "Table": "HU_CONTRACT",
           "UniqueIndexColumns": [ "CONTRACT_NO" ]
+        },
+        {
+          "Table": "SYS_CONTRACT_TYPE",
+          "UniqueIndexColumns": [ "NAME", "CODE" ],
+          "Condition": "(CODE = 'PLHD')"
         }
       ],
       "ExIndirectReferences": [
@@ -53,8 +58,7 @@
           "ChildTable": "HU_CONTRACT",
           "ChildKey": "EMPLOYEE_ID",
           "ParentUniqueIndexColumns": [ "CODE" ],
-          "ChildUniqueIndexColumns": [ "CONTRACT_NO" ],
-          "ChildCondition": "(STATUS_ID = 994)"
+          "ChildUniqueIndexColumns": [ "CONTRACT_NO" ]
         }
       ],
 
@@ -98,7 +102,7 @@
           "Rules": [
             {
               "Column": "APPEND_TYPEID",
-              "DirectReference": "HU_CONTRACT_TYPE"
+              "DirectReference": "SYS_CONTRACT_TYPE"
             },
             {
               "Column": "SIGNER_POSITION",
@@ -117,6 +121,10 @@
               "Column": "ID_CONTRACT",
               "IndirectReference": [ "HU_EMPLOYEE", "HU_CONTRACT" ],
               "IndirectColumn": "EMPLOYEE_ID"
+            },
+            {
+              "Column": "CONTRACT_TYPE_ID",
+              "DirectReference": "HU_CONTRACT_TYPE"
             },
             {
               "Column": "SIGN_PROFILE_ID",

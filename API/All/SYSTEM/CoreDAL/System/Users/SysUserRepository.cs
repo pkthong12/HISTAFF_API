@@ -271,54 +271,7 @@ namespace CoreDAL.Repositories
                     }
                     else
                     {
-                        return new ResultWithError("ERROR_USERNAME_INCORRECT");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    return new ResultWithError(ex.Message);
-                }
-
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-
-        async Task<ResultWithError> ISysUserRepository.GetByAccountName(string UserName,  bool alreadtHased = false, SYS_REFRESH_TOKEN refreshToken = null)
-        {
-            try
-            {
-                UserName = UserName.ToLower().Trim();
-                try
-                {
-                    var r = await _appContext.SysUsers.Where(p => p.USERNAME!.ToLower() == UserName).FirstOrDefaultAsync();
-                    if (r != null)
-                    {
-                        var userID = r.ID;
-                        var data = new AuthResponse()
-                        {
-                            Id = r.ID,
-                            UserName = r.USERNAME!,
-                            FullName = r.FULLNAME!,
-                            IsAdmin = r.IS_ADMIN,
-                            IsRoot = r.IS_ROOT,
-                            IsLock = r.IS_LOCK,
-                            IsWebapp = r.IS_WEBAPP,
-                            IsPortal = r.IS_PORTAL,
-                            Avatar = r.AVATAR!,
-                            IsFirstLogin = r.IS_FIRST_LOGIN,
-                            EmployeeId = r.EMPLOYEE_ID,
-                        };
-
-                        return new ResultWithError(data);
-
-                    }
-                    else
-                    {
-                        return new ResultWithError("ERROR_USERNAME_INCORRECT");
+                        return new ResultWithError("ERROR_USER_NOT_FOUND");
                     }
                 }
                 catch (Exception ex)

@@ -270,10 +270,6 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalEducation
                     {
                         foreach (PropertyInfo prop2 in prop2s)
                         {
-                            //if(prop2.Name == "IdentityAddress")
-                            //{
-                            //    listModelChange.Add("IdentityAddress");
-                            //}
 
                             if (prop.Name != "Id" && prop.Name != null && prop.Name == prop2.Name && prop.GetValue(query) != null && prop2.GetValue(dto) != null && prop.GetValue(query)!.ToString() != prop2.GetValue(dto)!.ToString())
                             {
@@ -281,10 +277,6 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalEducation
                             }
 
                         }
-                    }
-                    if(dto.IdentityAddress != null && cv.ID_PLACE != dto.IdentityAddress)
-                    {
-                        listModelChange.Add("IdentityAddress");
                     }
                     dto.ModelChange = string.Join(";", listModelChange);
                 }
@@ -597,6 +589,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalEducation
                     {
                         foreach (PropertyInfo prop2 in prop2s)
                         {
+
                             if (prop.Name != "Id" && prop.Name != null && prop.Name == prop2.Name && prop.GetValue(query) != null && prop2.GetValue(dto) != null && prop.GetValue(query)!.ToString() != prop2.GetValue(dto)!.ToString())
                             {
                                 listModelChange.Add(Char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1));

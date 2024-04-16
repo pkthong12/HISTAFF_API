@@ -4,8 +4,6 @@ namespace API.DTO
 {
     public class AtSignDefaultDTO : BaseDTO
     {
-        public long? ProfileId { get; set; }
-
         public long? EmployeeId { get; set; }
 
         public long? OrgId { get; set; }

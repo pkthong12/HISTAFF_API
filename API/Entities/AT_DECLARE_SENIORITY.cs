@@ -12,9 +12,9 @@ public partial class AT_DECLARE_SENIORITY
     public long? MONTH_ADJUST_NUMBER { get; set; }
     public string? REASON_ADJUST { get; set; }
     public long? MONTH_DAY_OFF { get; set; }
-    public double? NUMBER_DAY_OFF { get; set; }
+    public decimal? NUMBER_DAY_OFF { get; set; }
     public string? REASON_ADJUST_DAY_OFF { get; set; }
-    public double? TOTAL { get; set; }
+    public decimal? TOTAL { get; set; }
     public string? CREATED_BY { get; set; }
     public string? UPDATED_BY { get; set; }
     public DateTime? CREATED_DATE { get; set; }

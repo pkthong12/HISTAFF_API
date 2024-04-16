@@ -42,6 +42,8 @@ namespace API.DTO
         public double? Cl27 { get; set; }
         public double? Tax18 { get; set; }
         public double? Tax26 { get; set; }
+        public double? Tax23 { get; set; }
+        public double? Tax44 { get; set; }
         public int? JobOrderNum { get; set; }
     }
 }

@@ -20,8 +20,7 @@
         },
         {
           "Table": "HU_WELFARE",
-          "UniqueIndexColumns": [ "NAME" ],
-          "Condition": "(IS_AUTO_ACTIVE IS NULL)"
+          "UniqueIndexColumns": [ "NAME" ]
         }
       ],
       "ExIndirectReferences": [

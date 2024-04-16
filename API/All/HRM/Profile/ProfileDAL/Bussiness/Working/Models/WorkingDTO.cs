@@ -62,6 +62,8 @@ namespace ProfileDAL.ViewModels
         //[Required(ErrorMessage = "{0}_Required")]
         public long? OrgId { get; set; }
         //[Required(ErrorMessage = "{0}_Required")]
+
+        public long? OrgIdOfEmployee {  get; set; }
         public long? TypeId { get; set; } // Loại Quyết định
         public string? TypeCode { get; set; }
         //[Required(ErrorMessage = "{0}_Required")]
@@ -110,6 +112,7 @@ namespace ProfileDAL.ViewModels
         public long? LaborObjId { get; set; }
         public long? WageId { get; set; }
         public bool? IsResponsible { get; set; }
+        public bool? IsResponsibleSalary { get; set; }
         public string? EmployeeName { get; set; }
         public string? EmployeeCode { get; set; }
         public string? OrgName { get; set; }
@@ -130,7 +133,8 @@ namespace ProfileDAL.ViewModels
 
         public bool? ValueToBind { get; set; }
 
-
+        //is resign from position
+        public bool? IsNotResign { get; set; }
     }
 
     public class ImportDtlParam
@@ -138,7 +142,7 @@ namespace ProfileDAL.ViewModels
         public string Code { get; set; }
         public string FullName { get; set; }
         public string TypeName { get; set; }
-        public string DecisionNo { get; set; }
+        public string? DecisionNo { get; set; }
         public string EffectDate { get; set; }
         public string OrgId { get; set; }
         public string PosName { get; set; }

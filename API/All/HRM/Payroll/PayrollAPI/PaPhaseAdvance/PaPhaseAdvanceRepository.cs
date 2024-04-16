@@ -33,13 +33,14 @@ namespace API.Controllers.PaPhaseAdvance
                          from o in _dbContext.HuOrganizations.AsNoTracking().Where(o => o.ID == p.ORG_ID).DefaultIfEmpty()
                          from s in _dbContext.AtSalaryPeriods.AsNoTracking().Where(s => s.ID == p.PERIOD_ID).DefaultIfEmpty()
                              //from a in _dbContext.PaPhaseAdvanceSymbols.AsNoTracking().Where(x => x.PHASE_ADVANCE_ID == p.ID).DefaultIfEmpty()
-
+                        from s1 in _dbContext.AtSalaryPeriods.AsNoTracking().Where(x => x.ID == p.FROM_SALARY).DefaultIfEmpty()
+                        from s2 in _dbContext.AtSalaryPeriods.AsNoTracking().Where(x => x.ID == p.TO_SALARY).DefaultIfEmpty()
                          select new PaPhaseAdvanceDTO
                          {
                              Id = p.ID,
                              OrgId = p.ORG_ID,
                              OrgName = o.NAME,
-                             Year = s.YEAR,
+                             Year = p.YEAR,
                              PhaseDay = p.PHASE_DAY,
                              NameVn = p.NAME_VN,
                              MonthLbs = p.MONTH_LBS,
@@ -54,6 +55,10 @@ namespace API.Controllers.PaPhaseAdvance
                              IsActive = p.IS_ACTIVE,
                              Seniority = p.SENIORITY,
                              Status = p.IS_ACTIVE == true ? "Áp dụng" : "Ngừng áp dụng",
+                             FromSalary = p.FROM_SALARY,
+                             ToSalary = p.TO_SALARY,
+                             FromSalaryName = s1.NAME,
+                             ToSalaryName = s2.NAME,
 
                          };
 
@@ -107,6 +112,8 @@ namespace API.Controllers.PaPhaseAdvance
                               Symbol = l.SYMBOL,
                               Seniority = l.SENIORITY,
                               Status = l.IS_ACTIVE!.Value == true ? "Áp dụng" : "Ngừng áp dụng",
+                              FromSalary = l.FROM_SALARY,
+                              ToSalary = l.TO_SALARY,
                           }).FirstOrDefault();
 
             var listSymbol = _dbContext.PaPhaseAdvanceSymbols.AsNoTracking().Where(x => x.PHASE_ADVANCE_ID == id).Select(x => x.SYMBOL_ID).ToList();

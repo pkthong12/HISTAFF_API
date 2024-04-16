@@ -35,7 +35,6 @@ namespace ProfileDAL.Repositories
         Task<bool> IsReceive(ContractInputDTO param);
         Task<FormatedResponse> GetContractByEmpProfilePortal(long EmployeeId);
         Task<FormatedResponse> LiquidationContract(ContractInputDTO param);
-        Task<FormatedResponse> GetContractByEmpProfile2(long EmployeeId);
 
         void ScanUpdateStatusEmpDetail();
         Task<bool> ApproveList(string sid);

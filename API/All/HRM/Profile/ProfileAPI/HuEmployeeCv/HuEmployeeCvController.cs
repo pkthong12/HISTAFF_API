@@ -201,18 +201,17 @@ namespace API.Controllers.HuEmployeeCv
             var response = await _HuEmployeeCvRepository.CheckSameName(name);
             return Ok(response);
         }
+        [HttpGet]
+        public async Task<IActionResult> CheckSameItimeid(string itimeId)
+        {
+            var response = await _HuEmployeeCvRepository.CheckSameItimeid(itimeId);
+            return Ok(response);
+        }
 
         [HttpGet]
         public async Task<IActionResult> CheckSameTaxCode(string taxCode)
         {
             var response = await _HuEmployeeCvRepository.CheckSameTaxCode(taxCode);
-            return Ok(response);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> CheckSameItimeid(string itimeId)
-        {
-            var response = await _HuEmployeeCvRepository.CheckSameItimeid(itimeId);
             return Ok(response);
         }
 
@@ -240,18 +239,14 @@ namespace API.Controllers.HuEmployeeCv
         [HttpPost]
         public async Task<IActionResult> UpdateGeneralInfo(StaffProfileUpdateDTO request)
         {
-            var sid = Request.Sid(_appSettings);
-            if (sid == null) return Unauthorized();
-            var response = await _HuEmployeeCvRepository.UpdateGeneralInfo(request, sid);
+            var response = await _HuEmployeeCvRepository.UpdateGeneralInfo(request);
             return Ok(response);
         }
 
         [HttpPost]
         public async Task<IActionResult> UpdatePolitical(StaffProfileUpdateDTO request)
         {
-            var sid = Request.Sid(_appSettings);
-            if (sid == null) return Unauthorized();
-            var response = await _HuEmployeeCvRepository.UpdatePolitical(request, sid);
+            var response = await _HuEmployeeCvRepository.UpdatePolitical(request);
             return Ok(response);
         }
 
@@ -288,9 +283,7 @@ namespace API.Controllers.HuEmployeeCv
         [HttpPost]
         public async Task<IActionResult> UpdatePresenterId(StaffProfileUpdateDTO request)
         {
-            var sid = Request.Sid(_appSettings);
-            if (sid == null) return Unauthorized();
-            var response = await _HuEmployeeCvRepository.UpdatePresenterId(request, sid);
+            var response = await _HuEmployeeCvRepository.UpdatePresenterId(request);
             return Ok(response);
         }
 
@@ -304,18 +297,14 @@ namespace API.Controllers.HuEmployeeCv
         [HttpPost]
         public async Task<IActionResult> UpdatePoliticalOrganizationId(StaffProfileUpdateDTO request)
         {
-            var sid = Request.Sid(_appSettings);
-            if (sid == null) return Unauthorized();
-            var response = await _HuEmployeeCvRepository.UpdatePoliticalOrganizationId(request, sid);
+            var response = await _HuEmployeeCvRepository.UpdatePoliticalOrganizationId(request);
             return Ok(response);
         }
 
         [HttpPost]
         public async Task<IActionResult> UpdateBank(StaffProfileUpdateDTO request)
         {
-            var sid = Request.Sid(_appSettings);
-            if (sid == null) return Unauthorized();
-            var response = await _HuEmployeeCvRepository.UpdateBank(request, sid);
+            var response = await _HuEmployeeCvRepository.UpdateBank(request);
             return Ok(response);
         }
 
@@ -442,9 +431,7 @@ namespace API.Controllers.HuEmployeeCv
         [HttpPost]
         public async Task<IActionResult> UpdateCurruculum(StaffProfileUpdateDTO request)
         {
-            var sid = Request.Sid(_appSettings);
-            if (sid == null) return Unauthorized();
-            var response = await _HuEmployeeCvRepository.UpdateCurruculum(request, sid);
+            var response = await _HuEmployeeCvRepository.UpdateCurruculum(request);
             return Ok(response);
         }
 
@@ -460,18 +447,14 @@ namespace API.Controllers.HuEmployeeCv
         [HttpPost]
         public async Task<IActionResult> UpdateSituationId(StaffProfileUpdateDTO request)
         {
-            var sid = Request.Sid(_appSettings);
-            if (sid == null) return Unauthorized();
-            var response = await _HuEmployeeCvRepository.UpdateSituationId(request, sid);
+            var response = await _HuEmployeeCvRepository.UpdateSituationId(request);
             return Ok(response);
         }
 
         [HttpPost]
         public async Task<IActionResult> UpdateAdditonal(StaffProfileUpdateDTO request)
         {
-            var sid = Request.Sid(_appSettings);
-            if (sid == null) return Unauthorized();
-            var response = await _HuEmployeeCvRepository.UpdateAdditonal(request, sid);
+            var response = await _HuEmployeeCvRepository.UpdateAdditonal(request);
             return Ok(response);
         }
 
@@ -865,12 +848,13 @@ namespace API.Controllers.HuEmployeeCv
             var response = await _HuEmployeeCvRepository.GetNameOrgDashboard(model);
             return Ok(response);
         }
+
         [HttpPost]
-        public async Task<IActionResult> GetIdOrgDissolve(HuEmployeeCvInputDTO? model)
+        public async Task<IActionResult> UpdateGeneralInfo2(StaffProfileUpdateDTO request)
         {
             var sid = Request.Sid(_appSettings);
             if (sid == null) return Unauthorized();
-            var response = await _HuEmployeeCvRepository.GetIdOrgDissolve(model);
+            var response = await _HuEmployeeCvRepository.UpdateGeneralInfo2(request);
             return Ok(response);
         }
     }

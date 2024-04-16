@@ -1,4 +1,6 @@
-﻿using API.Entities.PORTAL;
+﻿using API.DTO;
+using API.Entities;
+using API.Entities.PORTAL;
 using Microsoft.Extensions.Options;
 
 namespace API.All.DbContexts
@@ -19,7 +21,7 @@ namespace API.All.DbContexts
         //public DbSet<HU_DYNAMIC_REPORT_DTL_TOTAL> HuDynamicReportDtlTotals { get; set; }
 
         public DbSet<AD_REQUEST> AdRequests { get; set; }
-
+        public DbSet<AT_SIGN_DEFAULT_IMPORT> AtSignDefaultImports { get; set; }
         public DbSet<AT_APPROVED> AtApproveds { get; set; }
 
         public DbSet<AT_CONFIG> AtConfigs { get; set; }
@@ -53,7 +55,6 @@ namespace API.All.DbContexts
         public DbSet<AT_SHIFT> AtShifts { get; set; }
 
         public DbSet<AT_SIGN_DEFAULT> AtSignDefaults { get; set; }
-        public DbSet<AT_SIGN_DEFAULT_IMPORT> AtSignDefaultImports { get; set; }
 
         public DbSet<AT_SWIPE_DATA> AtSwipeDatas { get; set; }
 
@@ -95,6 +96,10 @@ namespace API.All.DbContexts
 
         public DbSet<AT_WORKSIGN_TMP> AtWorksignTmps { get; set; }
 
+        public DbSet<AT_SETUP_GPS> AtSetupGpss { get; set; }
+
+        public DbSet<AT_SETUP_WIFI> AtSetupWifis { get; set; }
+
         public DbSet<CSS_THEME> CssThemes { get; set; }
 
         public DbSet<CSS_THEME_VAR> CssThemeVars { get; set; }
@@ -115,7 +120,10 @@ namespace API.All.DbContexts
         public DbSet<HU_ALLOWANCE_EMP_IMPORT> HuAllowanceEmpImports { get; set; }
         public DbSet<HU_ANSWER> HuAnswers { get; set; }
         public DbSet<HU_CONCURRENTLY> HuConcurrentlys { get; set; }
-
+        public DbSet<HU_COMPETENCY> HuCompetencys { get; set; }
+        public DbSet<HU_COMPETENCY_ASPECT> HuCompetencyAspects { get; set; }
+        public DbSet<HU_COMPETENCY_DICT> HuCompetencyDicts { get; set; }
+        public DbSet<HU_COMPETENCY_GROUP> HuCompetencyGroups { get; set; }
         public DbSet<HU_ANSWER_USER> HuAnswerUsers { get; set; }
 
         public DbSet<HU_BANK> HuBanks { get; set; }
@@ -124,8 +132,9 @@ namespace API.All.DbContexts
 
         public DbSet<HU_CERTIFICATE> HuCertificates { get; set; }
         public DbSet<HU_CERTIFICATE_IMPORT> HuCertificateImports { get; set; }
-
+        public DbSet<HU_COM_EMPLOYEE_MNG> HuComEmployeeMngs { get; set; }
         public DbSet<HU_COMMEND> HuCommends { get; set; }
+        public DbSet<HU_COM_COMMEND> HuComCommends { get; set; }
         public DbSet<HU_COMMEND_IMPORT> HuCommendImports { get; set; }
 
         public DbSet<HU_WORKING_ALLOW> WorkingAllowances { get; set; }
@@ -138,7 +147,7 @@ namespace API.All.DbContexts
 
         public DbSet<HU_CONTRACT> HuContracts { get; set; }
         public DbSet<HU_CONTRACT_IMPORT> HuContractImports { get; set; }
-        
+
         public DbSet<HU_FILECONTRACT> HuFileContracts { get; set; }
         public DbSet<HU_FILECONTRACT_IMPORT> HuFilecontractImports { get; set; }
 
@@ -196,6 +205,10 @@ namespace API.All.DbContexts
 
         public DbSet<HU_NATION> HuNations { get; set; }
 
+        public DbSet<HU_PLANNING> HuPlannings { get; set; }
+        public DbSet<HU_PLANNING_EMP> HuPlanningEmps { get; set; }
+
+
 
         public DbSet<HU_QUESTION> HuQuestions { get; set; }
 
@@ -233,10 +246,20 @@ namespace API.All.DbContexts
         public DbSet<HUV_WORKING_MAX_BYTYPE> HuVWorkingMaxByTypes { get; set; }
 
         public DbSet<HUV_WAGE_MAX> HuVWageMax { get; set; }
+        public DbSet<HU_COM_WORKING> HuComWorkings { get; set; }
+        public DbSet<HU_COM_CLASSIFICATION> HuComClassifications { get; set; }
+        public DbSet<HU_COMPETENCY_PERIOD> HuCompetencyPeriods { get; set; }
+        public DbSet<HU_ASSET> HuAssets { get; set; }
+        public DbSet<HU_ASSET_MNG> HuAssetMngs { get; set; }
 
         public DbSet<INS_CHANGE> InsChanges { get; set; }
+        public DbSet<INS_TOTALSALARY> InsTotalsalarys { get; set; }
+        public DbSet<INS_CLAIM_INSURANCE> InsClaimInsurances { get; set; }
+
+        public DbSet<INS_HEALTH_INSURANCE> InsHealthInsurances { get; set; }
 
         public DbSet<INS_INFORMATION> InsInformations { get; set; }
+        public DbSet<INS_MATERNITY_MNG> InsMaternityMngs { get; set; }
 
         public DbSet<INS_SPECIFIED_OBJECTS> InsSpecifiedObjectss { get; set; }
 
@@ -253,6 +276,8 @@ namespace API.All.DbContexts
         public DbSet<INS_GROUP> InsGroups { get; set; }
 
         public DbSet<INS_REGIMES_MNG> InsRegimesMngs { get; set; }
+        public DbSet<INS_LIST_PROGRAM> InsListPrograms { get; set; }
+        public DbSet<INS_LIST_CONTRACT> InsListContracts { get; set; }
 
         public DbSet<PA_ADVANCE> PaAdvances { get; set; }
 
@@ -317,14 +342,18 @@ namespace API.All.DbContexts
         public DbSet<PA_IMPORT_MONTHLY_TAX> PaImportMonthlyTaxs { get; set; }
 
         public DbSet<PA_TAX_ANNUAL_IMPORT> PaTaxAnnualImports { get; set; }
-        
+
         public DbSet<PORTAL_REQUEST_CHANGE> PortalRequestChanges { get; set; }
 
         public DbSet<PORTAL_ROUTE> PortalRoutes { get; set; }
 
         public DbSet<PT_BLOG_INTERNAL> PtBlogInternals { get; set; }
 
+
         public DbSet<RC_CANDIDATE_SCANCV> RcCandidateScancvs { get; set; }
+        public DbSet<RC_HR_PLANING_DETAIL> RcHrPlaningDetails { get; set; }
+        public DbSet<RC_HR_YEAR_PLANING> RcHrYearPlanings { get; set; }
+
 
         public DbSet<SE_APP_PROCESS> SeAppProcesss { get; set; }
 
@@ -332,7 +361,6 @@ namespace API.All.DbContexts
 
         public DbSet<SE_APP_TEMPLATE_DTL> SeAppTemplateDtls { get; set; }
         public DbSet<SE_CONFIG> SeConfigs { get; set; }
-        public DbSet<SE_MAIL> SeMails { get; set; }
 
         public DbSet<SE_HR_PROCESS> SeHrProcesss { get; set; }
 
@@ -354,6 +382,8 @@ namespace API.All.DbContexts
         public DbSet<SE_PROCESS_APPROVE_POS> SeProcessApprovePos { get; set; }
         public DbSet<SE_DOCUMENT> SeDocuments { get; set; }
         public DbSet<SE_DOCUMENT_INFO> SeDocumentInfos { get; set; }
+
+        public DbSet<SW_PUSH_SUBSCRIPTION> SwPushSubscriptions { get; set; }
 
         public DbSet<SY_AUDITLOG> SyAuditlogs { get; set; }
 
@@ -387,12 +417,14 @@ namespace API.All.DbContexts
 
         public DbSet<SYS_MENU> SysMenus { get; set; }
 
+        public DbSet<SYS_MIGRATION_LOG> SysMigrationLogs { get; set; }
+
         public DbSet<SYS_MODULE> SysModules { get; set; }
 
         public DbSet<SYS_MUTATION_LOG> SysMutationLogs { get; set; }
 
         public DbSet<SYS_OTHER_LIST> SysOtherLists { get; set; }
-         
+
         public DbSet<SYS_OTHER_LIST_FIX> SysOtherListFixs { get; set; }
 
         public DbSet<SYS_OTHER_LIST_TYPE> SysOtherListTypes { get; set; }
@@ -400,7 +432,7 @@ namespace API.All.DbContexts
         public DbSet<SYS_PA_ELEMENT> SysPaElements { get; set; }
 
         public DbSet<SYS_PA_FORMULA> SysPaFormulas { get; set; }
-         
+
         public DbSet<SYS_PERMISSION> SysPermissions { get; set; }
 
         public DbSet<SYS_REFRESH_TOKEN> SysRefreshTokens { get; set; }
@@ -409,7 +441,7 @@ namespace API.All.DbContexts
 
         public DbSet<SYS_SALARY_TYPE> SysSalaryTypes { get; set; }
 
-        public DbSet<SYS_SETTING_MAP> SysSettingMaps { get; set; }   
+        public DbSet<SYS_SETTING_MAP> SysSettingMaps { get; set; }
 
         public DbSet<SYS_TMP_SORT> SysTmpSorts { get; set; }
 
@@ -432,9 +464,24 @@ namespace API.All.DbContexts
         public DbSet<TMP_INS_CHANGE> TmpInsChanges { get; set; }
 
         public DbSet<TR_CENTER> TrCenters { get; set; }
+        public DbSet<TR_CLASS> TrClasss { get; set; }
+
+        public DbSet<TR_CLASSIFICATION> TrClassifications { get; set; }
 
         public DbSet<TR_COURSE> TrCourses { get; set; }
+        public DbSet<TR_CRITERIA> TrCriterias { get; set; }
         public DbSet<TR_PLAN> TrPlans { get; set; }
+        public DbSet<TR_PREPARE> TrPrepares { get; set; }
+        public DbSet<TR_REQUEST> TrRequests { get; set; }
+        public DbSet<TR_REQUEST_EMPLOYEE> TrRequestEmployees { get; set; }
+        public DbSet<TR_PROGRAM> TrPrograms { get; set; }
+        public DbSet<TR_SETTING_CRI_COURSE> TrSettingCriCourses { get; set; }
+
+        public DbSet<TR_SETTING_CRI_DETAIL> TrSettingCriDetails { get; set; }
+        public DbSet<TR_REIMBURSEMENT> TrReimbursements { get; set; }
+        public DbSet<TR_PROGRAM_RESULT> TrProgramResults { get; set; }
+        public DbSet<TR_CLASS_RESULT> TrClassResults { get; set; }
+
         public DbSet<HU_WELFARE_AUTO> HuWelfareAutos { get; set; }
         public DbSet<AT_ORG_PERIOD> AtOrgPeriods { get; set; }
 
@@ -444,15 +491,11 @@ namespace API.All.DbContexts
 
         public DbSet<PA_LISTSAL> PaListSals { get; set; }
         public DbSet<SE_REMINDER> SeReminders { get; set; }
-        public DbSet<SE_REMINDER_SEEN> SeReminderSeens { get; set; }
         public DbSet<HU_COMMEND_EMPLOYEE> HuCommendEmployees { get; set; }
         public DbSet<HU_COMMEND_EMPLOYEE_IMPORT> HuCommendEmployeeImports { get; set; }
         public DbSet<HU_EVALUATE> HuEvaluates { get; set; }
         public DbSet<HU_EVALUATE_IMPORT> HuEvaluateImports { get; set; }
         public DbSet<AT_OTHER_LIST> AtOtherLists { get; set; }
-
-
-        // thêm DbSet
         public DbSet<INS_DECLARATION_NEW> InsDeclarationNews { get; set; }
         public DbSet<HU_EVALUATION_COM> HuEvaluationComs { get; set; }
         public DbSet<HU_EVALUATION_COM_IMPORT> HuEvaluationComImports { get; set; }
@@ -463,10 +506,13 @@ namespace API.All.DbContexts
         public DbSet<HU_WORKING_HSL_PC_IMPORT> HuWorkingHslPcImports { get; set; }
         public DbSet<HU_WORKING_ALLOW_IMPORT> HuWorkingAllowImports { get; set; }
         public DbSet<HU_FAMILY_IMPORT> HuFamilyImports { get; set; }
-
-
+        public DbSet<RC_EXAMS> RcExamss { get; set; }
+        public DbSet<RC_REQUEST> RcRequests { get; set; }
+        public DbSet<RC_CANDIDATE> RcCandidates { get; set; }
+        public DbSet<RC_CANDIDATE_CV> RcCandidateCvs { get; set; }
         public DbSet<SYS_CONFIGURATION_COMMON> SysConfigurationCommons { get; set; }
         public DbSet<PORTAL_REGISTER_OFF> PortalRegisterOffs { get; set; }
+        public DbSet<PORTAL_REGISTER_EMPS> PortalRegisterEmps { get; set; }
         public DbSet<PORTAL_REGISTER_OFF_DETAIL> PortalRegisterOffDetails { get; set; }
         public DbSet<PORTAL_CERTIFICATE> PortalCertificates { get; set; }
         public DbSet<SE_PROCESS_APPROVE> ProcessApproves { get; set; }
@@ -474,7 +520,20 @@ namespace API.All.DbContexts
         public DbSet<SE_PROCESS_APPROVE_STATUS> ProcessApproveStatuses { get; set; }
         public DbSet<HU_WORKING_BEFORE_IMPORT> HuWorkingBeforeImports { get; set; }
         public DbSet<INS_INFORMATION_IMPORT> InsInformationImports { get; set; }
+        public DbSet<HU_BLACKLIST> HuBlacklists { get; set; }
+        public DbSet<AT_TIME_WORK_STANDARD> AtTimeWorkStandards { get; set; }
+        public DbSet<TR_LECTURE> TrLectures { get; set; }
+        public DbSet<TR_TRANNING_RECORD> TrTranningRecords { get; set; }
         public DbSet<SYS_MAIL_TEMPLATE> SysMailTemplates { get; set; }
+        public DbSet<TR_ASSESSMENT_RESULT> TrAssessmentResults { get; set; }
+        public DbSet<TR_RESULT_EVALUATION> TrResultEvaluations { get; set; }
+        public DbSet<TR_PROGRAM_COMMIT> TrProgramCommits { get; set; }
+        public DbSet<PE_CAPACITY_FRAMEWORK> PeCapacityFrameworks { get; set; }
+        public DbSet<AS_PROJECT> AsProjects { get; set; }
+        public DbSet<PE_EMPLOYEE_ASSESSMENT> PeEmployeeAssessments { get; set; }
+        public DbSet<TR_REQUEST_YEAR> TrRequestYears { get; set; }
+
+
 
         /* CÁC DbSet dưới đây lấy từ Views để làm nguồn báo cáo */
         public DbSet<REPORT_DATA_STAFF_PROFILE> ReportDataStaffProfiles { get; set; }

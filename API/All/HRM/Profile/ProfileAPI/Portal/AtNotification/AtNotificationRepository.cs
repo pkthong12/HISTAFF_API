@@ -6,7 +6,6 @@ using CORE.StaticConstant;
 using API.All.DbContexts;
 using CORE.AutoMapper;
 using System;
-using Common.Extensions;
 
 namespace API.Controllers.AtNotification
 {
@@ -50,7 +49,7 @@ namespace API.Controllers.AtNotification
                 var list = await (from o in _dbContext.AtNotifications
                                   from c in _dbContext.HuEmployees.Where(x => x.ID == o.EMP_CREATE_ID).DefaultIfEmpty()
                                   from cv in _dbContext.HuEmployeeCvs.Where(x => x.ID == c.PROFILE_ID).DefaultIfEmpty()
-                                  where o.EMP_NOTIFY_ID!.Contains(employeeId.ToString()) && ((DateTime.Now.DayOfYear - o.CREATED_DATE!.Value.DayOfYear) <= OtherConfig.NUM_OFF_NOTIFICATION)
+                                  where o.EMP_NOTIFY_ID!.Contains(employeeId.ToString())
                                   orderby o.CREATED_DATE descending
                                   select new
                                   {
@@ -63,8 +62,7 @@ namespace API.Controllers.AtNotification
                                       RefId = o.REF_ID,
                                       StatusNotify = o.STATUS_NOTIFY,
                                       Title = o.TITLE,
-                                      ModelChange = o.MODEL_CHANGE,
-                                      IsRead = o.IS_READ
+                                      ModelChange = o.MODEL_CHANGE
                                   }).ToListAsync();
                 return new FormatedResponse() { InnerBody = list, MessageCode = "", StatusCode = EnumStatusCode.StatusCode200 };
             } 
@@ -78,7 +76,7 @@ namespace API.Controllers.AtNotification
         {
             try
             {
-                var list = await _dbContext.AtNotifications.Where(x => x.EMP_NOTIFY_ID!.Contains(employeeId!.Value.ToString()) && (x.IS_READ == false || x.IS_READ == null) && ((DateTime.Now.DayOfYear - x.CREATED_DATE!.Value.DayOfYear) <= OtherConfig.NUM_OFF_NOTIFICATION)).AsNoTracking().ToListAsync();
+                var list = _dbContext.AtNotifications.Where(x => x.EMP_NOTIFY_ID.Contains(employeeId.ToString())).AsNoTracking().ToList();
                 if (list != null)
                 {
                     return new FormatedResponse() { InnerBody = list.Count, StatusCode = EnumStatusCode.StatusCode200 };
@@ -134,32 +132,15 @@ namespace API.Controllers.AtNotification
         {
             try
             {
-
-                var typeDictionary = new Dictionary<long, string>()
-                { 
-                    {1,"Nghỉ" },
-                    {2,"Làm thêm" },
-                    {3,"Giải trình công" },
-                    {4,"Hồ sơ nhân viên" },
-                    {5,"Thông tin người thân" },
-                    {6,"Bằng cấp chứng chỉ" },
-                    {7,"Quá trình công tác" },
-                    {8,"Quá trình công tác trước đây" },
-                    {9,"Thông tin liên hệ" },
-                    {10,"Thông tin phụ" },
-                    {11,"Trình độ học vấn" },
-                    {12,"Thông tin tài khoản" },
-                };
                 var response = await (from o in _dbContext.AtNotifications
-                                      where o.EMP_NOTIFY_ID!.Contains(employeeId.ToString()) || o.EMP_CREATE_ID == employeeId
+                                      where o.EMP_NOTIFY_ID!.Contains(employeeId.ToString())
                                       orderby o.CREATED_DATE descending
                                       select new
                                       {
                                           Id=o.ID,
-                                          TypeName = typeDictionary[o.TYPE!.Value],
-                                          //TypeName = o.TYPE == 1 ? "Nghỉ" : (o.TYPE == 2 ? "Làm thêm" : (o.TYPE == 3 ? "Giải trình công" : o.TYPE == 4 ? "Hồ sơ nhân viên"
-                                          //: (o.TYPE == 5 ? "Thông tin người thân" : (o.TYPE == 6 ? "Bằng cấp chứng chỉ" : (o.TYPE == 7 ? "Quá trình công tác" : (o.TYPE == 8 ? "Quá trình công tác trước đây"
-                                          //: (o.TYPE == 9 ? "Thông tin liên hệ" : (o.TYPE == 10 ? "Thông tin phụ" : (o.TYPE == 11 ? "Trình độ học vấn" : "Thông tin tài khoản"))))))))),
+                                          TypeName = o.TYPE == 1 ? "Nghỉ" : (o.TYPE == 2 ? "Làm thêm" : (o.TYPE == 3 ? "Giải trình công" : o.TYPE == 4 ? "Hồ sơ nhân viên"
+                                          : (o.TYPE == 5 ? "Thông tin người thân" : (o.TYPE == 6 ? "Bằng cấp chứng chỉ" : (o.TYPE == 7 ? "Quá trình công tác" : (o.TYPE == 8 ? "Quá trình công tác trước đây"
+                                          : (o.TYPE == 9 ? "Thông tin liên hệ" : (o.TYPE == 10 ? "Thông tin phụ" : (o.TYPE == 11 ? "Trình độ học vấn" : "Thông tin tài khoản"))))))))),
                                           Date = o.CREATED_DATE,
                                           StatusName = o.STATUS_NOTIFY == 0 ? "Chờ phê duyệt" : (o.STATUS_NOTIFY == 1 ? "Được phê duyệt" : "Bị từ chối")
                                       }).Take(10).ToListAsync();
@@ -235,6 +216,7 @@ namespace API.Controllers.AtNotification
             var response = await _genericRepository.ToggleActiveIds(_uow, ids, valueToBind, sid);
             return response;
         }
+
     }
 }
 

@@ -1831,17 +1831,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -1861,7 +1864,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -1888,22 +1891,28 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                         case "HU_EMPLOYEE_IMPORT":
                             List<HU_EMPLOYEE_IMPORT> strongList_HU_EMPLOYEE_IMPORT = dataTable!.ToList<HU_EMPLOYEE_IMPORT>();
 
+                            // new fix
+                            strongList_HU_EMPLOYEE_IMPORT = strongList_HU_EMPLOYEE_IMPORT.Where(x => x.ORG_ID != null).ToList();
+
                             // Check unique indexes (ui);
                             exTable.UniqueIndexes?.ForEach(ui =>
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -1923,7 +1932,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -1952,17 +1961,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -1982,7 +1994,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -2011,17 +2023,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -2041,7 +2056,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -2057,7 +2072,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             });
 
                             // Insert range to DB
-                            
+
                             _dbContext.HuEvaluateImports.AddRange(strongList_HU_EVALUATE_IMPORT);
                             _dbContext.SaveChanges();
 
@@ -2071,17 +2086,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -2101,7 +2119,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -2129,17 +2147,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -2159,7 +2180,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -2188,17 +2209,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -2218,7 +2242,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -2246,17 +2270,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -2276,7 +2303,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -2305,17 +2332,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -2335,7 +2365,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -2365,17 +2395,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -2395,7 +2428,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -2423,38 +2456,42 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
                                 selectStr += "";
 
-                                List<HU_ALLOWANCE_EMP> existing = _dbContext.HuAllowanceEmps.ToList();
-                                List<HU_ALLOWANCE_EMP> listToCheck = ListMapper<HU_ALLOWANCE_EMP_IMPORT, HU_ALLOWANCE_EMP>.Merge(strongList_HU_ALLOWANCE_EMP_IMPORT, existing, ui);
-                                var groupped = listToCheck.AsQueryable().GroupBy(uiStr).Select($"new ({selectStr}, Count() as KeyCount)");
-                                var ck = groupped.FirstOrDefault($"{notNullStr} && KeyCount > 1");
+                                //code check trung
+                                //List<HU_ALLOWANCE_EMP> existing = _dbContext.HuAllowanceEmps.ToList();
+                                //List<HU_ALLOWANCE_EMP> listToCheck = ListMapper<HU_ALLOWANCE_EMP_IMPORT, HU_ALLOWANCE_EMP>.Merge(strongList_HU_ALLOWANCE_EMP_IMPORT, existing, ui);
+                                //var groupped = listToCheck.AsQueryable().GroupBy(uiStr).Select($"new ({selectStr}, Count() as KeyCount)");
+                                //var ck = groupped.FirstOrDefault($"{notNullStr} && KeyCount > 1");
 
-                                if (ck != null)
-                                {
-                                    string duplicatedValue = "[";
-                                    ui.ForEach(c =>
-                                    {
-                                        duplicatedValue += $"{ck[c].ToString()},";
-                                    });
-                                    duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
-                                    duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
-                                }
+                                //if (ck != null)
+                                //{
+                                //    string duplicatedValue = "[";
+                                //    ui.ForEach(c =>
+                                //    {
+                                //        duplicatedValue += $"{ck[c].ToString()},";
+                                //    });
+                                //    duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
+                                //    duplicatedValue += "]";
+                                //    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
+                                //}
 
                             });
 
@@ -2481,17 +2518,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -2511,7 +2551,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -2540,17 +2580,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -2570,7 +2613,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -2599,17 +2642,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -2629,7 +2675,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -2672,17 +2718,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -2702,7 +2751,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -2731,17 +2780,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -2761,7 +2813,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -2790,17 +2842,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -2820,7 +2875,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -2849,17 +2904,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -2879,7 +2937,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -2907,17 +2965,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -2937,7 +2998,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -2965,17 +3026,20 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                             {
                                 string uiStr = "new (";
                                 string uiKeys = "";
+                                string uiKeysTranslated = "";
                                 string notNullStr = "";
                                 string selectStr = "";
                                 ui.ForEach(c =>
                                 {
                                     uiStr += $"it.{c}, ";
                                     uiKeys += $"{c},";
+                                    uiKeysTranslated += $"{Trans("UI_ENTITY_FIELD_CAPTION_" + exTable.Table + "_" + c, "vi")},";
                                     notNullStr += $"{c}!=null && ";
                                     selectStr += $"it.Key.{c} as {c},";
                                 });
                                 uiStr = uiStr[..(uiStr.Length - 2)];
                                 uiKeys = uiKeys[..(uiKeys.Length - 1)];
+                                uiKeysTranslated = uiKeysTranslated[..(uiKeysTranslated.Length - 1)];
                                 notNullStr = notNullStr[..(notNullStr.Length - 4)];
                                 selectStr = selectStr[..(selectStr.Length - 1)];
                                 uiStr += ")";
@@ -2995,7 +3059,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     });
                                     duplicatedValue = duplicatedValue[..(duplicatedValue.Length - 1)];
                                     duplicatedValue += "]";
-                                    throw new Exception($"Trùng mã {duplicatedValue} đối với [{uiKeys}]");
+                                    throw new Exception($"{Trans("DUPLICATE_CODE", "vi")} {duplicatedValue} {Trans("FOR", "vi")} [{uiKeysTranslated}]");
                                 }
 
                             });
@@ -3087,7 +3151,16 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                         }
                         else
                         {
-                            return new() { Text = _mlsData.SingleOrDefault(x => x.Key == "XLSX_TYPE_OF_STRING_NOT_NULL")?.Vi ?? type };
+                            if (required)
+                            {
+                                // in ra chữ "Kiểu chuỗi ký tự (bắt buộc)"
+                                return new() { Text = _mlsData.SingleOrDefault(x => x.Key == "XLSX_TYPE_OF_STRING_NOT_NULL")?.Vi ?? type };
+                            }
+                            else
+                            {
+                                // in ra chữ "Kiểu chuỗi ký tự"
+                                return new() { Text = _mlsData.SingleOrDefault(x => x.Key == "XLSX_TYPE_OF_STRING")?.Vi ?? type };
+                            }
                         }
                     }
 
@@ -3109,7 +3182,14 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                     }
                     else
                     {
-                        return new() { Text = _mlsData.SingleOrDefault(x => x.Key == "XLSX_PICK_FROM_LIST_NOT_NULL")?.Vi ?? type };
+                        if (required)
+                        {
+                            return new() { Text = _mlsData.SingleOrDefault(x => x.Key == "XLSX_PICK_FROM_LIST_NOT_NULL")?.Vi ?? type };
+                        }
+                        else
+                        {
+                            return new() { Text = _mlsData.SingleOrDefault(x => x.Key == "XLSX_PICK_FROM_LIST")?.Vi ?? type };
+                        }
                     }
                 case "Int64?":
                     if (lang == "en")
@@ -3256,6 +3336,48 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                         };
 
                     }
+
+                case "Decimal?":
+                    if (lang == "en")
+                    {
+                        if (timeOnly == true)
+                        {
+                            return new()
+                            {
+                                Text = _mlsData.SingleOrDefault(x => x.Key == "XLSX_TIME_ONLY")?.En ?? type,
+                                Comment = _mlsData.SingleOrDefault(x => x.Key == "XLSX_TIME_ONLY_COMMENT")?.En ?? "'hh:mm:ss or hh:mm"
+                            };
+                        }
+                        else
+                        {
+                            return new() { Text = _mlsData.SingleOrDefault(x => x.Key == "XLSX_TYPE_OF_STRING_NOT_NULL")?.En ?? type };
+                        }
+                    }
+                    else
+                    {
+                        if (timeOnly == true)
+                        {
+                            return new()
+                            {
+                                Text = _mlsData.SingleOrDefault(x => x.Key == "XLSX_TIME_ONLY")?.Vi ?? type,
+                                Comment = _mlsData.SingleOrDefault(x => x.Key == "XLSX_TIME_ONLY_COMMENT")?.Vi ?? "'hh:mm:ss or hh:mm"
+                            };
+                        }
+                        else
+                        {
+                            if (required)
+                            {
+                                // in ra chữ "Decimal (bắt buộc)"
+                                return new() { Text = _mlsData.SingleOrDefault(x => x.Key == "XLSX_TYPE_OF_DECIMAL_NOT_NULL")?.Vi ?? type };
+                            }
+                            else
+                            {
+                                // in ra chữ "Decimal"
+                                return new() { Text = _mlsData.SingleOrDefault(x => x.Key == "XLSX_TYPE_OF_DECIMAL")?.Vi ?? type };
+                            }
+                        }
+                    }
+
                 default:
                     return new() { Text = type };
             }
@@ -3347,7 +3469,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                                     if (curCell.Comment != null) ws.Comments.Remove(curCell.Comment);
                                     curCell.AddComment("Cột định danh của bảng không được để trống", "Histaff");
                                     //throw new Exception(Trans("XLSX_ERROR_FOR_IDENTITY_COLUMN", lang));
-                                    
+
                                     identityColumnsCondition = false;
                                     break;
                                 }
@@ -3506,7 +3628,7 @@ namespace API.All.SYSTEM.CoreAPI.Xlsx
                         // Take note for file
                     }
                 }
-                if(columnsIdentityCheck.Count == 0)
+                if (columnsIdentityCheck.Count == 0)
                 {
                     throw new Exception(Trans("XLSX_ERROR_FOR_IDENTITY_COLUMN", lang));
                 }

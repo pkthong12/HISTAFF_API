@@ -36,8 +36,8 @@ namespace ProfileDAL.Repositories
         Task<PagedResult<WorkingDTO>> GetWage(WorkingDTO param);
         Task<ResultWithError> GetWageById(long id);
         Task<ResultWithError> GetLastWage(long? empId, DateTime? date);
-        Task<ResultWithError> CreateWageAsync(WorkingInputDTO param, string id);
-        Task<ResultWithError> UpdateWageAsync(WorkingInputDTO param, string id);
+        Task<ResultWithError> CreateWageAsync(WorkingInputDTO param, string sid);
+        Task<ResultWithError> UpdateWageAsync(WorkingInputDTO param, string sid);
         Task<ResultWithError> RemoveWageAsync(List<long> param);
         Task<ResultWithError> OpenStatusWage(long id);
         Task<ResultWithError> TemplateImportWage(int orgId);
@@ -47,5 +47,7 @@ namespace ProfileDAL.Repositories
         Task<ResultWithError> CalculateExpireShortTemp(long? empId, string? date, long? levelId);
         Task<ResultWithError> UpdateUpsal(WorkingInputDTO request);
         Task<ResultWithError> checkDecisionMaster(WorkingInputDTO request);
+        Task<FormatedResponse> GetSalaryMinimumOfRegion(ContextModel request);
+        Task<bool> CheckIsResign(HU_WORKING obj);
     }
 }

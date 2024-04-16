@@ -17,7 +17,15 @@ namespace API.All.DbContexts
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(_appSettings.ConnectionStrings.CoreDb);
+
+            if (_appSettings.DbType == EnumDBType.MSSQL)
+            {
+                optionsBuilder.UseSqlServer(_appSettings.ConnectionStrings.CoreDb);
+            }
+            else if (_appSettings.DbType == EnumDBType.ORACLE)
+            {
+                optionsBuilder.UseOracle(_appSettings.ConnectionStrings.CoreDb);
+            }
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

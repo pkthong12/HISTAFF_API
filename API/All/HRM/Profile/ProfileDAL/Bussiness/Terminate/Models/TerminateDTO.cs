@@ -46,6 +46,7 @@ namespace ProfileDAL.ViewModels
         public string? FileName { get; set; }
         public AttachmentDTO? FileBuffer { get; set; }
         public int? JobOrderNum { get; set; }
+        public bool? IsBlackList { get; set; }
     }
 
     public class TerminateView
@@ -98,6 +99,7 @@ namespace ProfileDAL.ViewModels
         public bool? ValueToBind { get; set; }
         public string? FileName { get; set; }
         public AttachmentDTO? FileBuffer { get; set; }
+        public bool? IsBlackList { get; set; }
     }
 
 }

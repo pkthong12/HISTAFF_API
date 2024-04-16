@@ -156,7 +156,7 @@ namespace API.Controllers.PaPhaseAdvance
                             SYMBOL_ID = item,
                             PHASE_ADVANCE_ID = model.Id,
                         };
-                        _fullDbContext.PaPhaseAdvanceSymbols.AddAsync(objEmpData);
+                        await _fullDbContext.PaPhaseAdvanceSymbols.AddAsync(objEmpData);
                     }
                 }
                 else

@@ -24,13 +24,8 @@
         },
         {
           "Table": "HU_SALARY_LEVEL",
-          "UniqueIndexColumns": [ "NAME" ]
-        },
-        {
-          "Table": "HU_ALLOWANCE",
-          "UniqueIndexColumns": [ "CODE" ],
-          "Condition": "(IS_ACTIVE = 1 and IS_SAL = 1)"
-        }
+          "UniqueIndexColumns": [ "NAME", "CODE" ]
+        }    
       ],
 
       "ExConsequentReferences": [
@@ -62,7 +57,7 @@
           "ChildTable": "HU_SALARY_LEVEL",
           "ChildKey": "SALARY_RANK_ID",
           "ParentUniqueIndexColumns": [ "NAME" ],
-          "ChildUniqueIndexColumns": [ "NAME" ]
+          "ChildUniqueIndexColumns": [ "NAME", "CODE" ]
         }
       ],
 
@@ -83,6 +78,7 @@
             "DECISION_NO",
             "EFFECT_DATE",
             "EXPIRE_DATE",
+            "EMPLOYEE_OBJ_ID",
             "EXPIRE_UPSAL_DATE",
             "SHORT_TEMP_SALARY",
             "SALARY_TYPE_ID",
@@ -102,7 +98,15 @@
             "NOTE"
           ],
           "RequiredColumns": [
-            "EMPLOYEE_ID"
+            "PROFILE_ID",
+            "EMPLOYEE_ID",
+            "TYPE_ID",
+            "DECISION_NO",
+            "EMPLOYEE_OBJ_ID",
+            "EFFECT_DATE",
+            "SALARY_TYPE_ID",
+            "TAXTABLE_ID",
+            "SAL_PERCENT"
           ],
           "UniqueIndexes": [],
           "Rules": [
@@ -126,6 +130,10 @@
             {
               "Column": "TAXTABLE_ID",
               "SysOtherListTypeCode": "TAXTABLE"
+            },
+            {
+              "Column": "EMPLOYEE_OBJ_ID",
+              "SysOtherListTypeCode": "OBJECT_EMPLOYEE"
             },
             {
               "Column": "SALARY_SCALE_ID",
@@ -173,65 +181,6 @@
               "Column": "SIGN_ID",
               "IndirectReference": [ "HU_EMPLOYEE_CV", "HU_EMPLOYEE" ],
               "IndirectColumn": "SIGN_PROFILE_ID"
-            }
-          ]
-        },
-        {
-          "Table": "HU_WORKING_ALLOW",
-          "BufferTable": "HU_WORKING_ALLOW_IMPORT",
-          "RenderOrder": 2,
-          "ImportOrder": 2,
-          "HeaderBgColor": "#F37540",
-          "HeaderTextColor": "white",
-          "IdentityColumns": [ "ID" ],
-          "RenderColumns": [
-            "ALLOWANCE_ID1",
-            "COEFFICIENT1",
-            "EFFECT_DATE1",
-            "EXPIRE_DATE1",
-
-            "ALLOWANCE_ID2",
-            "COEFFICIENT2",
-            "EFFECT_DATE2",
-            "EXPIRE_DATE2",
-
-            "ALLOWANCE_ID3",
-            "COEFFICIENT3",
-            "EFFECT_DATE3",
-            "EXPIRE_DATE3",
-
-            "ALLOWANCE_ID4",
-            "COEFFICIENT4",
-            "EFFECT_DATE4",
-            "EXPIRE_DATE4",
-
-            "ALLOWANCE_ID5",
-            "COEFFICIENT5",
-            "EFFECT_DATE5",
-            "EXPIRE_DATE5"
-          ],
-          "RequiredColumns": [],
-          "UniqueIndexes": [],
-          "Rules": [
-            {
-              "Column": "ALLOWANCE_ID1",
-              "DirectReference": "HU_ALLOWANCE"
-            },
-            {
-              "Column": "ALLOWANCE_ID2",
-              "DirectReference": "HU_ALLOWANCE"
-            },
-            {
-              "Column": "ALLOWANCE_ID3",
-              "DirectReference": "HU_ALLOWANCE"
-            },
-            {
-              "Column": "ALLOWANCE_ID4",
-              "DirectReference": "HU_ALLOWANCE"
-            },
-            {
-              "Column": "ALLOWANCE_ID5",
-              "DirectReference": "HU_ALLOWANCE"
             }
           ]
         }

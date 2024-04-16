@@ -11,7 +11,6 @@ namespace API.DTO
         public string? CreateLog { get; set; }
         public string? UpdateLog { get; set; }
         public long? OrgId { get; set; }
-        public string? OrgName { get; set; }
         public DateTime? WorkingDay { get; set; }
         public int? Evt { get; set; }
         public int? IsGps { get; set; }

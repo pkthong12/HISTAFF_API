@@ -32,11 +32,10 @@ namespace API.Controllers.HuFamilyEdit
 
         public async Task<GenericPhaseTwoListResponse<HuFamilyEditDTO>> SinglePhaseQueryList(GenericQueryListDTO<HuFamilyEditDTO> request)
         {
-            string[] emptyChanges = Array.Empty<string>();
             var joined = from p in _dbContext.HuFamilyEdits.AsNoTracking()
                          from e in _dbContext.HuEmployees.AsNoTracking().Where(x => x.ID == p.EMPLOYEE_ID).DefaultIfEmpty()
                          from po in _dbContext.HuPositions.AsNoTracking().Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
-                         from j in _dbContext.HuJobs.AsNoTracking().Where(x => x.ID == po.JOB_ID).DefaultIfEmpty()
+                         from j in _dbContext.HuJobs.AsNoTracking().Where(x=> x.ID == po.JOB_ID).DefaultIfEmpty()
                          from og in _dbContext.HuOrganizations.AsNoTracking().Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
                          from cv in _dbContext.HuEmployeeCvs.AsNoTracking().Where(x => x.ID == e.PROFILE_ID).DefaultIfEmpty()
                          from r in _dbContext.SysOtherLists.AsNoTracking().Where(x => x.ID == p.RELATIONSHIP_ID).DefaultIfEmpty()
@@ -47,7 +46,7 @@ namespace API.Controllers.HuFamilyEdit
                          from w in _dbContext.HuWards.AsNoTracking().Where(x => x.ID == p.BIRTH_CER_WARD).DefaultIfEmpty()
                          from or in _dbContext.SysOtherLists.AsNoTracking().Where(x => x.ID == cv.RELIGION_ID).DefaultIfEmpty()
                          from s in _dbContext.SysOtherLists.AsNoTracking().Where(x => x.ID == p.STATUS_ID).DefaultIfEmpty()
-                         where (p.IS_SEND_PORTAL == true)
+                         where(p.IS_SEND_PORTAL == true)
                          // JOIN OTHER ENTITIES BASED ON THE BUSINESS
                          select new HuFamilyEditDTO
                          {
@@ -55,7 +54,7 @@ namespace API.Controllers.HuFamilyEdit
                              EmployeeId = p.EMPLOYEE_ID,
                              EmployeeCode = e.CODE,
                              JobOrderNum = (int)(j.ORDERNUM ?? 999),
-                             EmployeeName = e.Profile!.FULL_NAME,
+                             EmployeeName = e.Profile.FULL_NAME,
                              RelationshipName = r.NAME,
                              CreatedDate = p.CREATED_DATE,
                              BirthDate = p.BIRTH_DATE,
@@ -80,9 +79,8 @@ namespace API.Controllers.HuFamilyEdit
                              PositionName = po.NAME,
                              OrgName = og.NAME,
                              StatusName = s.NAME,
-                             OrgId = e.ORG_ID,
-                             ModelChanges = !string.IsNullOrEmpty(p.MODEL_CHANGE) ? p.MODEL_CHANGE!.Split(";", StringSplitOptions.None) : emptyChanges,
-                             ModelChange = p.MODEL_CHANGE,
+                             OrgId = e.ORG_ID
+
                          };
 
             var singlePhaseResult = await _genericReducer.SinglePhaseReduce(joined, request);
@@ -304,7 +302,7 @@ namespace API.Controllers.HuFamilyEdit
                             if (getData != null)
                             {
                                 
-                                if (getData.HU_FAMILY_ID != null && getData.HU_FAMILY_ID != 0)
+                                if (getData.HU_FAMILY_ID != null)
                                 {
                                     updateListHuFamily.Add(new()
                                     {
@@ -333,6 +331,9 @@ namespace API.Controllers.HuFamilyEdit
                                         Note = getData.NOTE,
                                         BirthCerPlace = getData.BIRTH_CER_PLACE
                                     });
+
+                                    
+                                    
                                 }
                                 else
                                 {

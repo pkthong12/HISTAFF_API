@@ -93,6 +93,9 @@ namespace API.Controllers.HuWelfareMng
                           from w in _dbContext.HuWelfares.AsNoTracking().Where(we => we.ID == l.WELFARE_ID).DefaultIfEmpty()
                           from c in _dbContext.SysUsers.AsNoTracking().Where(c => l.CREATED_BY == null ? false : c.ID == l.CREATED_BY).DefaultIfEmpty()
                           from u in _dbContext.SysUsers.AsNoTracking().Where(u => l.UPDATED_BY == null ? false : u.ID == l.UPDATED_BY).DefaultIfEmpty()
+                          from t in _dbContext.HuPositions.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
+                          from j in _dbContext.HuJobs.Where(x => x.ID == t.JOB_ID).DefaultIfEmpty()
+                          orderby j.ORDERNUM
                           select new HuWelfareMngDTO
                           {
                               Id = l.ID,
@@ -113,7 +116,8 @@ namespace API.Controllers.HuWelfareMng
                               CreatedDate = l.CREATED_DATE,
                               UpdatedDate = l.UPDATED_DATE,
                               CreatedByUsername = c.USERNAME,
-                              UpdatedByUsername = u.USERNAME
+                              UpdatedByUsername = u.USERNAME,
+                              JobOrderNum = (int)(j.ORDERNUM ?? 99)
                           }).FirstOrDefault();
 
 

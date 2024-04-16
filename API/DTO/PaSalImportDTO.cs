@@ -15,10 +15,15 @@ namespace API.DTO
         public long? Year { get; set; }
         public long? OrgId { get; set; }
         public long? ElementId { get; set; }
-        public long? PeriodId { get; set; }        
+        public long? PeriodId { get; set; }
+        public double? Cl11 { get; set; }
+        public double? Cl29 { get; set; }
+        public double? Cl31 { get; set; }
+        public double? Cl33 { get; set; }
         public double? Clchinh8 { get; set; }
-        public double? Deduct5 { get; set; }
-        public double? Csum4 { get; set; }
+        public double? Csum1 { get; set; }
+        public double? Csum2 { get; set; }
+        public double? Deduct3 { get; set; }
         public double? Tax54 { get; set; }
         public int? TypeSal { get; set; }
         public int? JobOrderNum { get; set; }

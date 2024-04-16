@@ -65,7 +65,6 @@ namespace API.Controllers.HuCertificateEdit
         Task<FormatedResponse> GetCertificateEditSaveById(long id);
         //Task<FormatedResponse> GetCertificateSaveById(long id);
         Task<FormatedResponse> GetByIdWebApp(long id);
-        Task<FormatedResponse> SendApproveCertificate(HuCertificateEditDTO request);
     }
 }
 

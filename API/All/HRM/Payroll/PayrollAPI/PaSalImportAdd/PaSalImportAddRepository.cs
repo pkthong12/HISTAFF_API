@@ -78,6 +78,7 @@ namespace API.Controllers.PaSalImportAdd
                            from wo in _dbContext.HuWorkings.Where(x => x.EMPLOYEE_ID == e.ID && result.Contains(x.ID))
                            from ob in _dbContext.HuSalaryTypes.Where(x => x.ID == wo.SALARY_TYPE_ID).DefaultIfEmpty()
                            from p in _dbContext.PaSalImportAdds.Where(x => x.EMPLOYEE_ID == e.ID && x.PERIOD_ID == periodId && x.OBJ_SALARY_ID == objSalId && x.PHASE_ID== phaseId).DefaultIfEmpty()
+                           orderby j.ORDERNUM
                            select new PaSalImportAddDTO
                            {
                                Id = e.ID,
@@ -93,11 +94,12 @@ namespace API.Controllers.PaSalImportAdd
                                CreatedDate = p.CREATED_DATE,
                                UpdatedBy = p.UPDATED_BY,
                                UpdatedDate = p.UPDATED_DATE,
-                               Deduct5 = p.DEDUCT5,
                                Clchinh8 = p.CLCHINH8,
                                Clchinh3 = p.CLCHINH3,
                                Clchinh4 = p.CLCHINH4,
-                               Cl8 = p.CL8,
+                               Lbs9 = p.LBS9,
+                               Lbs23 = p.LBS23,
+                               Lbs25 = p.LBS25,
                                PeriodId = p.PERIOD_ID,
                                Note = p.NOTE,
                                PhaseId= p.PHASE_ID,

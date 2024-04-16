@@ -99,6 +99,11 @@ namespace ProfileDAL.ViewModels
 
         public string? MemberPosition { get; set; }
         public string? LivingCell { get; set; }
+
+        public string? PlanningTitleName { get; set; }
+        public long? PlanningTitleId { get; set; }
+        public string? PlanningTypeName { get; set; }
+        public long? PlanningTypeId { get; set; }
     }
 
     public class EmployeeInput

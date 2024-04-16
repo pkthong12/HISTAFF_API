@@ -14,6 +14,8 @@ namespace API.Controllers.PaListsalaries
         Task<FormatedResponse> GetListSalaries(long idObjectSal);
         Task<FormatedResponse> GetListNameCode(PaListsalariesDTO param);
         Task<FormatedResponse> GetListObjSalry();
+        Task<FormatedResponse> GetListObj(string typeCode);
+
 
 
     }

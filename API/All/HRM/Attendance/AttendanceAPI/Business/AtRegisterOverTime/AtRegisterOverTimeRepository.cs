@@ -53,36 +53,113 @@ namespace API.Controllers.AtDecleareSeniority
             _appSettings = options.Value;
             _fileService = fileService;
         }
+        #region SinglePhaseQueryList old
+        //public async Task<FormatedResponse> SinglePhaseQueryList(GenericQueryListDTO<AtOvertimeDTO> request)
+        //{
+        //    var joined = from p in _dbContext.AtOvertimes.AsNoTracking()
+        //                 from e in _dbContext.HuEmployees.Where(x => x.ID == p.EMPLOYEE_ID).DefaultIfEmpty()
+        //                 from o in _dbContext.HuOrganizations.Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
+        //                 from ecv in _dbContext.HuEmployeeCvs.Where(x => x.ID == e.PROFILE_ID).DefaultIfEmpty()
+        //                 from po in _dbContext.HuPositions.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
+        //                 select new AtOvertimeDTO
+        //                 {
+        //                     Id = p.ID,
+        //                     EmployeeId = p.EMPLOYEE_ID,
+        //                     EmployeeCode = e.CODE,
+        //                     EmployeeName = ecv.FULL_NAME,
+        //                     OrgId = e.ORG_ID,
+        //                     OrgName = o.NAME,
+        //                     PositionName = po.NAME,
+        //                     EndDate = p.END_DATE,
+        //                     StartDate = p.START_DATE,
+        //                     IsActive = p.IS_ACTIVE,
+        //                     Reason = p.REASON,
+        //                     TimeEnd = p.TIME_END,
+        //                     TimeStart = p.TIME_START,
+        //                     TimeEndStr = p.TIME_END == null?"": p.TIME_END.Value.ToString("HH:mm"),
+        //                     TimeStartStr = p.TIME_START == null ? "" : p.TIME_START.Value.ToString("HH:mm"),
+        //                     FileName = p.FILE_NAME
+        //                 };
+
+        //    var searchForHoursStart = "";
+        //    var searchForHoursStop = "";
+        //    var skip = request.Pagination.Skip;
+        //    var take = request.Pagination.Take;
+        //    request.Pagination.Skip = 0;
+        //    request.Pagination.Take = 9999;
+        //    if (request.Search != null)
+        //    {
+        //        request.Search.ForEach(x =>
+        //        {
+        //            if (x.Field == "timeStart")
+        //            {
+        //                searchForHoursStart = x.SearchFor.ToString().ToLower().Trim();
+        //                x.SearchFor = "";
+        //            }
+        //            if (x.Field == "timeEnd")
+        //            {
+        //                searchForHoursStop = x.SearchFor.ToString().ToLower().Trim();
+        //                x.SearchFor = "";
+        //            }
+        //        });
+        //    }
+
+        //    var singlePhaseResult = await _genericReducer.SinglePhaseReduce(joined, request);
+        //    var resultList = new List<AtOvertimeDTO>();
+
+        //    foreach (var i in singlePhaseResult!.List)
+        //    {
+        //        resultList.Add(i);
+        //    }
+
+        //    resultList = resultList.Where(x => (x.TimeStartStr!.Trim().Contains(searchForHoursStart))).ToList();
+        //    resultList = resultList.Where(x => (x.TimeEndStr!.Trim().Contains(searchForHoursStop))).ToList();
+
+        //    var result = new
+        //    {
+        //        Count = resultList.Count(),
+        //        List = resultList.Skip(skip).Take(take),
+        //        Page = (skip / take) + 1,
+        //        PageCount = resultList.Count(),
+        //        Skip = skip,
+        //        Take = take,
+        //        MessageCode = CommonMessageCode.QUERY_LIST_SUCCESS,
+        //    };
+        //    return new()
+        //    {
+        //        InnerBody = result,
+        //    };
+        //}
+        #endregion
         public async Task<GenericPhaseTwoListResponse<AtOvertimeDTO>> SinglePhaseQueryList(GenericQueryListDTO<AtOvertimeDTO> request)
         {
+            var period = new AT_SALARY_PERIOD();
+            var i = 0; var index = 0;
 
-
-            DateTime endDate = new DateTime(3000, 1, 1);
-            DateTime startDate = new DateTime();
-            if (request.Filter != null)
+            if (request.InOperators != null)
             {
-                if (request.Filter.PeriodId != null)
+                request.InOperators.ForEach(x =>
                 {
-                    var objPerriod = _dbContext.AtSalaryPeriods.Where(x => x.ID == request.Filter.PeriodId).FirstOrDefault();
-                    endDate = objPerriod.END_DATE;
-                    startDate = objPerriod.START_DATE;
-                    request.Filter.PeriodId = null;
-                }
-                if (request.Filter.Id != null)
-                {
-                    request.Filter.Id = null;
-                }
+                    if (x.Field == "periodId")
+                    {
+                        period = _dbContext.AtSalaryPeriods.AsNoTracking().Where(p => x.Values[0] == null ? false : p.ID == (long)x.Values[0]).FirstOrDefault();
+                        x.Values = new List<long?>();
+                        index = i;
+                    }
+                    i++;
+                });
+                request.InOperators.RemoveAt(index);
             }
-
-            var joined = from p in _dbContext.AtOvertimes.AsNoTracking().Where(x => x.START_DATE!.Value.Date >= startDate.Date && x.END_DATE!.Value.Date <= endDate.Date
-                         || (startDate.Date >= x.START_DATE.Value.Date && startDate.Date <= x.END_DATE!.Value.Date)
-                         || (endDate.Date >= x.START_DATE.Value.Date && startDate.Date <= x.END_DATE!.Value.Date))
+            var joined = from p in _dbContext.AtOvertimes.AsNoTracking().Where(p => period.ID == 0 ? true : (
+                                                              (p.START_DATE!.Value.Date >= period.START_DATE.Date && p.START_DATE.Value.Date <= period.END_DATE.Date) ||
+                                                              (p.END_DATE!.Value.Date >= period.START_DATE.Date && p.END_DATE.Value.Date <= period.END_DATE.Date) ||
+                                                              (p.START_DATE.Value.Date <= period.START_DATE.Date && p.END_DATE.Value.Date >= period.END_DATE.Date))).DefaultIfEmpty()
                          from e in _dbContext.HuEmployees.Where(x => x.ID == p.EMPLOYEE_ID).DefaultIfEmpty()
                          from o in _dbContext.HuOrganizations.Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
                          from ecv in _dbContext.HuEmployeeCvs.Where(x => x.ID == e.PROFILE_ID).DefaultIfEmpty()
                          from po in _dbContext.HuPositions.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
                          from j in _dbContext.HuJobs.AsNoTracking().Where(x => x.ID == po.JOB_ID).DefaultIfEmpty()
-
+                         orderby j.ORDERNUM
                          select new AtOvertimeDTO
                          {
                              Id = p.ID,
@@ -256,7 +333,7 @@ namespace API.Controllers.AtDecleareSeniority
 
                 var hourM = (from p in hourToltal.OrderByDescending(x => x.ID).Where(x => x.IS_ACTIVE == true) select p.MAX_WORKING_MONTH).First();//tong gio lam them thang
                 var hourY = (from p in hourToltal.OrderByDescending(x => x.ID).Where(x => x.IS_ACTIVE == true) select p.MAX_WORKING_YEAR).First();//tong gio lam them nam
-                                                    
+
                 //check nv da duoc xep ca lam viec chua
                 if (dto.EmployeeIds != null)
                 {
@@ -269,21 +346,21 @@ namespace API.Controllers.AtDecleareSeniority
                         }
                         var dateT = (from t in atWorksign.Where(x => x.EMPLOYEE_ID == item) orderby t.WORKINGDAY descending select t.WORKINGDAY).ToList().First();//lay den ngay
                         var dateF = (from w in atWorksign.Where(x => x.EMPLOYEE_ID == item) orderby w.WORKINGDAY descending select w.WORKINGDAY).ToList().Last();//lay tu ngay
-                          
-                        if (dto.StartDate.Value.Date < dateF.Value.Date)
+
+                        if (dto.StartDate < dateF)
                         {
                             return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "START_DATE_MUST_BE_GREATER_THAN_THE_WORK_SHIFT_ASSIGNMENT_DATE", StatusCode = EnumStatusCode.StatusCode400 };//tu ngay chua dc xep ca
                         }
-                        if (dto.EndDate.Value.Date > dateT.Value.Date)
+                        if (dto.EndDate > dateT)
                         {
                             return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "END_DATE_MUST_BE_EARLIER_THAN_THE_WORK_SHIFT_ASSIGNMENT_DATE", StatusCode = EnumStatusCode.StatusCode400 };//den ngay chua dc xep ca
                         }
 
                         //check ky cong ngung ap dung
-                        //long? checkperiod = 0;
-                        //checkperiod = a.First().PERIOD_ID;
+                        long? checkperiod = 0;
+                        checkperiod = a.First().PERIOD_ID;
                         var o = (from t in huemp.Where(x => x.ID == item) orderby t.ID descending select t.ORG_ID).ToList().FirstOrDefault();
-                        var period = await atOrgPeriod.Where(x => x.PERIOD_ID == dto.PeriodId && x.STATUSCOLEX == 1 && x.ORG_ID == o).AnyAsync();
+                        var period = await atOrgPeriod.Where(x => x.PERIOD_ID == checkperiod && x.STATUSCOLEX == 1 && x.ORG_ID == o).AnyAsync();
                         if (period)
                         {
                             return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.THE_WORK_PERIOD_HAS_CEASED_TO_APPLY, StatusCode = EnumStatusCode.StatusCode400 };//ky cong da ngung ap dung
@@ -316,19 +393,19 @@ namespace API.Controllers.AtDecleareSeniority
                         var lstHld = lstHoliday.AsNoTracking().Where(x => x.IS_ACTIVE == true && ((dto.StartDate.Value.Date >= x.START_DAYOFF.Date && dto.StartDate.Value.Date <= x.END_DAYOFF.Date) || (dto.EndDate.Value.Date >= x.START_DAYOFF.Date && dto.EndDate.Value.Date <= x.END_DAYOFF.Date))).ToList();
 
 
-                        var shiftE = atShift.AsNoTracking().Where(p => p.ID == shiftID).FirstOrDefault();
+                            var shiftE = atShift.AsNoTracking().Where(p => p.ID == shiftID).FirstOrDefault();
 
-                        if (shiftE.CODE != "T7" && shiftE.CODE != "CN" && shiftE.CODE != "OFF")
-                        {
-                            if (shiftTimeStop != null)
+                            if (shiftE.CODE != "T7" && shiftE.CODE != "CN" && shiftE.CODE != "OFF")
                             {
-                                if (timeStart < timeStop && lstHld.Count == 0)
+                                if (shiftTimeStop != null)
                                 {
-                                    return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "NO_OVERTIME_REGISTRATION_DURING_THE_WORKING_SHIFT_OVERLAP", StatusCode = EnumStatusCode.StatusCode400 };//gio lam them khong duoc trong ca lam viec
+                                    if (timeStart < timeStop && lstHld.Count==0)
+                                    {
+                                        return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "NO_OVERTIME_REGISTRATION_DURING_THE_WORKING_SHIFT_OVERLAP", StatusCode = EnumStatusCode.StatusCode400 };//gio lam them khong duoc trong ca lam viec
+                                    }
                                 }
                             }
-                        }
-
+                        
 
 
                         //check dang ky nhieu ngay
@@ -567,28 +644,29 @@ namespace API.Controllers.AtDecleareSeniority
             List<UploadFileResponse> uploadFiles = new();
 
             // Check đóng/mở kỳ công 
-
-            // get month + year datestart, dateend
-            int monthStartDate = dto.StartDate!.Value.Month;
-            int monthEndDate = dto.EndDate!.Value.Month;
-            int yearStartDate = dto.StartDate!.Value.Year;
-            int yearEndDate = dto.EndDate!.Value.Year;
-
-            if (yearStartDate == yearEndDate)
+            foreach (var empID in dto.EmployeeIds!)
             {
-                for (int i = monthStartDate; i <= monthEndDate; i++)
+                // get month + year datestart, dateend
+                int monthStartDate = dto.StartDate!.Value.Month;
+                int monthEndDate = dto.EndDate!.Value.Month;
+                int yearStartDate = dto.StartDate!.Value.Year;
+                int yearEndDate = dto.EndDate!.Value.Year;
+
+                if (yearStartDate == yearEndDate)
                 {
-                    var salPeriod = await _dbContext.AtSalaryPeriods.Where(s => s.MONTH == i && s.YEAR == yearStartDate).FirstOrDefaultAsync();
-                    var org = await _dbContext.HuEmployees.Where(e => e.ID == dto.EmployeeId).FirstOrDefaultAsync();
-                    var checkLockOrgDateStart = (_dbContext.AtOrgPeriods.Where(p => p.ORG_ID == org!.ORG_ID && p.STATUSCOLEX == 1 && p.PERIOD_ID == salPeriod!.ID)).Count();
-                    if (checkLockOrgDateStart != 0)
+                    for (int i = monthStartDate; i <= monthEndDate; i++)
                     {
-                        return new FormatedResponse() { MessageCode = CommonMessageCode.THE_WORK_PERIOD_HAS_CEASED_TO_APPLY, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                        var salPeriod = await _dbContext.AtSalaryPeriods.Where(s => s.MONTH == i && s.YEAR == yearStartDate).FirstOrDefaultAsync();
+                        var org = await _dbContext.HuEmployees.Where(e => e.ID == empID).FirstOrDefaultAsync();
+                        var checkLockOrgDateStart = (_dbContext.AtOrgPeriods.Where(p => p.ORG_ID == org!.ORG_ID && p.STATUSCOLEX == 1 && p.PERIOD_ID == salPeriod!.ID)).Count();
+                        if (checkLockOrgDateStart != 0)
+                        {
+                            return new FormatedResponse() { MessageCode = CommonMessageCode.THE_WORK_PERIOD_HAS_CEASED_TO_APPLY, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                        }
                     }
                 }
             }
 
-            var lstHoliday = _uow.Context.Set<AT_HOLIDAY>().AsNoTracking().AsQueryable();//ngay le
             var atShift = _uow.Context.Set<AT_SHIFT>().AsNoTracking().AsQueryable();//ca lam viec
             var atWorksign = _uow.Context.Set<AT_WORKSIGN>().AsNoTracking().AsQueryable();//xep ca
             var atOverTime = _uow.Context.Set<AT_OVERTIME>().AsNoTracking();
@@ -599,151 +677,149 @@ namespace API.Controllers.AtDecleareSeniority
             var hourM = (from p in hourToltal.OrderByDescending(x => x.ID).Where(x => x.IS_ACTIVE == true) select p.MAX_WORKING_MONTH).First();//tong gio lam them thang
 
             //check nv da duoc xep ca lam viec chua
-
-
-            var a = _dbContext.AtWorksigns.AsNoTracking().Where(x => x.EMPLOYEE_ID == dto.EmployeeId).ToList();//lay nv dc xep ca
-            if (a.Count == 0)
+            if (dto.EmployeeIds != null)
             {
-                return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.EMPLOYEES_HAVE_NOT_BEEN_SCHEDULED_FOR_SHIFTS, StatusCode = EnumStatusCode.StatusCode400 };//tra mess co nv chua duoc xep ca
-            }
-            var dateT = (from t in atWorksign.Where(x => x.EMPLOYEE_ID == dto.EmployeeId) orderby t.WORKINGDAY descending select t.WORKINGDAY).ToList().First();//lay den ngay
-            var dateF = (from w in atWorksign.Where(x => x.EMPLOYEE_ID == dto.EmployeeId) orderby w.WORKINGDAY descending select w.WORKINGDAY).ToList().Last();//lay tu ngay
-
-            if (dto.StartDate.Value.Date < dateF.Value.Date)
-            {
-                return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "START_DATE_MUST_BE_GREATER_THAN_THE_WORK_SHIFT_ASSIGNMENT_DATE", StatusCode = EnumStatusCode.StatusCode400 };//tu ngay chua dc xep ca
-            }
-            else if (dto.EndDate.Value.Date > dateT.Value.Date)
-            {
-                return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "END_DATE_MUST_BE_EARLIER_THAN_THE_WORK_SHIFT_ASSIGNMENT_DATE", StatusCode = EnumStatusCode.StatusCode400 };//den ngay chua dc xep ca
-            }
-
-            //check ky cong ngung ap dung
-            long? checkperiod = 0;
-            a.ForEach(x => checkperiod = x.PERIOD_ID);
-            var period = await atSalPeriod.Where(x => x.ID == checkperiod && x.IS_ACTIVE != true).AnyAsync();
-            if (period)
-            {
-                return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "THE_WORK_PERIOD_HAS_CEASED_TO_APPLY", StatusCode = EnumStatusCode.StatusCode400 };//ky cong da ngung ap dung
-            }
-
-            ////check nv co trung ca lam viec
-
-            long? shiftID = 0;
-            a.ForEach(p =>
-            {
-                if (p.WORKINGDAY!.Value.ToShortDateString() == dto.StartDate!.Value.ToShortDateString())
+                foreach (var item in dto.EmployeeIds)
                 {
-                    shiftID = p.SHIFT_ID;
-                }
-            });
-
-            var shift = atShift.AsNoTracking().Where(p => p.ID == shiftID).Any();// Check ton tai ca
-            if (!shift)
-            {
-                return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "SHIFT_NOT_EXIST", StatusCode = EnumStatusCode.StatusCode400 };//den ngay chua dc xep ca
-            }
-
-            var shiftTimeStop = (from s in atShift.AsNoTracking().Where(p => p.ID == shiftID)
-                                 select s.HOURS_STOP).First();// lay dc gio ket thuc ca lm vc
-
-            //var c = (from p in atWorking.Where(x => x.EMPLOYEE_ID == item)
-            //         from s in atShift.Where(x => x.ID == p.SHIFT_ID)
-            //         select s.TIME_STOP).First();//lay dc gio ket thuc ca lm vc
-
-            //DateTime dateTime = dto.TimeStart
-
-            TimeSpan timeStart = new TimeSpan(dto.TimeStart.Value.Hour, dto.TimeStart.Value.Minute, dto.TimeStart.Value.Second);
-            TimeSpan timeStop = new TimeSpan(shiftTimeStop.Hour, shiftTimeStop.Minute, shiftTimeStop.Second);
-
-            var lstHld = lstHoliday.AsNoTracking().Where(x => x.IS_ACTIVE == true && ((dto.StartDate.Value.Date >= x.START_DAYOFF.Date && dto.StartDate.Value.Date <= x.END_DAYOFF.Date) || (dto.EndDate.Value.Date >= x.START_DAYOFF.Date && dto.EndDate.Value.Date <= x.END_DAYOFF.Date))).ToList();
-
-            var shiftE = atShift.AsNoTracking().Where(p => p.ID == shiftID).FirstOrDefault();
-            if (shiftE.CODE != "T7" && shiftE.CODE != "CN" && shiftE.CODE != "OFF")
-            {
-                if (shiftTimeStop != null)
-                {
-                    if (timeStart < timeStop && lstHld.Count == 0)
+                    var a = _dbContext.AtWorksigns.AsNoTracking().Where(x => x.EMPLOYEE_ID == item).ToList();//lay nv dc xep ca
+                    if (a.Count == 0)
                     {
-                        return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "NO_OVERTIME_REGISTRATION_DURING_THE_WORKING_SHIFT_OVERLAP", StatusCode = EnumStatusCode.StatusCode400 };//gio lam them khong duoc trong ca lam viec
+                        return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.EMPLOYEES_HAVE_NOT_BEEN_SCHEDULED_FOR_SHIFTS, StatusCode = EnumStatusCode.StatusCode400 };//tra mess co nv chua duoc xep ca
+                    }
+                    var dateT = (from t in atWorksign.Where(x => x.EMPLOYEE_ID == item) orderby t.WORKINGDAY descending select t.WORKINGDAY).ToList().First();//lay den ngay
+                    var dateF = (from w in atWorksign.Where(x => x.EMPLOYEE_ID == item) orderby w.WORKINGDAY descending select w.WORKINGDAY).ToList().Last();//lay tu ngay
+
+                    if (dto.StartDate < dateF)
+                    {
+                        return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "START_DATE_MUST_BE_GREATER_THAN_THE_WORK_SHIFT_ASSIGNMENT_DATE", StatusCode = EnumStatusCode.StatusCode400 };//tu ngay chua dc xep ca
+                    }
+                    else if (dto.EndDate > dateT)
+                    {
+                        return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "END_DATE_MUST_BE_EARLIER_THAN_THE_WORK_SHIFT_ASSIGNMENT_DATE", StatusCode = EnumStatusCode.StatusCode400 };//den ngay chua dc xep ca
+                    }
+
+                    //check ky cong ngung ap dung
+                    long? checkperiod = 0;
+                    a.ForEach(x => checkperiod = x.PERIOD_ID);
+                    var period = await atSalPeriod.Where(x => x.ID == checkperiod && x.IS_ACTIVE != true).AnyAsync();
+                    if (period)
+                    {
+                        return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "THE_WORK_PERIOD_HAS_CEASED_TO_APPLY", StatusCode = EnumStatusCode.StatusCode400 };//ky cong da ngung ap dung
+                    }
+
+                    ////check nv co trung ca lam viec
+
+                    long? shiftID = 0;
+                    a.ForEach(p =>
+                    {
+                        if (p.WORKINGDAY!.Value.ToShortDateString() == dto.StartDate!.Value.ToShortDateString())
+                        {
+                            shiftID = p.SHIFT_ID;
+                        }
+                    });
+
+                    var shift = atShift.AsNoTracking().Where(p => p.ID == shiftID).Any();// Check ton tai ca
+                    if (!shift)
+                    {
+                        return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "SHIFT_NOT_EXIST", StatusCode = EnumStatusCode.StatusCode400 };//den ngay chua dc xep ca
+                    }
+
+                    var shiftTimeStop = (from s in atShift.AsNoTracking().Where(p => p.ID == shiftID)
+                                         select s.HOURS_STOP).First();// lay dc gio ket thuc ca lm vc
+
+                    //var c = (from p in atWorking.Where(x => x.EMPLOYEE_ID == item)
+                    //         from s in atShift.Where(x => x.ID == p.SHIFT_ID)
+                    //         select s.TIME_STOP).First();//lay dc gio ket thuc ca lm vc
+
+                    //DateTime dateTime = dto.TimeStart;
+                    TimeSpan timeStart = new TimeSpan(dto.TimeStart.Value.Hour, dto.TimeStart.Value.Minute, dto.TimeStart.Value.Second);
+                    TimeSpan timeStop = new TimeSpan(shiftTimeStop.Hour, shiftTimeStop.Minute, shiftTimeStop.Second);
+                    var shiftE = atShift.AsNoTracking().Where(p => p.ID == shiftID).FirstOrDefault();
+                    if (shiftE.CODE != "T7" && shiftE.CODE != "CN" && shiftE.CODE != "OFF")
+                    {
+                        if (shiftTimeStop != null)
+                        {
+                            if (timeStart < timeStop)
+                            {
+                                return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "NO_OVERTIME_REGISTRATION_DURING_THE_WORKING_SHIFT_OVERLAP", StatusCode = EnumStatusCode.StatusCode400 };//gio lam them khong duoc trong ca lam viec
+                            }
+                        }
+                    }
+
+                    //check dang ky nhieu ngay
+                    var dateStart1 = DateTime.Parse(dto.StartDate.Value.ToShortDateString());
+                    var dateEnd1 = DateTime.Parse(dto.EndDate.Value.ToShortDateString());
+
+                    TimeSpan range = dateEnd1 - dateStart1;
+
+                    List<DateTime> days = new List<DateTime>();
+
+                    for (int i = 0; i <= range.Days; i++)
+                    {
+                        days.Add((dateStart1).AddDays(i));
+                    }
+                    foreach (var datetime in days)
+                    {
+                        var dateStartOneDay = new DateTime(datetime.Year, datetime.Month, datetime.Day, dto.TimeStart.Value.Hour, dto.TimeStart.Value.Minute, dto.TimeStart.Value.Second);
+                        var dateEndOneDay = new DateTime(datetime.Year, datetime.Month, datetime.Day, dto.TimeEnd.Value.Hour, dto.TimeEnd.Value.Minute, dto.TimeEnd.Value.Second);
+                        if (dto.TimeStart > dto.TimeEnd)
+                        {
+                            dateEndOneDay.AddDays(1);
+                        }
+
+                        long? shiftIdOneDay = 0;
+                        a.ForEach(p =>
+                        {
+                            if (p.WORKINGDAY!.Value.ToShortDateString() == dateEndOneDay.ToShortDateString())
+                            {
+                                shiftIdOneDay = p.SHIFT_ID;
+                            }
+                        });
+
+                        var shiftTimeStopOneDay = (from s in atShift.AsNoTracking().Where(p => p.ID == shiftIdOneDay)
+                                                   select s).First();
+                        TimeSpan timeStartOneDay = new TimeSpan(shiftTimeStopOneDay.HOURS_START.Hour, shiftTimeStopOneDay.HOURS_START.Minute, shiftTimeStopOneDay.HOURS_START.Second);
+                        TimeSpan timeStopOneDay = new TimeSpan(shiftTimeStopOneDay.HOURS_STOP.Hour, shiftTimeStopOneDay.HOURS_STOP.Minute, shiftTimeStopOneDay.HOURS_STOP.Second);
+                        //check gio ket thuc trung ca moi
+                        var timeStopCheck = new TimeSpan(dateEndOneDay.Hour, dateEndOneDay.Minute, dateEndOneDay.Second);
+                        if (shiftTimeStopOneDay.CODE != "T7" && shiftTimeStopOneDay.CODE != "CN" && shiftTimeStopOneDay.CODE != "OFF")
+                        {
+                            if (timeStartOneDay <= timeStopCheck && timeStopCheck <= timeStopOneDay)
+                            {
+                                return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "NO_OVERTIME_REGISTRATION_DURING_THE_WORKING_SHIFT_OVERLAP", StatusCode = EnumStatusCode.StatusCode400 };//gio lam them khong duoc trong ca lam viec
+                            }
+                        }
+
+                    }
+
+                    //check tong gio lam them cua nv trong thang
+                    //var h1 = _dbContext.AtOvertimes.AsNoTracking().Where(x => x.EMPLOYEE_ID == item && x.PERIOD_ID == dto.PeriodId).ToList();
+                    var h1 = _dbContext.AtOvertimes.AsNoTracking().Where(x => x.EMPLOYEE_ID == item).ToList();
+                    int toltalH = 0;
+                    foreach (var hour in h1)
+                    {
+                        //so gio lam them 1 ca/day
+                        DateTime timeS = hour.TIME_START.Value;
+                        DateTime timeE = hour.TIME_END.Value;
+                        TimeSpan numTimeS = new TimeSpan(timeS.Hour, timeS.Minute, timeS.Second);
+                        TimeSpan numTimeE = new TimeSpan(timeE.Hour, timeE.Minute, timeE.Second);
+                        TimeSpan numHour = (numTimeE - numTimeS);
+                        float toltalHour = (float)numHour.TotalHours;
+
+                        //so gio lam them thang
+                        DateTime dateE = hour.END_DATE!.Value.Date;
+                        DateTime dateS = hour.START_DATE!.Value.Date;
+                        TimeSpan day = (dateE - dateS);
+                        float numDays = (float)day.TotalDays;
+                        if (numDays == 0) numDays = 1;
+                        toltalH += (int)(toltalHour * numDays);
+                    }
+                    if (toltalH > hourM)
+                    {
+                        return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "OVERTIME_HOURS_EXCEEDED_THIS_MONTH", StatusCode = EnumStatusCode.StatusCode400 };//qua so gio lam them trong thang
                     }
                 }
             }
-
-            //check dang ky nhieu ngay
-            var dateStart1 = DateTime.Parse(dto.StartDate.Value.ToShortDateString());
-            var dateEnd1 = DateTime.Parse(dto.EndDate.Value.ToShortDateString());
-
-            TimeSpan range = dateEnd1 - dateStart1;
-
-            List<DateTime> days = new List<DateTime>();
-
-            for (int i = 0; i <= range.Days; i++)
-            {
-                days.Add((dateStart1).AddDays(i));
-            }
-            foreach (var datetime in days)
-            {
-                var dateStartOneDay = new DateTime(datetime.Year, datetime.Month, datetime.Day, dto.TimeStart.Value.Hour, dto.TimeStart.Value.Minute, dto.TimeStart.Value.Second);
-                var dateEndOneDay = new DateTime(datetime.Year, datetime.Month, datetime.Day, dto.TimeEnd.Value.Hour, dto.TimeEnd.Value.Minute, dto.TimeEnd.Value.Second);
-                if (dto.TimeStart > dto.TimeEnd)
-                {
-                    dateEndOneDay.AddDays(1);
-                }
-
-                long? shiftIdOneDay = 0;
-                a.ForEach(p =>
-                {
-                    if (p.WORKINGDAY!.Value.ToShortDateString() == dateEndOneDay.ToShortDateString())
-                    {
-                        shiftIdOneDay = p.SHIFT_ID;
-                    }
-                });
-
-                var shiftTimeStopOneDay = (from s in atShift.AsNoTracking().Where(p => p.ID == shiftIdOneDay)
-                                           select s).First();
-                TimeSpan timeStartOneDay = new TimeSpan(shiftTimeStopOneDay.HOURS_START.Hour, shiftTimeStopOneDay.HOURS_START.Minute, shiftTimeStopOneDay.HOURS_START.Second);
-                TimeSpan timeStopOneDay = new TimeSpan(shiftTimeStopOneDay.HOURS_STOP.Hour, shiftTimeStopOneDay.HOURS_STOP.Minute, shiftTimeStopOneDay.HOURS_STOP.Second);
-                //check gio ket thuc trung ca moi
-                var timeStopCheck = new TimeSpan(dateEndOneDay.Hour, dateEndOneDay.Minute, dateEndOneDay.Second);
-                if (shiftTimeStopOneDay.CODE != "T7" && shiftTimeStopOneDay.CODE != "CN" && shiftTimeStopOneDay.CODE != "OFF")
-                {
-                    if (timeStartOneDay <= timeStopCheck && timeStopCheck <= timeStopOneDay && lstHld.Count == 0)
-                    {
-                        return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "NO_OVERTIME_REGISTRATION_DURING_THE_WORKING_SHIFT_OVERLAP", StatusCode = EnumStatusCode.StatusCode400 };//gio lam them khong duoc trong ca lam viec
-                    }
-                }
-
-            }
-
-            //check tong gio lam them cua nv trong thang
-            //var h1 = _dbContext.AtOvertimes.AsNoTracking().Where(x => x.EMPLOYEE_ID == item && x.PERIOD_ID == dto.PeriodId).ToList();
-            var h1 = _dbContext.AtOvertimes.AsNoTracking().Where(x => x.EMPLOYEE_ID == dto.EmployeeId).ToList();
-            int toltalH = 0;
-            foreach (var hour in h1)
-            {
-                //so gio lam them 1 ca/day
-                DateTime timeS = hour.TIME_START.Value;
-                DateTime timeE = hour.TIME_END.Value;
-                TimeSpan numTimeS = new TimeSpan(timeS.Hour, timeS.Minute, timeS.Second);
-                TimeSpan numTimeE = new TimeSpan(timeE.Hour, timeE.Minute, timeE.Second);
-                TimeSpan numHour = (numTimeE - numTimeS);
-                float toltalHour = (float)numHour.TotalHours;
-
-                //so gio lam them thang
-                DateTime dateE = hour.END_DATE!.Value.Date;
-                DateTime dateS = hour.START_DATE!.Value.Date;
-                TimeSpan day = (dateE - dateS);
-                float numDays = (float)day.TotalDays;
-                if (numDays == 0) numDays = 1;
-                toltalH += (int)(toltalHour * numDays);
-            }
-            if (toltalH > hourM)
-            {
-                return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "OVERTIME_HOURS_EXCEEDED_THIS_MONTH", StatusCode = EnumStatusCode.StatusCode400 };//qua so gio lam them trong thang
-            }
-
-
 
             // First of all we need to upload all the attachments
             if (dto.FirstAttachmentBuffer != null)

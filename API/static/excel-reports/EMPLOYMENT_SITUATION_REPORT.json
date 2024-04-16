@@ -1,0 +1,123 @@
+{
+  "Root": {
+    "ClassName": "EMPLOYMENT_SITUATION_REPORT",
+    "ParameterValues": [
+      {
+        "FeildName": "P_ORG_ID",
+        "DataType": "VarChar",
+        "DtoName": "ListOrgIds"
+      },
+      {
+        "FeildName": "P_START_DATE",
+        "DataType": "DateTime2",
+        "DtoName": "DateStart"
+      },
+      {
+        "FeildName": "P_END_DATE",
+        "DataType": "DateTime2",
+        "DtoName": "DateEnd"
+      }
+    ],
+    "FontFamily": "Times New Roman",
+    "Size": 11,
+    "FontBolds": [
+      "A2:F3",
+      "A6:F6",
+      "A9:F11"
+    ],
+    "ErCode": "EMPLOYMENT_SITUATION_REPORT",
+    "HeaderRow": 11,
+    "HeaderTitles": [
+      {
+        "Text": "ER_HEADER_TITLE_COMPANY_NAME",
+        "Cell": "A2:D3"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_NAME_EMPLOYMENT_SITUATION_REPORT",
+        "Cell": "A6:F6"
+      },
+      {
+        "Text": "ER_HEADER_REPORT_FROM_DATE_TO_DATE",
+        "Cell": "A7:F7"
+      }
+    ],
+    "HeaderGridTitles": [
+      {
+        "Text": "ER_ORDER_NUM",
+        "Cell": "A9:A11"
+      },
+      {
+        "Text": "UI_ENTITY_FIELD_UNIT_DEPARTMENT",
+        "Cell": "B9:B11"
+      }
+    ],
+    "HeaderNoTranslates": [
+      {
+        "Text": "Tình hình sử dụng lao động",
+        "Cell": "C9:F9"
+      },
+      {
+        "Text": "Số lao động đầu kỳ",
+        "Cell": "C10:C10"
+      },
+      {
+        "Text": "Số lao động tăng trong kỳ",
+        "Cell": "D10:D10"
+      },
+      {
+        "Text": "Số lao động giảm trong kỳ",
+        "Cell": "E10:E10"
+      },
+      {
+        "Text": "Số lao động cuối kỳ",
+        "Cell": "F10:F10"
+      },
+      {
+        "Text": "Tổng số",
+        "Cell": "C11:C11"
+      },
+      {
+        "Text": "Tổng số",
+        "Cell": "D11:D11"
+      },
+      {
+        "Text": "Tổng số",
+        "Cell": "E11:E11"
+      },
+      {
+        "Text": "Tổng số",
+        "Cell": "F11:F11"
+      }
+    ],
+    "MegreCellRange": [
+      "A1:F1",
+      "A2:D3",
+      "A6:F6",
+      "A7:F7",
+      "A9:A11",
+      "B9:B11",
+      "C9:F9"
+    ],
+    "HorizontalAlignmentCenter": [
+      "A1:F1",
+      "A2:D3",
+      "A6:F6",
+      "A7:F7",
+      "A9:F11"
+    ],
+    "VerticalAlignmentCenter": [
+      "A1:F1",
+      "A2:D3",
+      "A6:F6",
+      "A7:F7",
+      "A9:F11"
+    ],
+    "RangeAutoFit": "A9:F11",
+    "BorderHeader": "A9:F11",
+    "WrapText": [
+      "A2:C3",
+      "B9:B11"
+    ]
+  }
+
+}

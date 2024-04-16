@@ -24,7 +24,7 @@ namespace API.DTO
         public DateTime? EndDate { get; set; }
         public long? DayCalculator { get; set; }
         public long? AccumulateDay { get; set; }
-        public string? ChildrenNo { get; set; }
+        public long? ChildrenNo { get; set; }
         public long? AverageSalSixMonth { get; set; }
         public long? BhxhSalary { get; set; }
         public long? RegimeSalary { get; set; }

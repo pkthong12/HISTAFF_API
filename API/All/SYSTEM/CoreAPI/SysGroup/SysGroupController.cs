@@ -33,7 +33,13 @@ namespace API.Controllers.SysGroup
         public async Task<IActionResult> ReadAll()
         {
             var response = await _SysGroupRepository.ReadAll();
-            return Ok(response);
+            return Ok(new FormatedResponse()
+            {
+                ErrorType = response.ErrorType,
+                MessageCode = "READ_ALL_SUCCESS",
+                StatusCode = response.StatusCode,
+                InnerBody = response.InnerBody
+            });
         }
 
         [HttpPost]
@@ -155,13 +161,6 @@ namespace API.Controllers.SysGroup
         public async Task<IActionResult> QueryFunctionActionPermissionList(long objectId)
         {
             var response = await _SysGroupRepository.QueryFunctionActionPermissionList(objectId);
-            return Ok(response);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> DeleteAllFunctionActionPermissionByGroupId(SysGroupDTO model)
-        {
-            var response = await _SysGroupRepository.DeleteAllFunctionActionPermissionByGroupId((long)model.GroupId!);
             return Ok(response);
         }
 

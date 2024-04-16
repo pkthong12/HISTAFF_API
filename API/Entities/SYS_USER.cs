@@ -60,8 +60,11 @@ public partial class SYS_USER
     public bool? IS_PORTAL { get; set; }
 
     public bool? IS_WEBAPP { get; set; }
+    public bool? IS_MOBILE { get; set; }
     public bool? IS_LDAP { get; set; }
     public long? EMPLOYEE_ID { get; set; }
+
+    public string? CHANGE_PASSWORD_CODE { get; set; }
 
     //public virtual ICollection<AspNetUserClaim> AspNetUserClaims { get; set; } = new List<AspNetUserClaim>();
 

@@ -1,24 +1,17 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using ProfileDAL.Repositories;
 using ProfileDAL.ViewModels;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.JsonWebTokens;
 using CORE.DTO;
 using CORE.Enum;
 using CORE.StaticConstant;
 using API.All.DbContexts;
 using CORE.GenericUOW;
-using API.All.SYSTEM.CoreDAL.System.Language.Models;
-using API.Entities;
 using API.Main;
 using API;
 using Microsoft.Extensions.Options;
-using Azure;
-using System;
 using API.DTO;
 using System.Linq.Dynamic.Core;
-using Common.Extensions;
 
 namespace ProfileAPI.List
 {
@@ -161,6 +154,8 @@ namespace ProfileAPI.List
                 }
                 model.Actflg = "A";
                 model.NameVn = model.NameVnNoCode;
+                model.CreatedDate = DateTime.UtcNow;
+                model.CreatedBy = sid;
                 var response = await _genericRepository.Create(_uow, model, sid ?? "");
                 return Ok(response);
             }
@@ -239,7 +234,7 @@ namespace ProfileAPI.List
             var userName = _accessor.HttpContext?.User.FindFirst(JwtRegisteredClaimNames.Typ)?.Value?.Trim();
             model.NameVn = model.NameVnNoCode;
             var r = await _genericRepository.Update(_uow, model, "");
-            return Ok(new FormatedResponse() { InnerBody = r.InnerBody, MessageCode = CommonMessageCode.UPDATE_SUCCESS, StatusCode = EnumStatusCode.StatusCode200 });
+            return Ok(r);
         }
         [HttpPost]
         public async Task<IActionResult> Delete(HUJobEditDTO model)
@@ -333,6 +328,20 @@ namespace ProfileAPI.List
             {
                 var r = await _unitOfWork.HuJobRepository.GetList();
                 return Ok(new FormatedResponse() { InnerBody = r.Data });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<ActionResult> GetCodeByJobFamily(long id)
+        {
+            try
+            {
+                var response = await _unitOfWork.HuJobRepository.GetCodeByJobFamily(id);
+                return Ok(response);
             }
             catch (Exception ex)
             {

@@ -20,6 +20,5 @@ namespace API.Controllers.PaPayrollsheetSum
 
         Task<FormatedResponse> GetPayrollByEmployee(long id, long salaryPeriodId);
 
-        Task<FormatedResponse> ComparePayrollFund(PaPayrollsheetSumDTO dto);
     }
 }

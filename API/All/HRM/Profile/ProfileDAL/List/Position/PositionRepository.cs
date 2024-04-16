@@ -12,6 +12,8 @@ using CORE.Enum;
 using CORE.StaticConstant;
 using System;
 using System.Linq;
+using API.All.SYSTEM.Common;
+using API.Main;
 
 namespace ProfileDAL.Repositories
 {
@@ -19,6 +21,9 @@ namespace ProfileDAL.Repositories
     {
         private readonly ProfileDbContext _appContext;
         private readonly GenericReducer<HU_POSITION, PositionViewNoPagingDTO> genericReducer;
+
+
+
         public PositionRepository(ProfileDbContext context) : base(context)
         {
             _appContext = context;
@@ -26,35 +31,9 @@ namespace ProfileDAL.Repositories
         }
         public async Task<GenericPhaseTwoListResponse<PositionViewNoPagingDTO>> SinglePhaseQueryList(GenericQueryListDTO<PositionViewNoPagingDTO> request)
         {
-            //var raw = _appContext.Positions.AsQueryable();
-            //var phase1 = await genericReducer.FirstPhaseReduce(raw, request);
-
-            //if (phase1.ErrorType != EnumErrorType.NONE)
-            //{
-            //    return new()
-            //    {
-            //        ErrorType = phase1.ErrorType,
-            //        MessageCode = phase1.MessageCode,
-            //        ErrorPhase = 1
-            //    };
-            //}
-
-            //if (phase1.Queryable == null)
-            //{
-            //    return new()
-            //    {
-            //        ErrorType = EnumErrorType.CATCHABLE,
-            //        MessageCode = CommonMessageCode.ENTITIES_NOT_FOUND,
-            //        ErrorPhase = 1
-            //    };
-            //}
-
-            //var phase1IdsResult = phase1.Queryable.ToList().Aggregate("", (prev, curr) => prev + curr.ID.ToString() + ";");
-            //var ids = phase1IdsResult.Split(';');
             var joined = (from p in _appContext.Positions
                           from o in _appContext.Organizations.Where(x => x.ID == p.ORG_ID).DefaultIfEmpty()
                           from g in _appContext.CompanyInfos.Where(x => x.ID == o.COMPANY_ID).DefaultIfEmpty()
-                              //from s in _appContext.OtherLists.Where(x => x.ID == g.INS_UNIT).DefaultIfEmpty()
                           from v in _appContext.OtherLists.Where(x => x.ID == g.REGION_ID).DefaultIfEmpty()
                           from e in _appContext.Employees.Where(x => x.POSITION_ID == p.ID).DefaultIfEmpty()
                           from m in _appContext.Employees.Where(x => x.ID == p.MASTER).DefaultIfEmpty()
@@ -66,6 +45,7 @@ namespace ProfileDAL.Repositories
                           from ttj in _appContext.HUJobs.Where(x => x.ID == tt.JOB_ID).DefaultIfEmpty()
                           from j in _appContext.HUJobs.Where(x => x.ID == p.JOB_ID).DefaultIfEmpty()
                           from gtj in _appContext.HUJobs.Where(x => x.ID == gt.JOB_ID).DefaultIfEmpty()
+                          from c in _appContext.HuConcurrentlies.Where(x => x.POSITION_ID == p.ID).DefaultIfEmpty()
                           orderby p.CREATED_DATE descending
                           select new PositionViewNoPagingDTO
                           {
@@ -93,6 +73,7 @@ namespace ProfileDAL.Repositories
                               Interim = p.INTERIM,
                               Master = p.MASTER,
                               OrgId = p.ORG_ID,
+                              IsActive = p.IS_ACTIVE == true ? true : false,
                               Active = p.IS_ACTIVE == true ? "Áp dụng" : "Ngừng áp dụng",
                               JobDesc = p.JOB_DESC,
                               isTDV = p.IS_TDV,
@@ -107,6 +88,10 @@ namespace ProfileDAL.Repositories
                               NameOnProfileEmployee = j.NAME_VN,
                               InsurenceArea = v.NAME, //Lấy ra vùng bảo hiểm
                               InsurenceAreaId = v.ID, //Lấy ra ID vùng bảo hiểm
+                              StatusChair = (p.MASTER == null && p.INTERIM == null ? 0 
+                                            : (p.INTERIM != null && p.MASTER == null ? 1 : (p.INTERIM == null && p.MASTER != null ? 2 : 3))),
+                              ConcurrentStatus = c.POSITION_ID != null ? 1 : 0,
+                              isMaster = c.POSITION_ID == null && p.MASTER != null ? true : false
                           }).Distinct();
             //request.Sort = new List<SortItem>();
             //request.Sort.Add(new SortItem()
@@ -2111,6 +2096,280 @@ namespace ProfileDAL.Repositories
             {
 
                 return new ResultWithError(ex);
+            }
+        }
+
+        public async Task<FormatedResponse> TransferPosition(List<long> listTransfer, long orgId, string userId)
+        {
+            await Task.Run(() => true);
+            try
+            {
+                bool checkDuplicateOrgId = false;
+                bool checkChair = false;
+                bool checkEntity = false;
+                List<HU_POSITION_ORG_MAP_BUFFER> listPositionOrgMapPositions = [];
+                if (listTransfer.Count == 0)
+                {
+                    return new FormatedResponse()
+                    {
+                        ErrorType = EnumErrorType.CATCHABLE,
+                        StatusCode = EnumStatusCode.StatusCode400,
+                        MessageCode = CommonMessageCodes.YOU_DO_NOT_CHOOSE_RECORD_NEED_TRANSFER
+                    };
+                }
+                else
+                {
+                    listTransfer.ForEach(item =>
+                    {
+                        var getPosition = _appContext.Positions.FirstOrDefault(x => x.ID == item);
+                        if (getPosition != null)
+                        {
+                            if (getPosition.ORG_ID == orgId)
+                            {
+                                checkDuplicateOrgId = true;
+                                return;
+                            }
+                            else if (getPosition.MASTER != null || getPosition.INTERIM != null)
+                            {
+                                checkChair = true;
+                                return;
+                            }
+                            else
+                            {
+                                listPositionOrgMapPositions.Add(new()
+                                {
+                                    USER_ID = userId,
+                                    OLD_POSITION_ID = getPosition.ID,
+                                    ORG_ID = (long)getPosition.ORG_ID!
+                                });
+                                getPosition.ORG_ID = orgId;
+                                getPosition.UPDATED_DATE = DateTime.Now;
+                                getPosition.UPDATED_BY = userId;
+                            }
+
+                        } else
+                        {
+                            checkEntity = true;
+                            return;
+                        }
+                    });
+
+                    if(checkDuplicateOrgId == true)
+                    {
+                        return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCodes.DUPLICATE_ORGID, StatusCode = EnumStatusCode.StatusCode400 };
+                    }
+                    if (checkChair == true)
+                    {
+                        return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCodes.DUPLICATE_CHAIR, StatusCode = EnumStatusCode.StatusCode400 };
+                    }
+                    if(checkEntity == true)
+                    {
+                        return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.ENTITIES_NOT_FOUND };
+                    }
+                    if(listPositionOrgMapPositions?.Count != 0)
+                    {
+                        await _appContext.HuPositionOrgMapBuffers.AddRangeAsync(listPositionOrgMapPositions!);
+                    }
+                    
+                    _appContext.SaveChanges();
+                    return new FormatedResponse()
+                    {
+                        MessageCode = CommonMessageCodes.TRANSFER_POSITION_SUCCESS,
+                        StatusCode = EnumStatusCode.StatusCode200,
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+
+                return new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message };
+            }
+        }
+
+        public async Task<FormatedResponse> CloningPosition(List<long> listCloning, long orgId, int aMount, string userId)
+        {
+            try
+            {
+                bool checkJobId = false;
+                List<HU_POSITION> listCloningPosition = new();
+                List<HU_POSITION_ORG_MAP_BUFFER> listPositionOrgMapBuffers = new();
+                if (listCloning.Count == 0)
+                {
+                    return new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCodes.YOU_DO_NOT_CHOOSE_RECORD_NEED_CLONING };
+                }
+                else if (orgId == null)
+                {
+                    return new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCodes.YOU_DO_NOT_CHOOSE_ORGANIZAITION_NEED_CLONING };
+                }
+                else if (aMount < 1)
+                {
+                    return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCodes.AMOUNT_CLONING_MUST_GREATER_THAN_1 };
+                }
+                else
+                {
+                    listCloning.ForEach(item =>
+                    {
+                        var getPosition = (from p in _appContext.Positions.Where(x => x.ID == item)
+                                          from j in _appContext.HUJobs.Where(x => x.ID == p.JOB_ID).DefaultIfEmpty()
+                                          select new PositionOutputDTO
+                                          {
+                                              Id = p.ID,
+                                              GroupId = p.GROUP_ID,
+                                              Code = p.CODE,
+                                              Name = p.NAME,
+                                              Note = p.NOTE,
+                                              jobDesc = p.JOB_DESC,
+                                              IsActive = p.IS_ACTIVE,
+                                              OrgId = orgId,
+                                              jobid = j.ID,
+                                              OrderNum = j.ORDERNUM
+                                          }).FirstOrDefault();
+                        if ( getPosition != null && getPosition.OrderNum > 0 && getPosition.OrderNum < 7)
+                        {
+                            checkJobId = true;
+                            return;
+                        }
+                        else
+                        {
+                            for (int i = 1; i < aMount + 1; i++)
+                            {
+                                decimal num;
+                                var queryCode = (from x in _appContext.Positions where x.CODE.Length == 5 select x.CODE).ToList();
+                                var existingCode = (from p in queryCode where Decimal.TryParse(p.Substring(2), out num) orderby p descending select p).ToList();
+                                string newcode = StringCodeGenerator.CreateNewCode("P", 4, existingCode);
+                                int newCodeSub = int.Parse(newcode.Substring(1)) + i;
+                                string lastCode = (newCodeSub > 999 ? string.Concat(newcode[..1], newCodeSub) : (newCodeSub > 99 ? string.Concat(newcode[..2], newCodeSub)
+                                                    : (newCodeSub > 9 ? string.Concat(newcode[..3], newCodeSub) : string.Concat(newcode[..4], newCodeSub))));
+                                listCloningPosition.Add(new()
+                                {
+                                    GROUP_ID = getPosition.GroupId,
+                                    CODE = lastCode,
+                                    NAME = getPosition.Name,
+                                    NOTE = getPosition.Note,
+                                    JOB_DESC = getPosition.jobDesc,
+                                    ORG_ID = getPosition.OrgId,
+                                    CREATED_DATE = DateTime.Now,
+                                    CREATED_BY = userId
+                                });
+
+                            }
+                        }
+                    });
+                    if (checkJobId == true)
+                    {
+                        return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCodes.CAN_NOT_CLONING_HEAD_OF_DEPARTMENT };
+                    }
+                    if (listCloningPosition?.Count != 0)
+                    {
+                        await _appContext.Positions.AddRangeAsync(listCloningPosition!);
+                       
+                    }
+                    _appContext.SaveChanges();
+                    var getNewPosition = _appContext.Positions.OrderByDescending(x => x.CREATED_DATE).Take(listCloningPosition!.Count).ToList();
+                    getNewPosition.ForEach(item =>
+                    {
+                        listPositionOrgMapBuffers.Add(new()
+                        {
+                            USER_ID = userId,
+                            NEW_POSITION_ID = item.ID
+                        });
+                    });
+                    await _appContext.HuPositionOrgMapBuffers.AddRangeAsync(listPositionOrgMapBuffers!);
+                    _appContext.SaveChanges();
+                    return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode200, MessageCode = CommonMessageCodes.CLONING_POSITION_SUCCESS };
+                }
+            }
+            catch (Exception ex)
+            {
+
+                return new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message };
+            }
+        }
+
+        public async Task<FormatedResponse> PositionTransferSave(string userId)
+        {
+            try
+            {
+                var getDataByUserId = await _appContext.HuPositionOrgMapBuffers.Where(x => x.USER_ID == userId).ToListAsync();
+                _appContext.HuPositionOrgMapBuffers.RemoveRange(getDataByUserId);
+                _appContext.SaveChanges();
+                return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode200, MessageCode = CommonMessageCodes.TRANSFER_POSITION_SUCCESS };
+            }
+            catch (Exception ex)
+            {
+                return new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message };
+            }
+        }
+
+        public async Task<FormatedResponse> PositionTransferRevert(string userId)
+        {
+            try
+            {
+                var getDataRevert = await _appContext.HuPositionOrgMapBuffers.Where(x => x.USER_ID == userId).ToListAsync();
+                List<HU_POSITION> listPosition = new();
+                List<HU_POSITION_ORG_MAP_BUFFER> listPositionOrgMapBuffer = new();
+                if (getDataRevert?.Count > 0)
+                {
+                    getDataRevert.ForEach(item =>
+                    {
+                        if (item.NEW_POSITION_ID == null)
+                        {
+                            var getPositionToRevert = _appContext.Positions.FirstOrDefault(x => x.ID == item.OLD_POSITION_ID);
+                            if (getPositionToRevert != null)
+                            {
+                                getPositionToRevert.ORG_ID = item.ORG_ID;
+                            }
+                        }
+                        else
+                        {
+                            var getPositionToDelete = _appContext.Positions.FirstOrDefault(x => x.ID == item.NEW_POSITION_ID);
+                            _appContext.Positions.Remove(getPositionToDelete!);
+                        }
+                    });
+                    _appContext.HuPositionOrgMapBuffers.RemoveRange(getDataRevert);
+                    _appContext.SaveChanges();
+                    return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode200, MessageCode = CommonMessageCodes.REVERT_SUCCESS };
+                }
+                else
+                {
+                    return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCodes.NO_MANIPULATIONS_HAVE_BEEN_PERFORMED_YET };
+                }
+            }
+            catch (Exception ex)
+            {
+
+                return new FormatedResponse()
+                {
+                    ErrorType = EnumErrorType.UNCATCHABLE,
+                    StatusCode = EnumStatusCode.StatusCode500,
+                    MessageCode = ex.Message
+                };
+            }
+        }
+
+        public async void PositionTransferDelete(string userId)
+        {
+            var getDataToDelete = await _appContext.HuPositionOrgMapBuffers.Where(x => x.USER_ID == userId).ToListAsync();
+            if(getDataToDelete?.Count > 0)
+            {
+                getDataToDelete.ForEach(item =>
+                {
+                    if (item.NEW_POSITION_ID == null)
+                    {
+                        var getPositionToRevert = _appContext.Positions.FirstOrDefault(x => x.ID == item.OLD_POSITION_ID);
+                        if (getPositionToRevert != null)
+                        {
+                            getPositionToRevert.ORG_ID = item.ORG_ID;
+                        }
+                    }
+                    else
+                    {
+                        var getPositionToDelete = _appContext.Positions.FirstOrDefault(x => x.ID == item.NEW_POSITION_ID);
+                        _appContext.Positions.Remove(getPositionToDelete!);
+                    }
+                });
+                _appContext.HuPositionOrgMapBuffers.RemoveRange(getDataToDelete);
+                _appContext.SaveChanges();
             }
         }
 

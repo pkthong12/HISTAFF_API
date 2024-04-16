@@ -159,48 +159,12 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                 DateTime startDate = DateTime.Parse(model["dateStart"].ToString()!).Date;
                 DateTime endDate = DateTime.Parse(model["dateEnd"].ToString()!).Date;
                 TimeSpan range = endDate.Subtract(startDate);
-
-                // tổng số ngày đăng ký 
-                double totalDayRegister = 0;
-                // trường hợp không khai báo từng 
-                if ((bool)model["isEachDay"] == false)
-                {
-                    // lấy ra loại đăng ký
-                    var registerCode = await _dbContext.AtTimeTypes.Where(t => t.ID == (long?)model["timeTypeId"]).FirstOrDefaultAsync();
-                    if (registerCode!.CODE == "P")
-                    {
-                        totalDayRegister += (1 * ((int)range.TotalDays + 1));
-                    }
-                    else if (registerCode!.CODE.Contains("/P") || registerCode!.CODE.Contains("P/"))
-                    {
-                        totalDayRegister += (0.5 * ((int)range.TotalDays + 1));
-                    }
-                }
-                // khai báo từng ngày
-                else
-                {
-                    for (int i = 0; i <= (int)range.TotalDays; i++)
-                    {
-                        var manualId = _dbContext.AtTimeTypes.Where(x => x.CODE == model["shiftCode" + (i + 1)].ToString()).FirstOrDefault();
-                        if(model["shiftCode" + (i + 1)].ToString()!.Contains("/P")  || model["shiftCode" + (i + 1)].ToString()!.Contains("P/"))
-                        {
-                            totalDayRegister += 0.5;
-                        }
-                        else if(model["shiftCode" + (i + 1)].ToString()  == "P")
-                        {
-                            totalDayRegister += 1;
-                        }
-
-                    }
-                }
-
-                
-                if (totalDayRegister > remainingDay)
+                // lấy ra loại đăng ký
+                var registerCode = await _dbContext.AtTimeTypes.Where(t => t.ID == (long?)model["timeTypeId"]).FirstOrDefaultAsync();
+                if (range.TotalDays + 1 > remainingDay && (registerCode!.CODE == "P" || registerCode!.CODE.Contains("/P") || registerCode!.CODE.Contains("P/")))
                 {
                     return new() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.NOT_ENOUGH_DAY_OFF };
                 }
-
-
 
                 // check nhan vien da dc xep ca hay chua 
                 var checkExisistShift = await _dbContext.AtWorksigns.Where(w => w.EMPLOYEE_ID == (long)model["employeeId"] && DateTime.Parse(model["dateStart"].ToString()!).Date <= w.WORKINGDAY!.Value.Date && w.WORKINGDAY!.Value.Date <= DateTime.Parse(model["dateEnd"].ToString()!).Date).CountAsync();
@@ -222,6 +186,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                 data.RECEIVE_WORKER_ID = (long?)(model["receiveWorkerId"] == "" ? null : model["receiveWorkerId"]);
                 data.NOTE = (string?)model["note"];
                 data.IS_EACH_DAY = (bool)model["isEachDay"];
+                data.IS_REGISTER = (bool)model["isRegister"];
                 data.CREATED_BY = sid;
                 data.CREATED_DATE = DateTime.Now;
                 data.UPDATED_BY = sid;
@@ -271,7 +236,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                     }
                 }
 
-                /*var checkValidate = await QueryData.ExecuteList("CHECK_VALIDATE_REGISTER_LEAVE",
+                var checkValidate = await QueryData.ExecuteList("CHECK_VALIDATE_REGISTER_LEAVE",
                  new
                  {
                      P_EMPLOYEEID = data.EMPLOYEE_ID,
@@ -294,7 +259,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                             StatusCode = EnumStatusCode.StatusCode500
                         };
                     }
-                }*/
+                }
                 await _dbContext.PortalRegisterOffs.AddAsync(data);
                 await _dbContext.SaveChangesAsync();
 
@@ -362,6 +327,21 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                             }
                         }
 
+                        if (obj.IS_REGISTER == true)
+                        {
+                            var registerOffEmps = new PORTAL_REGISTER_EMPS();
+                            var ids = (List<long>)model["employeeIds"];
+                            ids.ForEach(item =>
+                            {
+                                registerOffEmps.REGISTER_OFF_ID = obj.ID;
+                                registerOffEmps.EMPLOYEE_ID = item;
+                                registerOffEmps.CREATED_BY = sid;
+                                registerOffEmps.CREATED_DATE = DateTime.Now;
+                                _dbContext.PortalRegisterEmps.Add(registerOffEmps);
+
+                            });
+                        }
+
                         var objStatus = new
                         {
                             P_EMPLOYEE_ID = obj.EMPLOYEE_ID,
@@ -369,73 +349,57 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                             P_ID_REGGROUP = obj.ID_REGGROUP,
                             P_SENDER = obj.EMPLOYEE_ID
                         };
-                        try
-                        {
-                            var dataStatus = QueryData.ExecuteStoreToTable(Procedures.PKG_AT_PROCESS_PRI_PROCESS_APP, objStatus, false);
+                        var dataStatus = QueryData.ExecuteStoreToTable(Procedures.PKG_AT_PROCESS_PRI_PROCESS_APP, objStatus, false);
 
-                            var a = obj.ID;
-                            var test = dataStatus.Tables[0].Rows[0]["RESULT"].ToString();
-                            if (test == "3")
-                            {
-                                var portalRegisterOffId = obj.ID;
-                                var registerOff = await _dbContext.PortalRegisterOffs.FindAsync(portalRegisterOffId);
-                                _dbContext.PortalRegisterOffs.Remove(registerOff!);
-                                await _dbContext.SaveChangesAsync();
-                                return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.EMP_NOT_HAVE_APPROVE_POS, StatusCode = EnumStatusCode.StatusCode400 };//chưa có người người phê duyệt
-                            }
-                            else if (test == "2")
-                            {
-                                var portalRegisterOffId = obj.ID;
-                                var registerOff = await _dbContext.PortalRegisterOffs.FindAsync(portalRegisterOffId);
-                                _dbContext.PortalRegisterOffs.Remove(registerOff!);
-                                await _dbContext.SaveChangesAsync();
-                                return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.NOT_HAVE_PROCESS_APPROVE, StatusCode = EnumStatusCode.StatusCode400 };//chưa có thiết lập phê duyệt
-                            }
-                            else
-                            {
-                                var employeeIds = test.Split(",");
-                                if (employeeIds?.Count() > 0)
-                                    for (var i = 0; i < employeeIds.Count(); i++)
+                        var a = obj.ID;
+                        var test = dataStatus.Tables[0].Rows[0]["RESULT"].ToString();
+                        if (test == "3")
+                        {
+                            var portalRegisterOffId = obj.ID;
+                            var registerOff = await _dbContext.PortalRegisterOffs.FindAsync(portalRegisterOffId);
+                            _dbContext.PortalRegisterOffs.Remove(registerOff!);
+                            await _dbContext.SaveChangesAsync();
+                            return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.EMP_NOT_HAVE_APPROVE_POS, StatusCode = EnumStatusCode.StatusCode400 };//chưa có người người phê duyệt
+                        }
+                        else if (test == "2")
+                        {
+                            var portalRegisterOffId = obj.ID;
+                            var registerOff = await _dbContext.PortalRegisterOffs.FindAsync(portalRegisterOffId);
+                            _dbContext.PortalRegisterOffs.Remove(registerOff!);
+                            await _dbContext.SaveChangesAsync();
+                            return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.NOT_HAVE_PROCESS_APPROVE, StatusCode = EnumStatusCode.StatusCode400 };//chưa có thiết lập phê duyệt
+                        }
+                        else
+                        {
+                            var employeeIds = test.Split(",");
+                            if (employeeIds?.Count() > 0)
+                                for (var i = 0; i < employeeIds.Count(); i++)
+                                {
+                                    var user = await _dbContext.SysUsers.Where(x => x.EMPLOYEE_ID == Int64.Parse(employeeIds[i])).FirstOrDefaultAsync();
+                                    var username = user?.USERNAME;
+                                    if (!string.IsNullOrEmpty(username))
                                     {
-                                        var user = await _dbContext.SysUsers.Where(x => x.EMPLOYEE_ID == Int64.Parse(employeeIds[i])).FirstOrDefaultAsync();
-                                        var username = user?.USERNAME;
-                                        if (!string.IsNullOrEmpty(username))
+                                        await _hubContext.Clients.User(username).SendAsync("ReceiveMessage", new
                                         {
-                                            await _hubContext.Clients.User(username).SendAsync("ReceiveMessage", new
+                                            SignalType = "APPROVE_NOTIFICATION",
+                                            Message = "Bạn có thông báo mới trên Portal"/*message*/,
+                                            Data = new
                                             {
-                                                SignalType = "APPROVE_NOTIFICATION",
-                                                Message = "Bạn có thông báo mới trên Portal"/*message*/,
-                                                Data = new
-                                                {
 
-                                                }
-                                            });
-                                        }
-
+                                            }
+                                        });
                                     }
-                            }
 
-                            await _dbContext.SaveChangesAsync();
+                                }
                         }
-                        catch(Exception ex)
-                        {
-                            var detail = (from p in _dbContext.PortalRegisterOffDetails.AsNoTracking().Where(p => p.REGISTER_ID == obj.ID)
-                                         select p);
-                            var noti = (from p in _dbContext.AtNotifications.AsNoTracking().Where(p => p.REF_ID == obj.ID)
-                                         select p);
-                            _dbContext.PortalRegisterOffs.Remove(obj);
-                            _dbContext.PortalRegisterOffDetails.RemoveRange(detail);
-                            _dbContext.AtNotifications.RemoveRange(noti);
-                            await _dbContext.SaveChangesAsync();
-                            return new FormatedResponse() { MessageCode = "NOT_EXISTS_SUITABLE_APPROVE_PROCCESS", ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
-                        }
-                        
+
+                        await _dbContext.SaveChangesAsync();
                     }
                     catch (Exception ex)
                     {
                         _dbContext.PortalRegisterOffs.Remove(obj);
                         await _dbContext.SaveChangesAsync();
-                        return new FormatedResponse() { MessageCode = ex.Message, ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                        return new FormatedResponse() { MessageCode = ex.Message, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
                     }
 
 
@@ -454,46 +418,26 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
 
         public async Task<FormatedResponse> Create(GenericUnitOfWork _uow, PortalRegisterOffDTO dto, string sid)
         {
-            //if (dto.TypeCode == "OFF")
-            //{
-            //    // Check đóng/mở kỳ công 
-            //    // get month + year datestart, dateend
-            //    int monthStartDate = dto.DateStart!.Value.Month;
-            //    int monthEndDate = dto.DateEnd!.Value.Month;
-            //    int yearStartDate = dto.DateStart!.Value.Year;
-            //    int yearEndDate = dto.DateEnd!.Value.Year;
-
-            //    if (yearStartDate == yearEndDate)
-            //    {
-            //        for (int i = monthStartDate; i <= monthEndDate; i++)
-            //        {
-            //            var salPeriod = await _dbContext.AtSalaryPeriods.Where(s => s.MONTH == i && s.YEAR == yearStartDate).FirstOrDefaultAsync();
-            //            var org = await _dbContext.HuEmployees.Where(e => e.ID == dto.EmployeeId).FirstOrDefaultAsync();
-            //            var checkLockOrgDateStart = (_dbContext.AtOrgPeriods.Where(p => p.ORG_ID == org!.ORG_ID && p.STATUSCOLEX == 1 && p.PERIOD_ID == salPeriod!.ID)).Count();
-            //            if (checkLockOrgDateStart != 0)
-            //            {
-            //                return new FormatedResponse() { MessageCode = CommonMessageCode.THE_WORK_PERIOD_HAS_CEASED_TO_APPLY, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
-            //            }
-            //        }
-            //    }
-            //}
-            // Check đóng/mở kỳ công 
-            // get month + year datestart, dateend
-            int monthStartDate = dto.DateStart!.Value.Month;
-            int monthEndDate = dto.DateEnd!.Value.Month;
-            int yearStartDate = dto.DateStart!.Value.Year;
-            int yearEndDate = dto.DateEnd!.Value.Year;
-
-            if (yearStartDate == yearEndDate)
+            if (dto.TypeCode == "OFF" || dto.TypeCode == "EXPLAINWORK")
             {
-                for (int i = monthStartDate; i <= monthEndDate; i++)
+                // Check đóng/mở kỳ công 
+                // get month + year datestart, dateend
+                int monthStartDate = dto.DateStart!.Value.Month;
+                int monthEndDate = dto.DateEnd!.Value.Month;
+                int yearStartDate = dto.DateStart!.Value.Year;
+                int yearEndDate = dto.DateEnd!.Value.Year;
+
+                if (yearStartDate == yearEndDate)
                 {
-                    var salPeriod = await _dbContext.AtSalaryPeriods.Where(s => s.MONTH == i && s.YEAR == yearStartDate).FirstOrDefaultAsync();
-                    var org = await _dbContext.HuEmployees.Where(e => e.ID == dto.EmployeeId).FirstOrDefaultAsync();
-                    var checkLockOrgDateStart = (_dbContext.AtOrgPeriods.Where(p => p.ORG_ID == org!.ORG_ID && p.STATUSCOLEX == 1 && p.PERIOD_ID == salPeriod!.ID)).Count();
-                    if (checkLockOrgDateStart != 0)
+                    for (int i = monthStartDate; i <= monthEndDate; i++)
                     {
-                        return new FormatedResponse() { MessageCode = CommonMessageCode.THE_WORK_PERIOD_HAS_CEASED_TO_APPLY, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                        var salPeriod = await _dbContext.AtSalaryPeriods.Where(s => s.MONTH == i && s.YEAR == yearStartDate).FirstOrDefaultAsync();
+                        var org = await _dbContext.HuEmployees.Where(e => e.ID == dto.EmployeeId).FirstOrDefaultAsync();
+                        var checkLockOrgDateStart = (_dbContext.AtOrgPeriods.Where(p => p.ORG_ID == org!.ORG_ID && p.STATUSCOLEX == 1 && p.PERIOD_ID == salPeriod!.ID)).Count();
+                        if (checkLockOrgDateStart != 0)
+                        {
+                            return new FormatedResponse() { MessageCode = CommonMessageCode.THE_WORK_PERIOD_HAS_CEASED_TO_APPLY, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                        }
                     }
                 }
             }
@@ -576,17 +520,17 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                 }
                 TimeSpan diffOfDates = dto.TimeEnd!.Value.Subtract(dto.TimeStart!.Value);
 
-                //// check dki duoi 120p
-                //double totalMinutes = diffOfDates.TotalMinutes;
-                //if (totalMinutes < 120)
-                //{
-                //    return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.NOT_ENOUGH_TIME_MINIMUM, StatusCode = EnumStatusCode.StatusCode400 };
-                //}
-                //else
-                //{
-                //    dto.TotalOt = (decimal)totalMinutes;
-                //}
-                dto.TotalOt = (decimal)diffOfDates.TotalMinutes;
+                // check dki duoi 120p
+                double totalMinutes = diffOfDates.TotalMinutes;
+                if (totalMinutes < 120)
+                {
+                    return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.NOT_ENOUGH_TIME_MINIMUM, StatusCode = EnumStatusCode.StatusCode400 };
+                }
+                else
+                {
+                    dto.TotalOt = (decimal)totalMinutes;
+                }
+
                 // Check trung gio lam 
                 var atWorking = _uow.Context.Set<AT_WORKSIGN>().AsNoTracking().AsQueryable();   // xep ca
                 var atShift = _uow.Context.Set<AT_SHIFT>().AsNoTracking().AsQueryable();        // ca lam viec
@@ -596,7 +540,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                 var dayOfWeek = dto.WorkingDay!.Value.DayOfWeek;
                 var checkHoliday = _dbContext.AtHolidays.AsNoTracking().Where(p => p.START_DAYOFF.Date <= dto.WorkingDay.Value.Date && dto.WorkingDay.Value.Date <= p.END_DAYOFF.Date && p.IS_ACTIVE == true).Any();
 
-                if (dayOfWeek == DayOfWeek.Saturday || dayOfWeek == DayOfWeek.Sunday || checkHoliday)
+                if(dayOfWeek == DayOfWeek.Saturday || dayOfWeek == DayOfWeek.Sunday || checkHoliday)
                 {
                     // T7, CN, NGAY LE
                 }
@@ -625,13 +569,13 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                                             && ((p.DATE_START!.Value.Date == dto.WorkingDay!.Value.Date || p.DATE_END!.Value.Date == dto.WorkingDay!.Value.Date)
                                                 || (p.DATE_START!.Value.Date <= dto.WorkingDay!.Value.Date && dto.WorkingDay!.Value.Date <= p.DATE_END!.Value.Date))
                                             && (p.TIME_START <= dto.TimeStart && dto.TimeStart <= p.TIME_END || p.TIME_START <= dto.TimeEnd && dto.TimeEnd <= p.TIME_END)
-                                            && (p.STATUS_ID == 1 || p.STATUS_ID == null))).Count();
+                                            &&( p.STATUS_ID == 1 || p.STATUS_ID == null))).Count();
 
                 var checkRegisterInWebApp = (_dbContext.AtOvertimes.AsNoTracking().Where(p => (p.EMPLOYEE_ID == dto.EmployeeId) &&
                                                                                               (p.START_DATE!.Value.Date <= dto.WorkingDay!.Value.Date && dto.WorkingDay!.Value.Date <= p.END_DATE!.Value.Date) &&
                                                                                               (p.TIME_START <= dto.TimeStart && dto.TimeStart <= p.TIME_END || p.TIME_START <= dto.TimeEnd && dto.TimeEnd <= p.TIME_END))
                                             ).Count();
-                if (checkTime != 0 || checkRegisterInWebApp != 0)
+                if (checkTime != 0 || checkRegisterInWebApp!= 0)
                 {
                     return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.REGISTRATION_TIME_EXISTS, StatusCode = EnumStatusCode.StatusCode400 };
                 }
@@ -644,11 +588,11 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                 }
 
                 // check ky cong dong/mo
-                var salaryPeriod = await _dbContext.AtSalaryPeriods.Where(s => s.START_DATE <= dto.WorkingDay && dto.WorkingDay <= s.END_DATE).FirstOrDefaultAsync();
+                var salaryPeriod = await _dbContext.AtSalaryPeriods.Where(s => s.START_DATE <= dto.WorkingDay && s.END_DATE <= dto.WorkingDay).FirstOrDefaultAsync();
 
-                var employee = await _dbContext.HuEmployees.Where(e => e.ID == dto.EmployeeId).FirstOrDefaultAsync();
-                var period = await _dbContext.AtOrgPeriods.Where(x => x.PERIOD_ID == salaryPeriod!.ID && x.STATUSCOLEX == 1 && x.ORG_ID == employee!.ORG_ID).CountAsync();
-                if (period != 0)
+                var org = await _dbContext.HuEmployees.Where(e => e.ID == dto.EmployeeId).FirstOrDefaultAsync();
+                var period = await _dbContext.AtOrgPeriods.Where(x => x.PERIOD_ID == salaryPeriod!.ID && x.STATUSCOLEX == 1 && x.ORG_ID == org!.ID).AnyAsync();
+                if (period)
                 {
                     return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = "THE_WORK_PERIOD_HAS_CEASED_TO_APPLY", StatusCode = EnumStatusCode.StatusCode400 };//ky cong da ngung ap dung
                 }
@@ -728,8 +672,8 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
             if (dto.TypeCode == "EXPLAINWORK")
             {
                 dto.WorkingDay = dto.WorkingDay!.Value.AddDays(1);
-                var checkExplan = _dbContext.AtTimeExplanations.AsNoTracking().Where(p => p.EXPLANATION_DAY!.Value.Date == dto.WorkingDay.Value.Date && dto.EmployeeId == p.EMPLOYEE_ID).Any();
-                var checkRegis = _dbContext.PortalRegisterOffs.AsNoTracking().Where(p => p.TYPE_CODE == "EXPLAINWORK" && p.WORKING_DAY!.Value.DayOfYear == dto.WorkingDay.Value.DayOfYear && dto.EmployeeId == p.EMPLOYEE_ID).Any();
+                var checkExplan = _dbContext.AtTimeExplanations.AsNoTracking().Where(p => p.EXPLANATION_DAY.Value.DayOfYear == dto.WorkingDay.Value.DayOfYear).Any();
+                var checkRegis = _dbContext.PortalRegisterOffs.AsNoTracking().Where(p => p.TYPE_CODE == "EXPLAINWORK" && p.WORKING_DAY.Value.DayOfYear == dto.WorkingDay.Value.DayOfYear).Any();
 
                 var salaryPeriod = await _dbContext.AtSalaryPeriods.Where(s => s.START_DATE <= dto.WorkingDay && s.END_DATE <= dto.WorkingDay).FirstOrDefaultAsync();
 
@@ -742,7 +686,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
 
                 if (checkExplan || checkRegis)
                 {
-                    return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.WORKING_DAY_IS_EXIST_TIME_EXPLAINWORK, StatusCode = EnumStatusCode.StatusCode400 };//ngay lam viec da dc giai trinh
+                    return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.WORKING_DAY_IS_EXIST_TIME_EXPLAINWORK, StatusCode = EnumStatusCode.StatusCode400 };//qua so gio lam them trong nam
                 }
             }
             dto.IdReggroup = reggroupId;
@@ -757,77 +701,44 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                     P_ID_REGGROUP = reggroupId,
                     P_SENDER = response.InnerBody!.GetType().GetProperty("EMPLOYEE_ID")!.GetValue(response.InnerBody, null)
                 };
-                try
-                {
-                    var data = QueryData.ExecuteStoreToTable(Procedures.PKG_AT_PROCESS_PRI_PROCESS_APP, obj, false);
+                var data = QueryData.ExecuteStoreToTable(Procedures.PKG_AT_PROCESS_PRI_PROCESS_APP, obj, false);
 
-                    var a = response.InnerBody!.GetType().GetProperty("ID")!.GetValue(response.InnerBody, null);
-                    var test = data.Tables[0].Rows[0]["RESULT"].ToString();
-                    if (test == "3")
-                    {
-                        var portalRegisterOffId = response.InnerBody!.GetType().GetProperty("ID")!.GetValue(response.InnerBody, null);
-                        var registerOff = await _dbContext.PortalRegisterOffs.FindAsync(portalRegisterOffId);
-                        _dbContext.PortalRegisterOffs.Remove(registerOff!);
-                        await _dbContext.SaveChangesAsync();
-                        return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.EMP_NOT_HAVE_APPROVE_POS, StatusCode = EnumStatusCode.StatusCode400 };//chưa có người người phê duyệt
-                    }
-                    else if (test == "2")
-                    {
-                        var portalRegisterOffId = response.InnerBody!.GetType().GetProperty("ID")!.GetValue(response.InnerBody, null);
-                        var registerOff = await _dbContext.PortalRegisterOffs.FindAsync(portalRegisterOffId);
-                        _dbContext.PortalRegisterOffs.Remove(registerOff!);
-                        await _dbContext.SaveChangesAsync();
-                        return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.NOT_HAVE_PROCESS_APPROVE, StatusCode = EnumStatusCode.StatusCode400 };//chưa có thiết lập phê duyệt
-                    }
-                    else
-                    {
-                        var employeeIds = test.Split(",");
-                        if (employeeIds?.Count() > 0)
-                            for (var i = 0; i < employeeIds.Count(); i++)
-                            {
-                                var user = await _dbContext.SysUsers.Where(x => x.EMPLOYEE_ID == Int64.Parse(employeeIds[i])).FirstOrDefaultAsync();
-                                var username = user?.USERNAME;
-                                if (!string.IsNullOrEmpty(username))
-                                {
-                                    await _hubContext.Clients.User(username).SendAsync("ReceiveMessage", new
-                                    {
-                                        SignalType = "APPROVE_NOTIFICATION",
-                                        Message = "Bạn có thông báo mới trên Portal"/*message*/,
-                                        Data = new
-                                        {
-
-                                        }
-                                    });
-                                }
-
-                            }
-                    }
-                }
-                catch (Exception ex)
+                var a = response.InnerBody!.GetType().GetProperty("ID")!.GetValue(response.InnerBody, null);
+                var test = data.Tables[0].Rows[0]["RESULT"].ToString();
+                if (test == "3")
                 {
                     var portalRegisterOffId = response.InnerBody!.GetType().GetProperty("ID")!.GetValue(response.InnerBody, null);
-
                     var registerOff = await _dbContext.PortalRegisterOffs.FindAsync(portalRegisterOffId);
-
-                    var detail = (from p in _dbContext.PortalRegisterOffDetails.AsNoTracking().Where(p => p.REGISTER_ID == registerOff!.ID)
-                                  select p);
-                    var noti = (from p in _dbContext.AtNotifications.AsNoTracking().Where(p => p.REF_ID == registerOff!.ID)
-                                select p);
                     _dbContext.PortalRegisterOffs.Remove(registerOff!);
+                    await _dbContext.SaveChangesAsync();
+                    return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.EMP_NOT_HAVE_APPROVE_POS, StatusCode = EnumStatusCode.StatusCode400 };//chưa có người người phê duyệt
+                }
+                else if (test == "2")
+                {
+                    return new() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.NOT_HAVE_PROCESS_APPROVE, StatusCode = EnumStatusCode.StatusCode400 };//chưa có thiết lập phê duyệt
+                }
+                else
+                {
+                    var employeeIds = test.Split(",");
+                    if (employeeIds?.Count() > 0)
+                        for (var i = 0; i < employeeIds.Count(); i++)
+                        {
+                            var user = await _dbContext.SysUsers.Where(x => x.EMPLOYEE_ID == Int64.Parse(employeeIds[i])).FirstOrDefaultAsync();
+                            var username = user?.USERNAME;
+                            if (!string.IsNullOrEmpty(username))
+                            {
+                                await _hubContext.Clients.User(username).SendAsync("ReceiveMessage", new
+                                {
+                                    SignalType = "APPROVE_NOTIFICATION",
+                                    Message = "Bạn có thông báo mới trên Portal"/*message*/,
+                                    Data = new
+                                    {
 
-                    _dbContext.AtNotifications.RemoveRange(noti);
-                    if (detail != null)
-                    {
-                        _dbContext.PortalRegisterOffDetails.RemoveRange(detail);
-                    }
-                    _dbContext.SaveChanges();
-                    return new()
-                    {
-                        InnerBody = null,
-                        MessageCode = "NOT_EXISTS_SUITABLE_APPROVE_PROCCESS",
-                        ErrorType = EnumErrorType.CATCHABLE,
-                        StatusCode = EnumStatusCode.StatusCode400
-                    };
+                                    }
+                                });
+                            }
+
+                        }
                 }
             }
             return new()
@@ -892,12 +803,12 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
             DateTime now = DateTime.Now;
             var currentSalaryPeriod = await _dbContext.AtSalaryPeriods.Where(s => s.START_DATE <= now && now <= s.END_DATE).FirstOrDefaultAsync();
             var empId = (from p in _dbContext.SysUsers where p.ID == id select p.EMPLOYEE_ID).FirstOrDefault();
-            var listOt = await _dbContext.AtTimesheetMonthlys.Where(p => p.EMPLOYEE_ID == empId && currentSalaryPeriod!.ID == p.PERIOD_ID).ToListAsync();
+            var listOt = await _dbContext.AtTimeTimesheetDailys.Where(p => p.EMPLOYEE_ID == empId && currentSalaryPeriod!.ID == p.PERIOD_ID).ToListAsync();
 
             double totalHour = 0;
             foreach (var item in listOt)
             {
-                totalHour += (item.TOTAL_OT_WEEKDAY!.Value + item.TOTAL_OT_SUNDAY!.Value + item.TOTAL_OT_HOLIDAY!.Value + item.TOTAL_OT_WEEKNIGHT!.Value + item.TOTAL_OT_SUNDAYNIGTH!.Value + item.TOTAL_OT_HOLIDAY_NIGTH!.Value);
+                totalHour += (item.OT_WEEKDAY!.Value + item.OT_WEEKNIGHT!.Value + item.OT_SUNDAY!.Value + item.OT_SUNDAYNIGHT!.Value + item.OT_HOLIDAY!.Value + item.OT_HOLIDAY_NIGHT!.Value);
             }
             string totaOtMonth = (TimeSpan.FromMinutes((double)totalHour * 60).ToString(@"hh\:mm"));
             return new FormatedResponse() { InnerBody = new { TotalOtMonth = totaOtMonth } };
@@ -935,6 +846,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                                       from t in _dbContext.AtTimeTypes.AsNoTracking().Where(t => p.TIME_TYPE_ID == t.ID).DefaultIfEmpty()
                                       from e in _dbContext.HuEmployees.AsNoTracking().Where(e => e.ID == pas.EMPLOYEE_APPROVED).DefaultIfEmpty()
                                       from pos in _dbContext.HuPositions.AsNoTracking().Where(pos => pos.ID == e.POSITION_ID).DefaultIfEmpty()
+                                      from s in _dbContext.SysOtherLists.AsNoTracking().Where(s => s.ID == p.EXPLAIN_REASON).DefaultIfEmpty()
                                       where p.CREATED_DATE >= fromDate && p.CREATED_DATE <= toDate
                                       orderby pas.ID descending
                                       select new
@@ -961,6 +873,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                                           AppStatus = pas.APP_STATUS,
                                           AppLevel = pas.APP_LEVEL,
                                           Reason = p.NOTE,
+                                          ReasonExplain = s.NAME,
                                           ApproveStatus = pas.APP_STATUS == 0 ? CommonMessageCode.WAITING_APPROVED : (pas.APP_STATUS == 1 ? CommonMessageCode.APPROVED : CommonMessageCode.REJECTED),
                                           ApproveId = pas.EMPLOYEE_APPROVED,
                                           ApproveName = pas.EMPLOYEE_APPROVED == null ? "" : e.Profile!.FULL_NAME,
@@ -993,6 +906,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                                       from t in _dbContext.AtTimeTypes.AsNoTracking().Where(t => p.TIME_TYPE_ID == t.ID).DefaultIfEmpty()
                                       from e in _dbContext.HuEmployees.AsNoTracking().Where(e => e.ID == pas.EMPLOYEE_APPROVED).DefaultIfEmpty()
                                       from pos in _dbContext.HuPositions.AsNoTracking().Where(pos => pos.ID == e.POSITION_ID).DefaultIfEmpty()
+                                      from s in _dbContext.SysOtherLists.AsNoTracking().Where(s => s.ID == p.EXPLAIN_REASON).DefaultIfEmpty()
                                       where p.ID == id
                                       orderby pas.ID descending
                                       select new
@@ -1019,6 +933,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                                           AppStatus = pas.APP_STATUS,
                                           AppLevel = pas.APP_LEVEL,
                                           Reason = p.NOTE,
+                                          ReasonExplain = s.NAME,
                                           ApproveStatus = pas.APP_STATUS == 0 ? CommonMessageCode.WAITING_APPROVED : (pas.APP_STATUS == 1 ? CommonMessageCode.APPROVED : CommonMessageCode.REJECTED),
                                           ApproveId = pas.EMPLOYEE_APPROVED,
                                           ApproveName = pas.EMPLOYEE_APPROVED == null ? "" : e.Profile!.FULL_NAME,
@@ -1053,6 +968,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                          from t in _dbContext.AtTimeTypes.AsNoTracking().Where(t => p.TIME_TYPE_ID == t.ID).DefaultIfEmpty()
                          from e in _dbContext.HuEmployees.AsNoTracking().Where(e => e.ID == pas.EMPLOYEE_APPROVED).DefaultIfEmpty()
                          from pos in _dbContext.HuPositions.AsNoTracking().Where(pos => pos.ID == e.POSITION_ID).DefaultIfEmpty()
+                         from s in _dbContext.SysOtherLists.AsNoTracking().Where(s => s.ID == p.EXPLAIN_REASON).DefaultIfEmpty()
                          where pas.EMPLOYEE_APPROVED != null
                          orderby pas.APP_LEVEL descending
                          select new
@@ -1079,6 +995,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
                              AppStatus = pas.APP_STATUS,
                              AppLevel = pas.APP_LEVEL,
                              Reason = p.NOTE,
+                             ReasonExplain = s.NAME,
                              ApproveStatus = pas.APP_STATUS == 0 ? CommonMessageCode.WAITING_APPROVED : (pas.APP_STATUS == 1 ? CommonMessageCode.APPROVED : CommonMessageCode.REJECTED),
                              ApproveId = pas.EMPLOYEE_APPROVED,
                              ApproveName = pas.EMPLOYEE_APPROVED == null ? "" : e.Profile!.FULL_NAME,

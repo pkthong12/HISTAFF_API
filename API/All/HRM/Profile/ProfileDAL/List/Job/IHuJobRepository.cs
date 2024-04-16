@@ -18,5 +18,7 @@ namespace ProfileDAL.Repositories
         Task<GenericPhaseTwoListResponse<HUJobInputDTO>> SinglePhaseQueryList(GenericQueryListDTO<HUJobInputDTO> request);
         Task<ResultWithError> GetJobById(long id);
         Task<ResultWithError> GetList();
+        Task<FormatedResponse> GetCodeByJobFamily(long id);
+
     }
 }

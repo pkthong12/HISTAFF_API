@@ -5,6 +5,7 @@ using CORE.DTO;
 using CORE.Enum;
 using CORE.GenericUOW;
 using CORE.StaticConstant;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -56,7 +57,7 @@ namespace API.Controllers.AtSalaryPeriod
         public async Task<IActionResult> QueryList(GenericQueryListDTO<AtSalaryPeriodDTO> request)
         {
             var response = await _AtSalaryPeriodRepository.SinglePhaseQueryList(request);
-            return Ok(new FormatedResponse() { InnerBody = response});
+            return Ok(new FormatedResponse() { InnerBody = response });
         }
 
         [HttpGet]
@@ -167,22 +168,26 @@ namespace API.Controllers.AtSalaryPeriod
             var response = await _AtSalaryPeriodRepository.GetListSalaryPeriod(param);
             return Ok(response);
         }
-        [HttpGet] 
+        [HttpGet]
         public async Task<IActionResult> GetYear()
         {
             try
             {
-            var response = await (from s in _uow.Context.Set<AT_SALARY_PERIOD>().AsNoTracking()
-                                  from c in _uow.Context.Set<SYS_USER>().AsNoTracking().Where(x => x.ID == s.CREATED_BY).DefaultIfEmpty()
-                                  from u in _uow.Context.Set<SYS_USER>().AsNoTracking().Where(x => x.ID == s.UPDATED_BY).DefaultIfEmpty()
-                                  where s.IS_ACTIVE == true
-                                  select new
-                                  {
-                                      Year = s.YEAR
-                                  } 
-                                  ).Select(x => x.Year).Distinct().ToListAsync();
+                //var response = await (from s in _uow.Context.Set<AT_SALARY_PERIOD>().AsNoTracking()
+                //                      from c in _uow.Context.Set<SYS_USER>().AsNoTracking().Where(x => x.ID == s.CREATED_BY)
+                //                      from u in _uow.Context.Set<SYS_USER>().AsNoTracking().Where(x => x.ID == s.UPDATED_BY)
+                //                      where s.IS_ACTIVE == true
+                //                      select new
+                //                      {
+                //                          Year = s.YEAR
+                //                      }
+                //                      ).Select(x => x.Year).ToListAsync();
+                
 
-            return Ok(new FormatedResponse() { InnerBody = response });
+                var data = await _uow.Context.Set<AT_SALARY_PERIOD>().Where(x => x.IS_ACTIVE == true).ToListAsync();
+                var result = data.Select(s => s.YEAR).Distinct().ToList();
+
+                return Ok(new FormatedResponse() { InnerBody = result });
             }
             catch (Exception ex)
             {
@@ -202,7 +207,7 @@ namespace API.Controllers.AtSalaryPeriod
                                       Id = s.ID,
                                       Month = s.NAME,
                                   }).ToListAsync();
-            return Ok(new FormatedResponse() { InnerBody = response});
+            return Ok(new FormatedResponse() { InnerBody = response });
         }
         [HttpPost]
         public async Task<IActionResult> ToggleActiveIds(GenericToggleIsActiveDTO model)

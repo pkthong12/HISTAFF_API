@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using System.Diagnostics;
 
 namespace API.All.Logger.TextLogger
 {
@@ -11,7 +12,8 @@ namespace API.All.Logger.TextLogger
         private readonly string name;
         private readonly Func<TextLoggerConfiguration> getCurrentConfig;
 
-        public TextLogger(IWebHostEnvironment env, IOptions<AppSettings> options, TextLoggerProvider textLoggerProvider, string _name, Func<TextLoggerConfiguration> _getCurrentConfig) {
+        public TextLogger(IWebHostEnvironment env, IOptions<AppSettings> options, TextLoggerProvider textLoggerProvider, string _name, Func<TextLoggerConfiguration> _getCurrentConfig)
+        {
             _env = env;
             _appSettings = options.Value;
             _textLoggerProvider = textLoggerProvider;
@@ -45,10 +47,9 @@ namespace API.All.Logger.TextLogger
                 using var streamWriter = new StreamWriter(fullFilePath, true);
                 streamWriter.WriteLine(logRecord);
             }
-            catch (Exception)
-            {
+            catch {
+                Trace.WriteLine(logRecord);
             }
-
 
         }
     }

@@ -26,9 +26,11 @@ namespace AttendanceDAL.Repositories
                          from t in _appContext.Positions.Where(f => p.POSITION_ID == f.ID).DefaultIfEmpty()
                          from j in _appContext.Jobs.AsNoTracking().Where(x => x.ID == t.JOB_ID).DefaultIfEmpty()
                          from o in _appContext.Organizations.Where(f => p.ORG_ID == f.ID).DefaultIfEmpty()
+                         orderby j.ORDERNUM
                          select new AtEntitlementDTO
                          {
                              Id = p.ID,
+                             EmployeeId = e.ID,
                              EmployeeCode = e.CODE,
                              EmployeeName = e.Profile!.FULL_NAME,
                              PositionName = t.NAME,

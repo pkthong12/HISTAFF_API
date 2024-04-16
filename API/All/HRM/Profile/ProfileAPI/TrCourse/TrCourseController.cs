@@ -1,10 +1,12 @@
 using API.All.DbContexts;
 using API.DTO;
 using API.Main;
+using AttendanceDAL.ViewModels;
 using CORE.DTO;
 using CORE.Enum;
 using CORE.GenericUOW;
 using CORE.StaticConstant;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -147,6 +149,14 @@ namespace API.Controllers.TrCourse
             if (sid == null) return Unauthorized();
             var response = await _TrCourseRepository.ToggleActiveIds(_uow, model.Ids, model.ValueToBind, sid);
             return Ok(response);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult> GetListCourse()
+        {
+            var response = await _TrCourseRepository.GetListCourse();
+            return Ok(response);
+            
         }
     }
 }

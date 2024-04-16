@@ -48,6 +48,7 @@ namespace API.All.DbContexts
         public DbSet<SE_APP_TEMPLATE> ApproveTemplates { get; set; }
         public DbSet<SE_APP_TEMPLATE_DTL> ApproveTemplateDetails { get; set; }
         public DbSet<HU_EMPLOYEE> Employees { get; set; }
+        public DbSet<HU_EMPLOYEE_CV> HuEmployeeCvs { get; set; }
         public DbSet<HU_POSITION> Positions { get; set; }
         public DbSet<HU_WORKING> Workings { get; set; }
         public DbSet<HU_WORKING_ALLOW> WorkingAllowances { get; set; }

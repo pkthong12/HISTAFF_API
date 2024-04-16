@@ -29,7 +29,6 @@ namespace ProfileDAL.ViewModels
         public DateTime? SignDate { get; set; }
         public long? EmpStatus { get; set; }
         public int? JobOrderNum { get; set; }
-        public string? InformationEdit { get; set; }
 
     }
 
@@ -67,7 +66,6 @@ namespace ProfileDAL.ViewModels
         // để làm chức năng upload file
         public AttachmentDTO? AttachmentBuffer { get; set; }
         public string? UploadFile { get; set; }
-        public string? InformationEdit { get; set; }
     }
 
     public class HuFilecontractImportDTO

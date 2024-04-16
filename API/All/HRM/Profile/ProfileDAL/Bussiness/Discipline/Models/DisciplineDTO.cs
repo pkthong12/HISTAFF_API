@@ -1,12 +1,12 @@
-﻿using Common.Paging;
+﻿using API.Main;
+using Common.Paging;
 using CORE.Services.File;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProfileDAL.ViewModels
 {
-    public class DisciplineDTO
+    public class DisciplineDTO: BaseDTO
     {
-        public long? Id { get; set; }
         public long? EmployeeId { get; set; }
         public string? EmployeeCode { get; set; }
         public string? EmployeeName { get; set; }
@@ -39,10 +39,6 @@ namespace ProfileDAL.ViewModels
         
         public string? Attachment { get; set; }
         public string? Note { get; set; }
-        public string? CreatedBy { get; set; }
-        public string? UpdatedBy { get; set; }
-        public DateTime? CreatedDate { get; set; }
-        public DateTime? UpdatedDate { get; set; }
         public AttachmentDTO? AttachmentBuffer { get; set; }
         public int? JobOrderNum { get; set; }
     }

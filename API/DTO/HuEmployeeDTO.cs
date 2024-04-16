@@ -155,7 +155,5 @@ namespace API.DTO
         public bool? IsRepresentative { get; set; } // Get representative of state capital
 
         public string? StatusDocument { get; set; }
-
-        public string? UserId { get; set; }
     }
 }

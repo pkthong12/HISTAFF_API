@@ -8,6 +8,7 @@ using CORE.AutoMapper;
 using Microsoft.AspNetCore.Http;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Information;
 using System.Collections.Generic;
+using AttendanceDAL.ViewModels;
 
 namespace API.Controllers.TrCourse
 {
@@ -29,7 +30,7 @@ namespace API.Controllers.TrCourse
         public async Task<GenericPhaseTwoListResponse<TrCourseDTO>> SinglePhaseQueryList(GenericQueryListDTO<TrCourseDTO> request)
         {
             var joined = from p in _dbContext.TrCourses.AsNoTracking()
-                             // JOIN OTHER ENTITIES BASED ON THE BUSINESS
+                         from s in _dbContext.SysOtherLists.AsNoTracking().Where(s => s.ID == p.TR_TRAIN_FIELD).DefaultIfEmpty()
                          select new TrCourseDTO
                          {
                              Id = p.ID,
@@ -38,7 +39,9 @@ namespace API.Controllers.TrCourse
                              CourseDate = p.COURSE_DATE,
                              Costs = p.COSTS,
                              Status = p.IS_ACTIVE == true ? "Áp dụng" : "Ngừng áp dụng",
-                             Note = p.NOTE
+                             Note = p.NOTE,
+                             TrTrainField = p.TR_TRAIN_FIELD,
+                             TrTrainFieldName = s.NAME,
                          };
 
             var singlePhaseResult = await _genericReducer.SinglePhaseReduce(joined, request);
@@ -66,8 +69,8 @@ namespace API.Controllers.TrCourse
         public async Task<FormatedResponse> GetById(long id)
         {
 
-            var joined = (from l in _dbContext.TrCourses.AsNoTracking().Where(l => l.ID == id)
-                              // JOIN OTHER ENTITIES BASED ON THE BUSINESS
+            var joined = await (from l in _dbContext.TrCourses.AsNoTracking().Where(l => l.ID == id)
+                          from s in _dbContext.SysOtherLists.AsNoTracking().Where(s => s.ID == l.TR_TRAIN_FIELD).DefaultIfEmpty()
                           from cr in _dbContext.SysUsers.AsNoTracking().Where(c => l.CREATED_BY == null ? false : c.ID == l.CREATED_BY).DefaultIfEmpty()
                           from up in _dbContext.SysUsers.AsNoTracking().Where(u => l.UPDATED_BY == null ? false : u.ID == l.UPDATED_BY).DefaultIfEmpty()
                           select new TrCourseDTO
@@ -78,19 +81,19 @@ namespace API.Controllers.TrCourse
                               CourseDate = l.COURSE_DATE,
                               Note = l.NOTE,
                               Costs = l.COSTS,
-                          }).FirstOrDefault();
+                              TrTrainField = l.TR_TRAIN_FIELD,
+                              TrTrainFieldName = s.NAME,
+                              ProfessionalTrainning = l.PROFESSIONAL_TRAINNING
+                          }).FirstOrDefaultAsync();
 
             if (joined != null)
             {
                 return new FormatedResponse() { InnerBody = joined, StatusCode = EnumStatusCode.StatusCode200 };
-
-
             }
             else
             {
                 return new FormatedResponse() { MessageCode = CommonMessageCode.ENTITY_NOT_FOUND, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
             }
-
         }
         public async Task<FormatedResponse> GetById(string id)
         {
@@ -220,6 +223,26 @@ namespace API.Controllers.TrCourse
             return response;
         }
 
+        public async Task<FormatedResponse> GetListCourse()
+        {
+            try
+            {
+                var joined = await(from p in _dbContext.TrCourses.AsNoTracking()
+                                    where p.IS_ACTIVE == true
+                                    orderby p.CREATED_DATE descending
+                                    select new 
+                                    {
+                                        Id = p.ID,
+                                        Code = p.COURSE_CODE,
+                                        Name = "[" + p.COURSE_CODE + "] " + p.COURSE_NAME
+                                    }).ToListAsync();
+                return new FormatedResponse() { InnerBody = joined, StatusCode = EnumStatusCode.StatusCode200 };
+            }
+            catch (Exception ex)
+            {
+                return new FormatedResponse() { MessageCode = ex.Message, ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500 };
+            }
+        }
     }
 }
 

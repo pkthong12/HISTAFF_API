@@ -87,7 +87,7 @@ namespace API.Controllers.HuConcurrently
                 return Ok(new FormatedResponse() { MessageCode = CommonMessageCode.EFFECTIVEDATE_NOT_BIGGER_THAN_EXPIRATIONDATE, ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500 });
             }
             var response = await _HuConcurrentlyRepository.Create(_uow, model, sid);
-            
+
             _fullDbContext.SaveChanges();
             return Ok(response);
         }
@@ -204,19 +204,37 @@ namespace API.Controllers.HuConcurrently
                 var statusIdCur = r.STATUS_ID;
                 r.STATUS_ID = model.ValueToBind == true ? OtherConfig.STATUS_APPROVE : (model.ValueToBind == false ? OtherConfig.STATUS_WAITING : null);
                 var position = await _fullDbContext.HuPositions.Where(x => x.ID == r.POSITION_ID).FirstOrDefaultAsync();
-                if(r.STATUS_ID == OtherConfig.STATUS_APPROVE)
+                if(r.EFFECTIVE_DATE!.Value.Date <= DateTime.UtcNow.Date)
                 {
-                    if (position != null && position.MASTER != null)
+                    if (r.STATUS_ID == OtherConfig.STATUS_APPROVE)
                     {
-                        position.INTERIM = position.MASTER;
-                        position.MASTER = r.EMPLOYEE_ID;
+                        if (position != null && position.MASTER != null)
+                        {
+                            position.INTERIM = position.MASTER;
+                            position.MASTER = r.EMPLOYEE_ID;
+                        }
+                        else if (position!.MASTER == null)
+                        {
+                            position.MASTER = r.EMPLOYEE_ID;
+                        }
                     }
-                    else if (position!.MASTER == null)
+                    else
                     {
-                        position.MASTER = r.EMPLOYEE_ID;
+                        if (position != null && position.MASTER != null)
+                        {
+                            if(position.INTERIM != null)
+                            {
+                                position.INTERIM = null;
+                                position.MASTER = position.INTERIM;
+                            }
+                            else
+                            {
+                                position!.MASTER = null;
+                            }
+                        }
                     }
                 }
-                
+
                 var result = _fullDbContext.HuConcurrentlys.Update(r);
             }
             await _fullDbContext.SaveChangesAsync();

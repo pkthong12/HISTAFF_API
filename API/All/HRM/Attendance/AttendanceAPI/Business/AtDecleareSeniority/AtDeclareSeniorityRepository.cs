@@ -54,9 +54,10 @@ namespace API.Controllers.AtDecleareSeniority
                          from o in _dbContext.HuOrganizations.Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
                          from ecv in _dbContext.HuEmployeeCvs.Where(x => x.ID == e.PROFILE_ID).DefaultIfEmpty()
                          from po in _dbContext.HuPositions.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
-                         from j in _dbContext.HuJobs.AsNoTracking().Where(x => x.ID == po.JOB_ID).DefaultIfEmpty()
+                         from j in _dbContext.HuJobs.AsNoTracking().Where(x=> x.ID == po.JOB_ID).DefaultIfEmpty()
                          from ma in _dbContext.AtSalaryPeriods.Where(x => x.ID == p.MONTH_ADJUST).DefaultIfEmpty()
                          from md in _dbContext.AtSalaryPeriods.Where(x => x.ID == p.MONTH_DAY_OFF).DefaultIfEmpty()
+                         orderby j.ORDERNUM
                          select new AtDeclareSeniorityDTO
                          {
                              Id = p.ID,
@@ -67,16 +68,16 @@ namespace API.Controllers.AtDecleareSeniority
                              OrgId = e.ORG_ID,
                              OrgName = o.NAME,
                              PositionName = po.NAME,
-                             YearDeclare = p.YEAR_DECLARE,
-                             MonthAdjust = p.MONTH_ADJUST,
-                             MonthAdjustName = ma.NAME,
-                             MonthAdjustNumber = p.MONTH_ADJUST_NUMBER,
-                             ReasonAdjust = p.REASON_ADJUST,
-                             MonthDayOff = p.MONTH_DAY_OFF,
-                             MonthDayOffName = md.NAME,
-                             NumberDayOff = p.NUMBER_DAY_OFF,
-                             ReasonAdjustDayOff = p.REASON_ADJUST_DAY_OFF,
-                             Total = p.TOTAL,
+                             YearDeclare= p.YEAR_DECLARE,
+                             MonthAdjust= p.MONTH_ADJUST,
+                             MonthAdjustName= ma.NAME,
+                             MonthAdjustNumber= p.MONTH_ADJUST_NUMBER,
+                             ReasonAdjust= p.REASON_ADJUST,
+                             MonthDayOff= p.MONTH_DAY_OFF,
+                             MonthDayOffName= md.NAME,
+                             NumberDayOff= p.NUMBER_DAY_OFF,
+                             ReasonAdjustDayOff= p.REASON_ADJUST_DAY_OFF,
+                             Total= p.TOTAL,
                          };
             var singlePhaseResult = await _genericReducer.SinglePhaseReduce(joined, request);
             return singlePhaseResult;
@@ -171,32 +172,6 @@ namespace API.Controllers.AtDecleareSeniority
             }
         }
 
-
-        public async Task<FormatedResponse> CalculateTotal(long employeeId)
-        {
-            try
-            {
-                var joined = await _dbContext.AtEntitlements.AsNoTracking()
-                    .Where(x => x.EMPLOYEE_ID == employeeId)
-                    .OrderByDescending(x => x.YEAR)
-                    .ThenByDescending(x => x.MONTH)
-                    .ToListAsync();
-
-                var obj = joined.FirstOrDefault();
-                if (obj != null)
-                {
-                    var dayNum = obj.SENIORITYHAVE + obj.TOTAL_HAVE;
-                    return new FormatedResponse() { InnerBody = dayNum };
-                }
-                else { return new FormatedResponse() { InnerBody = 0 }; }
-            }
-            catch
-            {
-                return new FormatedResponse() { MessageCode = CommonMessageCode.ENTITY_NOT_FOUND, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
-            }
-        }
-
-
         public async Task<FormatedResponse> GetById(string id)
         {
             await Task.Run(() => null);
@@ -206,12 +181,7 @@ namespace API.Controllers.AtDecleareSeniority
         public async Task<FormatedResponse> Create(GenericUnitOfWork _uow, AtDeclareSeniorityDTO dto, string sid)
         {
             var response = await _genericRepository.Create(_uow, dto, sid);
-            return new FormatedResponse()
-            {
-                MessageCode = response.MessageCode,
-                InnerBody = response,
-                StatusCode = response.StatusCode
-            };
+            return response;
         }
 
         public async Task<FormatedResponse> CreateRange(GenericUnitOfWork _uow, List<AtDeclareSeniorityDTO> dtos, string sid)
@@ -225,12 +195,7 @@ namespace API.Controllers.AtDecleareSeniority
         public async Task<FormatedResponse> Update(GenericUnitOfWork _uow, AtDeclareSeniorityDTO dto, string sid, bool patchMode = true)
         {
             var response = await _genericRepository.Update(_uow, dto, sid, patchMode);
-            return new FormatedResponse()
-            {
-                MessageCode = response.MessageCode,
-                InnerBody = response,
-                StatusCode = response.StatusCode
-            };
+            return response;
         }
 
 

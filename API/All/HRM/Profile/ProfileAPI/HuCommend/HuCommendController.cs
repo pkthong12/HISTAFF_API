@@ -1,6 +1,7 @@
 ﻿using API.All.DbContexts;
 using API.DTO;
 using API.Main;
+using Common.Extensions;
 using CORE.DTO;
 using CORE.Enum;
 using CORE.GenericUOW;
@@ -36,7 +37,7 @@ namespace API.Controllers.HuCommend
             _appSettings = options.Value;
             _fileService = fileService;
             _env = env;
-            _genericRepositoryChild = _uow.GenericRepository<HU_COMMEND_EMPLOYEE,HuCommendEmployeeDTO>();
+            _genericRepositoryChild = _uow.GenericRepository<HU_COMMEND_EMPLOYEE, HuCommendEmployeeDTO>();
             _fullDbContext = fullDbContext;
         }
 
@@ -65,7 +66,7 @@ namespace API.Controllers.HuCommend
         public async Task<IActionResult> QueryList(GenericQueryListDTO<HuCommendDTO> request)
         {
             var response = await _HuCommendRepository.SinglePhaseQueryList(request);
-            return Ok(new FormatedResponse() { InnerBody = response});
+            return Ok(new FormatedResponse() { InnerBody = response });
         }
 
         [HttpGet]
@@ -125,7 +126,7 @@ namespace API.Controllers.HuCommend
                     }
                 }
 
-                if(model.PaymentAttachmentBuffer != null)
+                if (model.PaymentAttachmentBuffer != null)
                 {
                     string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
                     var uploadFileResponse = await _fileService.UploadFile(new UploadRequest()
@@ -148,80 +149,108 @@ namespace API.Controllers.HuCommend
                 }
 
                 //var id = _uow.Context.Set<HU_COMMEND>().AsNoTracking().AsQueryable().Max(p => p.ID);
-                
-                //if(
-                //    //model.EffectDate != null&& 
-                //    model.No != null
+
+                //if(model.EffectDate != null
+                //    && model.No != null
                 //    && model.SignDate != null
                 //    && model.CommendObjId != null
                 //    //&& model.Money != null
-                //    //&& model.SignPaymentDate != null
-                //    //&& model.PaymentNo != null
+                //    && model.SignPaymentDate != null
+                //    && model.PaymentNo != null
                 //    && model.StatusPaymentId != null)
                 //{
-                   
-                    var newObjResponse = await _HuCommendRepository.Create(_uow, model, sid);
-                        if(newObjResponse != null)
-                        {
-                            var newObj = newObjResponse.InnerBody as HU_COMMEND;
-                            if(newObj != null)
-                            {
-                                if(model.EmployeeIds != null)
-                                {
-                                    List<HuCommendEmployeeDTO> list = new();
-                                    model.EmployeeIds.ForEach(item =>
-                                    {
-                                        var checkEffectDate = from a in _fullDbContext.HuContracts.AsNoTracking().Where(x => x.EMPLOYEE_ID == item)
-                                                              from o in _fullDbContext.SysOtherLists.AsNoTracking().Where(x => x.ID == a.STATUS_ID)
-                                                              where a.START_DATE > model.EffectDate || o.CODE != "DD"
-                                                              select new
-                                                              {
-                                                                  Id = a.ID,
-                                                                  StartDate = a.START_DATE
 
-                                                              };
-                                            if (checkEffectDate.Any())
-                                            {
-                                                isEffectDateInvalid = true;
-                                                return;
-                                            }
-                                            list.Add(new()
-                                            {
-                                                EmployeeId = item,
-                                                CommendId = newObj.ID,
-                                                StatusId  = model.StatusPaymentId
-                                            });
-                                        });
-                                    if(isEffectDateInvalid == true)
-                                    {
-                                        return Ok(new FormatedResponse()
-                                        {
-                                            ErrorType = EnumErrorType.CATCHABLE,
-                                            StatusCode = EnumStatusCode.StatusCode400,
-                                            MessageCode = CommonMessageCode.THE_EFFECT_DATE_MUST_BE_GREAT_THAN_THE_CONTRACT
-                                        });
-                                    }
-                                     var addChildren = await _genericRepositoryChild.CreateRange(_uow, list, sid);
-                                }
-                                else
+                if (model.EmployeeIds != null)
+                {
+                    foreach (var item in model.EmployeeIds)
+                    {
+                        var checkCon = await _fullDbContext.HuContracts.AsNoTracking().Where(x => x.EMPLOYEE_ID == item && x.STATUS_ID == OtherConfig.STATUS_APPROVE).AnyAsync();
+                        if (!checkCon)
+                        {
+                            return Ok(new FormatedResponse() { 
+                                MessageCode = "EMPLOYEE_DO_NOT_HAVE_A_CONTRACT", 
+                                ErrorType = EnumErrorType.CATCHABLE, 
+                                StatusCode = EnumStatusCode.StatusCode400 
+                            });
+                        }
+                        var ckDate = await _fullDbContext.HuContracts.AsNoTracking().Where(x => x.EMPLOYEE_ID == item).OrderByDescending(c => c.START_DATE).FirstOrDefaultAsync();
+                        if (ckDate != null)
+                        {
+                            if (model.SignDate!.Value.Date < ckDate.START_DATE!.Value.Date)
+                            {
+                                return Ok(new FormatedResponse()
                                 {
-                                    return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": PaymentAttachment" });
-                                }
+                                    MessageCode = "EFFECTIVE_DATE_MUST_BE_GREATER_THAN_CONTRACT_EFFECTIVE_DATE",
+                                    ErrorType = EnumErrorType.CATCHABLE,
+                                    StatusCode = EnumStatusCode.StatusCode400
+                                });
                             }
                         }
+                    }
+                }
 
-                        await _fullDbContext.SaveChangesAsync();
-                        
-                        _uow.Commit();
-                        
-                        return Ok(new FormatedResponse()
+                var newObjResponse = await _HuCommendRepository.Create(_uow, model, sid);
+                if (newObjResponse != null)
+                {
+                    var newObj = newObjResponse.InnerBody as HU_COMMEND;
+                    if (newObj != null)
+                    {
+                        if (model.EmployeeIds != null)
                         {
-                            MessageCode = CommonMessageCode.CREATE_SUCCESS,
-                            InnerBody = newObjResponse.InnerBody,
-                            StatusCode = EnumStatusCode.StatusCode200
-                        });
-                    //}
-                   
+                            List<HuCommendEmployeeDTO> list = new();
+                            model.EmployeeIds.ForEach(item =>
+                            {
+                                var checkEffectDate = from a in _fullDbContext.HuContracts.AsNoTracking().Where(x => x.EMPLOYEE_ID == item)
+                                                      from o in _fullDbContext.SysOtherLists.AsNoTracking().Where(x => x.ID == a.STATUS_ID)
+                                                      where a.START_DATE > model.EffectDate || o.CODE != "DD"
+                                                      select new
+                                                      {
+                                                          Id = a.ID,
+                                                          StartDate = a.START_DATE
+
+                                                      };
+                                if (checkEffectDate.Any())
+                                {
+                                    isEffectDateInvalid = true;
+                                    return;
+                                }
+                                list.Add(new()
+                                {
+                                    EmployeeId = item,
+                                    CommendId = newObj.ID,
+                                    StatusId = model.StatusPaymentId
+                                });
+                            });
+                            if (isEffectDateInvalid == true)
+                            {
+                                return Ok(new FormatedResponse()
+                                {
+                                    ErrorType = EnumErrorType.CATCHABLE,
+                                    StatusCode = EnumStatusCode.StatusCode400,
+                                    MessageCode = CommonMessageCode.THE_EFFECT_DATE_MUST_BE_GREAT_THAN_THE_CONTRACT
+                                });
+                            }
+                            var addChildren = await _genericRepositoryChild.CreateRange(_uow, list, sid);
+                        }
+                        else
+                        {
+                            return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": PaymentAttachment" });
+                        }
+                    }
+                }
+
+                await _fullDbContext.SaveChangesAsync();
+
+                _uow.Commit();
+
+                return Ok(new FormatedResponse()
+                {
+                    MessageCode = CommonMessageCode.CREATE_SUCCESS,
+                    InnerBody = newObjResponse.InnerBody,
+                    StatusCode = EnumStatusCode.StatusCode200
+                });
+                //}
+
                 //}
                 //else {
                 //    return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.DTO_MODEL_IS_INVALID});
@@ -257,10 +286,11 @@ namespace API.Controllers.HuCommend
             _uow.CreateTransaction();
             bool patchMode = true;
             List<UploadFileResponse> uploadFiles = new();
+            bool isEffectDateInvalid = false;
             try
             {
-            var sid = Request.Sid(_appSettings);
-            if (sid == null) return Unauthorized();
+                var sid = Request.Sid(_appSettings);
+                if (sid == null) return Unauthorized();
 
                 // chuyển List thành string
                 if (request.CheckListRewardLevel != null)
@@ -273,30 +303,30 @@ namespace API.Controllers.HuCommend
                     request.ListRewardLevelId = "";
                 }
 
-            if (request.AttachmentBuffer != null)
-            {
-                string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
-                var uploadFileResponse = await _fileService.UploadFile(new UploadRequest()
+                if (request.AttachmentBuffer != null)
                 {
-                    ClientFileName = request.AttachmentBuffer.ClientFileName,
-                    ClientFileType = request.AttachmentBuffer.ClientFileType,
-                    ClientFileData = request.AttachmentBuffer.ClientFileData
-                }, location, sid);
+                    string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
+                    var uploadFileResponse = await _fileService.UploadFile(new UploadRequest()
+                    {
+                        ClientFileName = request.AttachmentBuffer.ClientFileName,
+                        ClientFileType = request.AttachmentBuffer.ClientFileType,
+                        ClientFileData = request.AttachmentBuffer.ClientFileData
+                    }, location, sid);
 
-                // Assign saved paths
-                var property = typeof(HuCommendDTO).GetProperty("Attachment");
+                    // Assign saved paths
+                    var property = typeof(HuCommendDTO).GetProperty("Attachment");
 
-                if (property != null)
-                {
-                    property?.SetValue(request, uploadFileResponse.SavedAs);
-                    uploadFiles.Add(uploadFileResponse);
+                    if (property != null)
+                    {
+                        property?.SetValue(request, uploadFileResponse.SavedAs);
+                        uploadFiles.Add(uploadFileResponse);
+                    }
+                    else
+                    {
+                        return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": Attachment" });
+                    }
+
                 }
-                else
-                {
-                    return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": Attachment" });
-                }
-
-            }
                 if (request.PaymentAttachmentBuffer != null)
                 {
                     string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
@@ -318,13 +348,43 @@ namespace API.Controllers.HuCommend
                         return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": PaymentAttachment" });
                     }
                 }
+                if (request.EmployeeIds != null)
+                {
+                    foreach (var item in request.EmployeeIds)
+                    {
+                        var checkCon = await _fullDbContext.HuContracts.AsNoTracking().Where(x => x.EMPLOYEE_ID == item && x.STATUS_ID != OtherConfig.STATUS_APPROVE).AnyAsync();
+                        if (checkCon)
+                        {
+                            return Ok(new FormatedResponse()
+                            {
+                                MessageCode = "EMPLOYEE_DO_NOT_HAVE_A_CONTRACT",
+                                ErrorType = EnumErrorType.CATCHABLE,
+                                StatusCode = EnumStatusCode.StatusCode400
+                            });
+                        }
+                        var ckDate = await _fullDbContext.HuContracts.AsNoTracking().Where(x => x.EMPLOYEE_ID == item).OrderByDescending(c => c.START_DATE).FirstOrDefaultAsync();
+                        if (ckDate != null)
+                        {
+                            if (request.EffectDate!.Value.Date < ckDate.START_DATE!.Value.Date)
+                            {
+                                return Ok(new FormatedResponse()
+                                {
+                                    MessageCode = "EFFECTIVE_DATE_MUST_BE_GREATER_THAN_CONTRACT_EFFECTIVE_DATE",
+                                    ErrorType = EnumErrorType.CATCHABLE,
+                                    StatusCode = EnumStatusCode.StatusCode400
+                                });
+                            }
+                        }
+                    }
+                }
+
                 var updateResponse = await _HuCommendRepository.Update(_uow, request, sid, patchMode);
                 if (updateResponse != null)
                 {
                     var updateHuCommend = updateResponse.InnerBody as HU_COMMEND;
                     if (updateHuCommend != null)
                     {
-                        if(request.EmployeeIds != null)
+                        if (request.EmployeeIds != null)
                         {
                             _fullDbContext.HuCommendEmployees.RemoveRange(_fullDbContext.HuCommendEmployees.Where(x => x.COMMEND_ID == request.Id));
                             foreach (long i in request.EmployeeIds)
@@ -341,13 +401,46 @@ namespace API.Controllers.HuCommend
                                 };
                                 await _fullDbContext.HuCommendEmployees.AddAsync(objEmpData);
                             }
+                            //List<HuCommendEmployeeDTO> list = new();
+                            //request.EmployeeIds.ForEach(item =>
+                            //{
+                            //    var checkEffectDate = from a in _fullDbContext.HuContracts.AsNoTracking().Where(x => x.EMPLOYEE_ID == item)
+                            //                          from o in _fullDbContext.SysOtherLists.AsNoTracking().Where(x => x.ID == a.STATUS_ID).DefaultIfEmpty()
+                            //                          where a.START_DATE > request.EffectDate || o.CODE != "DD"
+                            //                          select new
+                            //                          {
+                            //                              Id = a.ID,
+                            //                              StartDate = a.START_DATE
+                            //                          };
+                            //    if (checkEffectDate.Any())
+                            //    {
+                            //        isEffectDateInvalid = true;
+                            //        return;
+                            //    }
+                            //    list.Add(new()
+                            //    {
+                            //        EmployeeId = item,
+                            //        CommendId = updateHuCommend.ID,
+                            //        StatusId = request.StatusPaymentId
+                            //    });
+                            //});
+                            //if (isEffectDateInvalid == true)
+                            //{
+                            //    return Ok(new FormatedResponse()
+                            //    {
+                            //        ErrorType = EnumErrorType.CATCHABLE,
+                            //        StatusCode = EnumStatusCode.StatusCode400,
+                            //        MessageCode = CommonMessageCode.THE_EFFECT_DATE_MUST_BE_GREAT_THAN_THE_CONTRACT
+                            //    });
+                            //}
+                            //var updateChildren = await _genericRepositoryChild.UpdateRange(_uow, list, sid, patchMode);
                         }
                     }
                 }
                 await _fullDbContext.SaveChangesAsync();
                 _uow.Commit();
 
-            return Ok(updateResponse);
+                return Ok(updateResponse);
             }
             catch (Exception ex)
             {
@@ -395,13 +488,13 @@ namespace API.Controllers.HuCommend
                 model.Ids.ForEach(item =>
                 {
                     var getCommend = _uow.Context.Set<HU_COMMEND>().Where(x => x.ID == item).FirstOrDefault();
-                    if(otherList.ID == getCommend.STATUS_PAYMENT_ID)
+                    if (otherList!.ID == getCommend!.STATUS_PAYMENT_ID)
                     {
                         isCheckStatus = true;
                         return;
                     }
                 });
-                if(isCheckStatus == true)
+                if (isCheckStatus == true)
                 {
                     return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.APPROVED_RECORDS_CAN_NOT_BE_DELETED });
                 }
@@ -435,38 +528,38 @@ namespace API.Controllers.HuCommend
             var orgLevel = _uow.Context.Set<HU_ORG_LEVEL>().AsNoTracking().AsQueryable();
             var list_title_commend = _uow.Context.Set<SYS_OTHER_LIST>().AsNoTracking().AsQueryable();
 
-            var result = await(from c in entity
-                               from ce in commendEmployee.Where(x => x.COMMEND_ID == c.ID).DefaultIfEmpty() 
-                               from r in otherList.Where(x => x.ID == c.REWARD_ID).DefaultIfEmpty()
-                               from f in otherList.Where(x => x.ID == c.STATUS_PAYMENT_ID).DefaultIfEmpty()
-                               from e in employee.Where(x => x.ID == ce.EMPLOYEE_ID).DefaultIfEmpty()
-                               from o in organization.Where(x => x.ID == c.ORG_LEVEL_ID).DefaultIfEmpty()
-                               from rLevel in orgLevel.Where(x => x.ID == c.REWARD_LEVEL_ID).DefaultIfEmpty()
-                               from reference_1 in list_title_commend.Where(x => x.ID == c.AWARD_TITLE_ID).DefaultIfEmpty()
-                               where e.ID == employeeId && f.CODE == "DD"
-                               select new HuCommendDTO()
-                               {
-                                   Id = c.ID,
-                                   EmployeeId = employeeId,
-                                   No = c.NO,
-                                   SignDate = c.SIGN_DATE,
-                                   CommendType = c.COMMEND_TYPE,
-                                   Reason = c.REASON,
-                                   Money = c.MONEY,
-                                   EffectDate = c.EFFECT_DATE,
-                                   RewardName = r.NAME,
-                                   OrgLevelId = c.ORG_LEVEL_ID,
-                                   OrgLevelName = o.NAME,
-                                   Year = c.YEAR,
-                                   PaymentNo = c.PAYMENT_NO,
-                                   SignPaymentDate = c.SIGN_PAYMENT_DATE,
-                                   RewardLevelName = rLevel.NAME,
-                                   Note = c.NOTE,
-                                   StatusId = c.STATUS_ID,
-                                   StatusPaymentName = f.NAME,
-                                   PaymentContent = c.PAYMENT_CONTENT,
-                                   AwardTitleName = reference_1.NAME
-                               }).ToListAsync();
+            var result = await (from c in entity
+                                from ce in commendEmployee.Where(x => x.COMMEND_ID == c.ID).DefaultIfEmpty()
+                                from r in otherList.Where(x => x.ID == c.REWARD_ID).DefaultIfEmpty()
+                                from f in otherList.Where(x => x.ID == c.STATUS_PAYMENT_ID).DefaultIfEmpty()
+                                from e in employee.Where(x => x.ID == ce.EMPLOYEE_ID).DefaultIfEmpty()
+                                from o in organization.Where(x => x.ID == c.ORG_LEVEL_ID).DefaultIfEmpty()
+                                from rLevel in orgLevel.Where(x => x.ID == c.REWARD_LEVEL_ID).DefaultIfEmpty()
+                                from reference_1 in list_title_commend.Where(x => x.ID == c.AWARD_TITLE_ID).DefaultIfEmpty()
+                                where e.ID == employeeId && f.CODE == "DD"
+                                select new HuCommendDTO()
+                                {
+                                    Id = c.ID,
+                                    EmployeeId = employeeId,
+                                    No = c.NO,
+                                    SignDate = c.SIGN_DATE,
+                                    CommendType = c.COMMEND_TYPE,
+                                    Reason = c.REASON,
+                                    Money = c.MONEY,
+                                    EffectDate = c.EFFECT_DATE,
+                                    RewardName = r.NAME,
+                                    OrgLevelId = c.ORG_LEVEL_ID,
+                                    OrgLevelName = o.NAME,
+                                    Year = c.YEAR,
+                                    PaymentNo = c.PAYMENT_NO,
+                                    SignPaymentDate = c.SIGN_PAYMENT_DATE,
+                                    RewardLevelName = rLevel.NAME,
+                                    Note = c.NOTE,
+                                    StatusId = c.STATUS_ID,
+                                    StatusPaymentName = f.NAME,
+                                    PaymentContent = c.PAYMENT_CONTENT,
+                                    AwardTitleName = reference_1.NAME
+                                }).ToListAsync();
             return Ok(new FormatedResponse() { InnerBody = result });
         }
         [HttpGet]

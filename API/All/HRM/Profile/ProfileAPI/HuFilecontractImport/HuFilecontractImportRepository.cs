@@ -8,7 +8,6 @@ using CORE.AutoMapper;
 using ProfileDAL.ViewModels;
 using API.All.SYSTEM.CoreAPI.Xlsx;
 using Common.Extensions;
-using Microsoft.IdentityModel.Tokens;
 
 namespace API.Controllers.HuFilecontractImport
 {
@@ -41,7 +40,7 @@ namespace API.Controllers.HuFilecontractImport
                          from cv2 in _dbContext.HuEmployeeCvs.AsNoTracking().Where(cv2 => s.PROFILE_ID == cv2.ID).DefaultIfEmpty()
                          from t2 in _dbContext.HuPositions.Where(f => s.POSITION_ID == f.ID).DefaultIfEmpty()
                          from f in _dbContext.SysOtherLists.Where(c => c.ID == p.STATUS_ID).DefaultIfEmpty()
-                         from l in _dbContext.HuContractTypes.Where(c => c.ID == p.APPEND_TYPEID).DefaultIfEmpty()
+                         from l in _dbContext.SysContractTypes.Where(c => c.ID == p.APPEND_TYPEID).DefaultIfEmpty()
                              // JOIN OTHER ENTITIES BASED ON THE BUSINESS
                          select new HuFilecontractImportDTO
                          {
@@ -225,13 +224,9 @@ namespace API.Controllers.HuFilecontractImport
                             }
                         }
                     });
-                    if (cv.START_DATE == null)
+                    if (cv.SIGN_DATE == null)
                     {
-                        throw new Exception("START_DATE_IS_NULL" + " " + cv.CONTRACT_NO);
-                    }
-                    if (cv.ID_CONTRACT == null)
-                    {
-                        throw new Exception("ID_CONTRACT_IS_NULL" + " " + cv.CONTRACT_NO);
+                        throw new Exception("SIGN_DATE_IS_NULL" + " " + cv.CONTRACT_NO);
                     }
                     //check HSL chua phe duyet
                     var checkWorking = _dbContext.HuWorkings.AsNoTracking().Where(p => p.ID == cv.WORKING_ID).FirstOrDefault();
@@ -250,13 +245,10 @@ namespace API.Controllers.HuFilecontractImport
                         throw new Exception("WORKING_IS_NOT_EXIST");
                     }
                     //check ton tai so hop dong
-                    if (!cv.CONTRACT_NO.IsNullOrEmpty())
+                    var checkContractNo = _dbContext.HuFileContracts.AsNoTracking().Where(p => p.CONTRACT_NO.Trim().ToUpper() == cv.CONTRACT_NO.Trim().ToUpper()).Any();
+                    if (checkContractNo)
                     {
-                        var checkContractNo = _dbContext.HuFileContracts.AsNoTracking().Where(p => p.CONTRACT_NO.Trim().ToUpper() == cv.CONTRACT_NO.Trim().ToUpper()).Any();
-                        if (checkContractNo)
-                        {
-                            throw new Exception("CONTRACT_APPENDIX_NO_IS_EXIST" + " " + cv.CONTRACT_NO.ToUpper());
-                        }
+                        throw new Exception("CONTRACT_APPENDIX_NO_IS_EXIST" + " " + cv.CONTRACT_NO.ToUpper());
                     }
                     //lay phong ban nhan vien
                     var emp = _dbContext.HuEmployees.AsNoTracking().Where(p => p.ID == cv.EMPLOYEE_ID).FirstOrDefault();
@@ -271,8 +263,7 @@ namespace API.Controllers.HuFilecontractImport
                     var signer = (from e in _dbContext.HuEmployees.AsNoTracking().Where(p => p.ID == cv.SIGN_ID)
                                   from cvs in _dbContext.HuEmployeeCvs.AsNoTracking().Where(p => p.ID == e.PROFILE_ID).DefaultIfEmpty()
                                   select cvs).FirstOrDefault();
-
-                    cv.SIGNER_NAME = signer == null ? null : (signer.FULL_NAME ?? "");
+                    cv.SIGNER_NAME = signer!.FULL_NAME ?? "";
                     //lay chuc danh nguoi ky
                     var signerPos = (from e in _dbContext.HuEmployees.AsNoTracking().Where(p => p.ID == cv.SIGN_ID)
                                      from p in _dbContext.HuPositions.AsNoTracking().Where(p => p.ID == e.POSITION_ID).DefaultIfEmpty()

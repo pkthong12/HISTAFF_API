@@ -21,5 +21,8 @@ public class PA_PHASE_ADVANCE : BASE_ENTITY
     public DateTime? FROM_DATE { get; set; }
     public DateTime? TO_DATE { get; set; }
     public long? ORG_ID { get; set; }
+    public long? FROM_SALARY { get; set; }
+    public long? TO_SALARY { get; set; }
+
 }
 

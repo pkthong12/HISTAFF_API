@@ -10,6 +10,7 @@ namespace CoreDAL.Models
         public bool? IsLock { get; set; }
         public bool? IsWebapp { get; set; }
         public bool? IsPortal { get; set; }
+        public bool? IsMobile { get; set; }
         public bool? IsLdap { get; set; }
         public long? EmployeeId { get; set; }
     }

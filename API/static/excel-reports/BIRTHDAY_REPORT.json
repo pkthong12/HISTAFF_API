@@ -21,27 +21,27 @@
     "FontFamily": "Times New Roman",
     "Size": 9,
     "FontBolds": [
-      "A1:H1",
-      "A2:H3",
-      "A6:H6"
+      "A1:I1",
+      "A2:I3",
+      "A6:I6"
     ],
     "FontItalic": [
-      "A4:H5"
+      "A4:I5"
     ],
     "ErCode": "BC_SINH_NHAT",
     "HeaderRow": 6,
     "HeaderTitles": [
       {
         "Text": "ER_HEADER_TITLE_COMPANY_NAME",
-        "Cell": "A1:H1"
+        "Cell": "A1:I1"
       },
       {
         "Text": "ER_HEADER_REPORT_NAME_BIRTHDAY_REPORT",
-        "Cell": "A2:H2"
+        "Cell": "A2:I2"
       },
       {
         "Text": "ER_HEADER_REPORT_FROM_DATE_TO_DATE",
-        "Cell": "A4:H4"
+        "Cell": "A4:I4"
       }
     ],
     "HeaderGridTitles": [
@@ -58,43 +58,47 @@
         "Cell": "C6:C6"
       },
       {
-        "Text": "ER_POSITION",
+        "Text": "ER_BIRTHDAY",
         "Cell": "D6:D6"
       },
       {
-        "Text": "ER_ORG_UNIT",
+        "Text": "ER_POSITION",
         "Cell": "E6:E6"
       },
       {
-        "Text": "ER_BIRTHDAY",
+        "Text": "ER_ORG_UNIT",
         "Cell": "F6:F6"
       },
       {
-        "Text": "ER_PHONE_NUMBER",
+        "Text": "ER_COMPANY",
         "Cell": "G6:G6"
       },
       {
-        "Text": "ER_BANK_NO",
+        "Text": "ER_PHONE_NUMBER",
         "Cell": "H6:H6"
+      },
+      {
+        "Text": "ER_BANK_NO",
+        "Cell": "I6:I6"
       }
     ],
     "MegreCellRange": [
-      "A1:H1",
-      "A2:H3",
-      "A4:H5"
+      "A1:I1",
+      "A2:I3",
+      "A4:I5"
     ],
     "HorizontalAlignmentCenter": [
-      "A2:H3",
-      "A4:H5",
-      "A6:H6"
+      "A2:I3",
+      "A4:I5",
+      "A6:I6"
     ],
     "HorizontalAlignmentLeft": [
-      "A1:H1"
+      "A1:I1"
     ],
     "VerticalAlignmentCenter": [
-      "A2:H3",
-      "A4:H5",
-      "A6:H6"
+      "A2:I3",
+      "A4:I5",
+      "A6:I6"
     ],
 
     "RowHeighs": [
@@ -103,23 +107,23 @@
         "Height": 27
       }
     ],
-    "RangeAutoFit": "A7:H7",
-    "BorderHeader": "A6:H6",
+    "RangeAutoFit": "A7:I7",
+    "BorderHeader": "A6:I6",
     "FontSizeSpecifics": [
       {
-        "Cell": "A1:H1",
+        "Cell": "A1:I1",
         "Size": 14
       },
       {
-        "Cell": "A2:H3",
+        "Cell": "A2:I3",
         "Size": 14
       },
       {
-        "Cell": "A4:H5",
+        "Cell": "A4:I5",
         "Size": 12
       },
       {
-        "Cell": "A6:H6",
+        "Cell": "A6:I6",
         "Size": 10
       }
     ]

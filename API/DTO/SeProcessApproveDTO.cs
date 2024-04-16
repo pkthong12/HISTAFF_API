@@ -18,7 +18,7 @@ namespace API.DTO
         public string? PosName { get; set; }
         public int? ListCheck { get; set; }//tu dong lua chon nguoi phe duyet 
         public List<long>? CheckList { get; set; }
-        public List<long?>? PosIds { get; set; }//list chuc danh
+        public List<long>? PosIds { get; set; }//list chuc danh
         public string? Approve { get; set; }//Phe duyet
         public string? Refuse { get; set; }//Tu choi
         public string? ChooseAnApprover { get; set; }//Lua chon nguoi phe duyet

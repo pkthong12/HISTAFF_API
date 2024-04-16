@@ -28,7 +28,12 @@ namespace API.DTO
         public string? Status { get; set; }
         //public List<long>? SymbolIds { get; set; }
         public List<long?> ListSymbolId { get; set; }
-        
+
+        public long? FromSalary { get; set; }
+        public string? FromSalaryName { get; set; }
+        public long? ToSalary { get; set; }
+        public string? ToSalaryName { get; set; }
+
 
     }
 }

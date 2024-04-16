@@ -21,6 +21,8 @@ using API.DTO;
 using API.All.SYSTEM.CoreAPI.Xlsx;
 using Microsoft.AspNetCore.Http;
 using System.Globalization;
+using System.Linq;
+using API.All.SYSTEM.Common;
 
 namespace ProfileAPI.List
 {
@@ -79,11 +81,9 @@ namespace ProfileAPI.List
         }
         [HttpPost]
         public async Task<IActionResult> QueryList(GenericQueryListDTO<ContractDTO> request)
-
         {
             try
             {
-
                 var response = await _unitOfWork.ContractRepository.SinglePhaseQueryList(request);
 
                 if (response.ErrorType != EnumErrorType.NONE)
@@ -428,47 +428,6 @@ namespace ProfileAPI.List
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetFileName(long id)
-        {
-            try
-            {
-                var QueryData = new SqlQueryDataTemplate(_fullDbContext);
-
-                var fileType = await  (from p in _fullDbContext.HuContracts
-                                from e in _fullDbContext.HuEmployees.Where(x => x.ID == p.EMPLOYEE_ID).DefaultIfEmpty()
-                                from cv in _fullDbContext.HuEmployeeCvs.Where(x => x.ID == e.PROFILE_ID).DefaultIfEmpty()
-                                from t in _fullDbContext.HuContractTypes.Where(x => x.ID == p.CONTRACT_TYPE_ID).DefaultIfEmpty()
-                                from st in _fullDbContext.SysContractTypes.Where(x => x.ID == t.TYPE_ID).DefaultIfEmpty()
-                                where p.ID == id
-                                select new
-                                {
-                                    code = st.CODE,
-                                    EmployeeCode = e.CODE,
-                                    EmployeeName = cv.FULL_NAME
-                                }).ToListAsync();
-                ;
-                string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.WordTemplates);
-                string relativePath = "";
-                if (fileType.Where(x => x.code == "HDTV").Count() > 0)
-                {
-                    relativePath = "Hợp đồng thử việc_" + fileType.FirstOrDefault().EmployeeCode + "_" + fileType.FirstOrDefault().EmployeeName;
-                }
-                else
-                {
-                    relativePath = "Hợp đồng chính thức_" + fileType.FirstOrDefault().EmployeeCode + "_" + fileType.FirstOrDefault().EmployeeName;
-                }
-
-                return Ok(new FormatedResponse() { InnerBody = relativePath });
-
-            }
-            catch
-            {
-            }
-            return null;
-
-        }
-
-        [HttpGet]
         public async Task<IActionResult> PrintContractInfo(long id)
         {
             try
@@ -500,7 +459,7 @@ namespace ProfileAPI.List
                 var file = await _wordRespsitory.ExportWordNoImage(dataSet, absolutePath);
                 return File(file, "application/octet-stream", relativePath);
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
                 return Ok(new FormatedResponse()
                 {
@@ -509,7 +468,7 @@ namespace ProfileAPI.List
                     StatusCode = EnumStatusCode.StatusCode400,
                 });
             }
-
+           
         }
 
         [HttpPost]
@@ -525,9 +484,9 @@ namespace ProfileAPI.List
             var response = await _unitOfWork.ContractRepository.IsReceive(request);
 
             return Ok(new FormatedResponse()
-            {
-                InnerBody = null,
-                StatusCode = response ? EnumStatusCode.StatusCode400 : EnumStatusCode.StatusCode200
+            { 
+                InnerBody = null, 
+                StatusCode = response? EnumStatusCode.StatusCode400: EnumStatusCode.StatusCode200 
             });
         }
 
@@ -539,12 +498,160 @@ namespace ProfileAPI.List
             return Ok(response);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetFileName(long id)
+        {
+            try
+            {
+                // declare list code of "probation contract"
+                List<string> list1 = ["HDTV"];
+
+                // get list id corresponding with "list1"
+                var listIdFirst = _profileDbContext.SysContracttypes.Where(x => list1.Contains(x.CODE)).Select(x => x.ID).ToList();
+
+                var listProbationContractId = _profileDbContext.Contracttypes.Where(x => listIdFirst.Contains((long)x.TYPE_ID)).Select(x => x.ID).ToList();
+
+
+
+                // declare list code of "labor contract"
+                // in table SYS_CONTRACT_TYPE
+                List<string> list2 = ["HDLDXD", "HDLDKXD", "HDCNSDLD", "HDK"];
+
+                // get list id corresponding with "list2"
+                var listId = _profileDbContext.SysContracttypes.Where(x => list2.Contains(x.CODE)).Select(x => x.ID).ToList();
+
+                // get list id corresponding with "listId"
+                var listLaborContractId = _profileDbContext.Contracttypes.Where(x => listId.Contains((long)x.TYPE_ID) && x.IS_ACTIVE == true).Select(x => x.ID).ToList();
+
+
+
+                var contract = await _profileDbContext.Contracts.FirstOrDefaultAsync(x => x.ID == id);
+
+                string fileName = "";
+
+                if (listProbationContractId.Contains((long)contract.CONTRACT_TYPE_ID))
+                {
+                    fileName = "Hop_dong_thu_viec";
+                }
+                else if (listLaborContractId.Contains((long)contract.CONTRACT_TYPE_ID))
+                {
+                    fileName = "Hop_dong_lao_dong";
+                }
+                else
+                {
+                    return Ok(new FormatedResponse()
+                    {
+                        ErrorType = EnumErrorType.CATCHABLE,
+                        MessageCode = CommonMessageCodes.NO_PROBATION_CONTRACT_AND_LABOR_CONTRACT,
+                        StatusCode = EnumStatusCode.StatusCode400
+                    });
+                }
+
+                return Ok(new FormatedResponse()
+                {
+                    InnerBody = fileName
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new FormatedResponse()
+                {
+                    ErrorType = EnumErrorType.UNCATCHABLE,
+                    MessageCode = ex.Message,
+                    StatusCode = EnumStatusCode.StatusCode400
+                });
+            }
+        }
 
         [HttpGet]
-        public async Task<ActionResult> GetContractByEmpProfile2(long EmployeeId)
+        public async Task<IActionResult> PrintProbationContract(long id)
         {
-            var r = await _unitOfWork.ContractRepository.GetContractByEmpProfile2(EmployeeId);
-            return Ok(r);
+            try
+            {
+                // get file path
+                string relativePath = "";
+                string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.WordTemplates);
+
+
+
+                // declare list code of "probation contract"
+                List<string> list1 = ["HDTV"];
+
+                // get list id corresponding with "list1"
+                var listIdFirst = _profileDbContext.SysContracttypes.Where(x => list1.Contains(x.CODE)).Select(x => x.ID).ToList();
+
+                var listProbationContractId = _profileDbContext.Contracttypes.Where(x => listIdFirst.Contains((long)x.TYPE_ID)).Select(x => x.ID).ToList();
+
+
+
+                // declare list code of "labor contract"
+                // in table SYS_CONTRACT_TYPE
+                List<string> list2 = ["HDLDXD", "HDLDKXD", "HDCNSDLD", "HDK"];
+
+                // get list id corresponding with "list2"
+                var listId = _profileDbContext.SysContracttypes.Where(x => list2.Contains(x.CODE)).Select(x => x.ID).ToList();
+
+                // get list id corresponding with "listId"
+                var listLaborContractId = _profileDbContext.Contracttypes.Where(x => listId.Contains((long)x.TYPE_ID) && x.IS_ACTIVE == true).Select(x => x.ID).ToList();
+
+
+
+                var contract = _profileDbContext.Contracts.FirstOrDefault(x => x.ID == id);
+
+
+                // execute stored procedure SQL Server
+                var QueryData = new SqlQueryDataTemplate(_fullDbContext);
+
+                DataSet dataSet = new DataSet("MyDataSet");
+
+
+                // check contract
+                if (listProbationContractId.Contains((long)contract.CONTRACT_TYPE_ID))
+                {
+                    relativePath = "VEAM_PROBATION_CONTRACT.docx";
+
+                    dataSet = QueryData.ExecuteStoreToTable(
+                        "PKG_PRINT_PROBATIONARY_CONTRACT",
+                        new { P_ID = id },
+                        false);
+                }
+                else if (listLaborContractId.Contains((long)contract.CONTRACT_TYPE_ID))
+                {
+                    relativePath = "VEAM_LABOR_CONTRACT.docx";
+
+                    dataSet = QueryData.ExecuteStoreToTable(
+                        "PKG_PRINT_LABOR_CONTRACT",
+                        new { P_ID = id },
+                        false);
+                }
+                else
+                {
+                    return Ok(new FormatedResponse()
+                    {
+                        ErrorType = EnumErrorType.CATCHABLE,
+                        MessageCode = CommonMessageCodes.NO_PROBATION_CONTRACT_AND_LABOR_CONTRACT,
+                        StatusCode = EnumStatusCode.StatusCode400
+                    });
+                }
+
+                var absolutePath = Path.Combine(location, relativePath);
+
+                // create file
+                var file = await _wordRespsitory.ExportWordNoImage(dataSet, absolutePath);
+                
+
+                // return result
+                return File(file, "application/octet-stream", relativePath);
+            }
+            catch (Exception ex)
+            {
+                return Ok(new FormatedResponse()
+                {
+                    ErrorType = EnumErrorType.UNCATCHABLE,
+                    MessageCode = ex.Message,
+                    StatusCode = EnumStatusCode.StatusCode400,
+                });
+            }
         }
 
         [HttpGet]

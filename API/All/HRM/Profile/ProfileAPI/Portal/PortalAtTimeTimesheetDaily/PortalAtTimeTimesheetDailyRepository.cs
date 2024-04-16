@@ -185,7 +185,7 @@ namespace API.Controllers.AtTimeTimesheetDaily
                         Info = late,
                         Late = minu.LATE ?? 0,
                         ComebackOut = minu.COMEBACKOUT ?? 0,
-                        TotalOt = minu.OT_TOTAL_CONVERT_PAY == null? 0 : Math.Round((decimal)minu.OT_TOTAL_CONVERT_PAY * 60),
+                        TotalOt = minu.OT_TOTAL_CONVERT_PAY ?? 0,
                     }
                 };
             }
@@ -195,8 +195,7 @@ namespace API.Controllers.AtTimeTimesheetDaily
                 {
                     Info = new { },
                     Late = 0,
-                    ComebackOut = 0,
-                    TotalOt = 0,
+                    ComebackOut = 0
                 }
             };
         }

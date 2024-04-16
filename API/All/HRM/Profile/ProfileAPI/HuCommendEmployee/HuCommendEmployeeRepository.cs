@@ -5,6 +5,7 @@ using CORE.Enum;
 using CORE.StaticConstant;
 using API.All.DbContexts;
 using CORE.AutoMapper;
+using API.Controllers.HuCommend;
 
 namespace API.Controllers.HuCommendEmployee
 {
@@ -14,19 +15,21 @@ namespace API.Controllers.HuCommendEmployee
         private readonly FullDbContext _dbContext;
         private IGenericRepository<HU_COMMEND_EMPLOYEE, HuCommendEmployeeDTO> _genericRepository;
         private readonly GenericReducer<HU_COMMEND_EMPLOYEE, HuCommendEmployeeDTO> _genericReducer;
+        private readonly IHuCommendRepository _huCommendRepository;
 
         public HuCommendEmployeeRepository(FullDbContext context, GenericUnitOfWork uow)
         {
             _dbContext = context;
             _uow = uow;
             _genericRepository = _uow.GenericRepository<HU_COMMEND_EMPLOYEE, HuCommendEmployeeDTO>();
+            _huCommendRepository = new HuCommendRepository(context, _uow);
             _genericReducer = new();
         }
 
         public async Task<GenericPhaseTwoListResponse<HuCommendEmployeeDTO>> SinglePhaseQueryList(GenericQueryListDTO<HuCommendEmployeeDTO> request)
         {
             var joined = from p in _dbContext.HuCommendEmployees.AsNoTracking()
-                         // JOIN OTHER ENTITIES BASED ON THE BUSINESS
+                             // JOIN OTHER ENTITIES BASED ON THE BUSINESS
                          select new HuCommendEmployeeDTO
                          {
                              Id = p.ID
@@ -65,7 +68,7 @@ namespace API.Controllers.HuCommendEmployee
                         (HU_COMMEND_EMPLOYEE)response
                     };
                 var joined = (from l in list
-                              // JOIN OTHER ENTITIES BASED ON THE BUSINESS
+                                  // JOIN OTHER ENTITIES BASED ON THE BUSINESS
                               select new HuCommendEmployeeDTO
                               {
                                   Id = l.ID
@@ -152,7 +155,7 @@ namespace API.Controllers.HuCommendEmployee
                 {
                     var response = _uow.Context.Set<HU_COMMEND_EMPLOYEE>().Where(x => x.ID == item).FirstOrDefault();
                     var getOtherList = _uow.Context.Set<SYS_OTHER_LIST>().Where(x => x.CODE == "DD").FirstOrDefault();
-                    if(response == null && getOtherList == null)
+                    if (response == null && getOtherList == null)
                     {
                         isCheck = true;
                         return;
@@ -161,19 +164,19 @@ namespace API.Controllers.HuCommendEmployee
                     {
                         list.Add(new HuCommendEmployeeDTO()
                         {
-                            Id = response.ID,
-                            StatusId = getOtherList.ID
+                            Id = response!.ID,
+                            StatusId = getOtherList!.ID
                         });
                     }
                 });
-                if(isCheck == false) 
+                if (isCheck == false)
                 {
                     return new FormatedResponse() { MessageCode = CommonMessageCode.ENTITY_NOT_FOUND, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
                 }
                 else
                 {
-                    var approveCommend = await _genericRepository.UpdateRange(_uow, list,sid,pathMode);
-                    if(approveCommend != null)
+                    var approveCommend = await _genericRepository.UpdateRange(_uow, list, sid, pathMode);
+                    if (approveCommend != null)
                     {
                         return approveCommend;
 
@@ -202,7 +205,7 @@ namespace API.Controllers.HuCommendEmployee
                 {
                     var response = _uow.Context.Set<HU_COMMEND_EMPLOYEE>().Where(x => x.ID == item).FirstOrDefault();
                     var getOtherList = _uow.Context.Set<SYS_OTHER_LIST>().Where(x => x.CODE == "CD").FirstOrDefault();
-                    if(response.STATUS_ID == getOtherList.ID && getOtherList == null) 
+                    if (response!.STATUS_ID == getOtherList!.ID && getOtherList == null)
                     {
                         isCheck = true;
                         return;

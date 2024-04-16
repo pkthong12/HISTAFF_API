@@ -10,7 +10,8 @@ namespace API.Controllers.TrPlan
        Task<FormatedResponse> GetAllCoures();
         Task<FormatedResponse> GetAllCenter();
         Task<FormatedResponse> GetAllOrg();
-
+        Task<FormatedResponse> GetTrainingForm();
+        Task<FormatedResponse> GetJobByJobFamId(List<long>? ids);
     }
 }
 

@@ -15,8 +15,5 @@ namespace API.DTO
 
         public string? CloneFrom { get; set; }
 
-        //Dat added
-        public  long? GroupId { get; set; }
-
     }
 }

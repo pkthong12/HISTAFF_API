@@ -208,6 +208,14 @@ namespace API.All.HRM.Payroll.PayrollAPI.PaListSal
 
         public async Task<FormatedResponse> Delete(GenericUnitOfWork _uow, long id)
         {
+            var data = await _dbContext.PaListSals.Where(p => p.ID == id).FirstAsync();
+            var r = await QueryData.ExecuteNonQuery("PKG_PAYROLL_DELETE_COLUMN",
+                    new
+                    {
+                        COL_NAME = data.CODE_LISTSAL!.ToUpper().Replace(' ', '_'),
+                        DATA_TYPE = data.DATA_TYPE_ID == 1054 ? "FLOAT" : "NVARCHAR(50)",
+                        FROM_TABLE = "PA_LISTSAL",
+                    }, false);
             var response = await _genericRepository.Delete(_uow, id);
             return response;
         }

@@ -30,5 +30,7 @@ namespace API.Entities.PORTAL
         public decimal? TOTAL_OT { get; set; }
         public string? ID_REGGROUP { get; set; }
         public bool? IS_EACH_DAY { get; set; }
+        public long? EXPLAIN_REASON { get; set; }
+        public bool? IS_REGISTER { get; set; }
     }
 }

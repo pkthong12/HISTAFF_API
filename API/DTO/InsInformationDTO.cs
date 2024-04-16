@@ -31,6 +31,7 @@ namespace API.DTO
         public string? SalaryBhxhYtStr { get; set; }
         public double? SalaryBhTn { get; set; }
         public double? SalaryRegionMin { get; set; }
+        public double? SalaryNew { get; set; }
 
         //Bhxh
         public DateTime? BhxhFromDate { get; set; }
@@ -90,7 +91,8 @@ namespace API.DTO
         public string? BhtnToDateString { get; set; }
         public string? BhtnldBnnFromDateString { get; set; }
         public string? BhtnldBnnToDateString { get; set; }
-        public long? RegionId { get; set; }
+        
+        public long? IdPos { get; set; }
 
     }
 

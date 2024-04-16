@@ -15,15 +15,15 @@ namespace API.Controllers.HuEmployeeCv
         Task<FormatedResponse> GetGeneralInfo(long id);
         Task<FormatedResponse> CheckSameName(string name);
         Task<FormatedResponse> CheckSameIdNo(string idNo);
-        Task<FormatedResponse> CheckSameTaxCode(string taxCode);
         Task<FormatedResponse> CheckSameItimeid(string itimeId);
+        Task<FormatedResponse> CheckSameTaxCode(string taxCode);
         Task<FormatedResponse> GetPolitical(long id);
-        Task<FormatedResponse> UpdatePolitical(StaffProfileUpdateDTO request, string sid);
-        Task<FormatedResponse> UpdatePoliticalOrganizationId(StaffProfileUpdateDTO request, string sid);
-        Task<FormatedResponse> UpdateBank(StaffProfileUpdateDTO request, string sid);
+        Task<FormatedResponse> UpdatePolitical(StaffProfileUpdateDTO request);
+        Task<FormatedResponse> UpdatePoliticalOrganizationId(StaffProfileUpdateDTO request);
+        Task<FormatedResponse> UpdateBank(StaffProfileUpdateDTO request);
         Task<FormatedResponse> GetPoliticalOrganization(long employeeCvId);
         Task<FormatedResponse> GetPoliticalOrganizationId(long id);
-        Task<FormatedResponse> UpdateGeneralInfo(StaffProfileUpdateDTO request, string sid);
+        Task<FormatedResponse> UpdateGeneralInfo(StaffProfileUpdateDTO request);
         Task<FormatedResponse> GetEmployeeStatusList();
         Task<FormatedResponse> InsertStaffProfile(StaffProfileEditDTO request, string sid);
         Task<FormatedResponse> CheckPositionMasterInterim(long? id);
@@ -36,8 +36,8 @@ namespace API.Controllers.HuEmployeeCv
 
         Task<FormatedResponse> UpdatePapers(DynamicDTO model, string sid);
         Task<FormatedResponse> GetCurruculum(long id);
-        Task<FormatedResponse> UpdateCurruculum(StaffProfileUpdateDTO request, string sid);
-        Task<FormatedResponse> UpdateAdditonal(StaffProfileUpdateDTO request, string sid);
+        Task<FormatedResponse> UpdateCurruculum(StaffProfileUpdateDTO request);
+        Task<FormatedResponse> UpdateAdditonal(StaffProfileUpdateDTO request);
         Task<FormatedResponse> GetAdditonal(long id);
         Task<FormatedResponse> GetEducation(long employeeCvId);
         Task<FormatedResponse> GetEducationId(long id);
@@ -47,11 +47,11 @@ namespace API.Controllers.HuEmployeeCv
         Task<FormatedResponse> GetPresenterId(long id);
         Task<FormatedResponse> GetSituation(long employeeCvId);
         Task<FormatedResponse> GetSituationId(long id);
-        Task<FormatedResponse> UpdatePresenterId(StaffProfileUpdateDTO request, string sid);
+        Task<FormatedResponse> UpdatePresenterId(StaffProfileUpdateDTO request);
         Task<FormatedResponse> GetContact(long employeeCvId);
         Task<FormatedResponse> GetContactId(long id);
         Task<FormatedResponse> UpdateContactId(StaffProfileUpdateDTO request, string sid);
-        Task<FormatedResponse> UpdateSituationId(StaffProfileUpdateDTO request, string sid);
+        Task<FormatedResponse> UpdateSituationId(StaffProfileUpdateDTO request);
         Task<FormatedResponse> GetAll();
 
         Task<FormatedResponse> GetAllIgnoreCurrentUser(string sid);
@@ -67,7 +67,7 @@ namespace API.Controllers.HuEmployeeCv
         Task<FormatedResponse> GetWorkingAgeInfomationDashboard(HuEmployeeCvInputDTO? model);
         Task<FormatedResponse> GetNewEmpMonthDashboard(HuEmployeeCvInputDTO? model);
         Task<FormatedResponse> GetNameOrgDashboard(HuEmployeeCvInputDTO? model);
-        Task<FormatedResponse> GetIdOrgDissolve(HuEmployeeCvInputDTO? model);
+        Task<FormatedResponse> UpdateGeneralInfo2(StaffProfileUpdateDTO request);
     }
 }
 

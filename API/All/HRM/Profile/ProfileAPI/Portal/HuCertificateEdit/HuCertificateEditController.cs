@@ -38,7 +38,7 @@ namespace API.Controllers.HuCertificateEdit
             IFileService fileService, IHubContext<SignalHub> hubContext)
         {
             _uow = new GenericUnitOfWork(dbContext);
-            _HuCertificateEditRepository = new HuCertificateEditRepository(dbContext,options.Value,env,fileService, _uow, hubContext);
+            _HuCertificateEditRepository = new HuCertificateEditRepository(dbContext, _uow, hubContext);
             _appSettings = options.Value;
             _env = env;
             _fileService = fileService;
@@ -848,12 +848,433 @@ namespace API.Controllers.HuCertificateEdit
         {
             var sid = Request.Sid(_appSettings);
             if (sid == null) return Unauthorized();
-            
+            bool pathMode = true;
+            var getOtherList = (from t in _uow.Context.Set<SYS_OTHER_LIST_TYPE>().Where(x => x.CODE == "STATUS")
+                                from o in _uow.Context.Set<SYS_OTHER_LIST>().Where(x => x.CODE == "CD")
+                                select new { Id = o.ID }).FirstOrDefault();
+            var getData = _uow.Context.Set<HU_CERTIFICATE_EDIT>().Where(x => x.EMPLOYEE_ID == request.EmployeeId && x.IS_SEND_PORTAL == true && x.IS_APPROVE_PORTAL == false);
+            if (getData.Any())
+            {
+                return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.HAD_RECORD_IS_APPROVING });
+;           }
+            if(request.Id != null && request.IsSavePortal == true) //gửi duyệt bản ghi đã lưu
+            {
+                request.IsSendPortal = true;
+                request.IsSavePortal = false;
+                request.IsApprovePortal = false;
+                request.StatusId = getOtherList?.Id;
+                if (request.IdHuCertificate != null)
+                {
+                    var certificate = _uow.Context.Set<HU_CERTIFICATE>().Where(x => x.ID == request.IdHuCertificate).AsNoTracking().AsQueryable();
+                    List<string> listModelChange = new List<string>();
+                    if (certificate != null)
+                    {
+                        var entityType = typeof(HU_EMPLOYEE_CV);
+                        var dtoType = typeof(HuEmployeeCvDTO);
+                        var entityPropList = entityType.GetProperties().ToList();
+                        var dtoPropList = dtoType.GetProperties().ToList();
+
+                        var query = Activator.CreateInstance(dtoType);
 
 
-            var response = await _HuCertificateEditRepository.SendApproveCertificate(request);
-            return Ok(response);     
+                        entityPropList.ForEach(prop =>
+                        {
+                            var value = prop.GetValue(certificate);
+                            var dtoProp = dtoPropList.SingleOrDefault(x => x.Name == prop.Name.SnakeToCamelCase().CamelToPascalCase());
+                            dtoProp?.SetValue(query, value);
+
+                        });
+
+
+                        if (query != null)
+                        {
+                            Type type = query.GetType();
+                            Type type2 = request.GetType();
+                            IList<PropertyInfo> props = new List<PropertyInfo>(type.GetProperties());
+                            IList<PropertyInfo> prop2s = new List<PropertyInfo>(type2.GetProperties());
+                            foreach (PropertyInfo prop in props)
+                            {
+                                foreach (PropertyInfo prop2 in prop2s)
+                                {
+
+                                    if (prop.Name != "Id" && prop.Name != null && prop.Name == prop2.Name && prop.GetValue(query) != null && prop2.GetValue(request) != null && prop.GetValue(query)!.ToString() != prop2.GetValue(request)!.ToString())
+                                    {
+                                        listModelChange.Add(Char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1));
+                                    }
+
+                                }
+                            }
+                            request.ModelChange = string.Join(";", listModelChange);
+                        }
+                    }
+                }
+                
+
+                List<UploadFileResponse> uploadFiles1 = new();
+                // First of all we need to upload all the attachments
+                if (request.FirstAttachmentBuffer != null)
+                {
+                    string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
+                    var uploadFileResponse = await _fileService.UploadFile(new UploadRequest()
+                    {
+                        ClientFileName = request.FirstAttachmentBuffer.ClientFileName,
+                        ClientFileType = request.FirstAttachmentBuffer.ClientFileType,
+                        ClientFileData = request.FirstAttachmentBuffer.ClientFileData
+                    }, location, sid);
+
+                    // Assign saved paths
+                    var property = typeof(HuCertificateEditDTO).GetProperty("FileName");
+
+                    if (property != null)
+                    {
+                        property?.SetValue(request, uploadFileResponse.SavedAs);
+                        uploadFiles1.Add(uploadFileResponse);
+                    }
+                    else
+                    {
+                        return Ok(new FormatedResponse()
+                        {
+                            ErrorType = EnumErrorType.CATCHABLE,
+                            StatusCode = EnumStatusCode.StatusCode400,
+                            MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": FirstAttachment"
+                        });
+                    }
+                }
+
+                var updateResponse = await _HuCertificateEditRepository.Update(_uow, request, sid, pathMode);
+                return Ok(updateResponse);  
+            }
+            if(request.Id != null && request.IsSavePortal == false) //gửi duyệt bản ghi đã bị từ chối
+            {
+                request.IsSendPortal = true;
+                request.IsApprovePortal = false;
+                request.StatusId = getOtherList?.Id;
+                
+
+                var certificate = _uow.Context.Set<HU_CERTIFICATE>().Where(x => x.ID == request.IdHuCertificate).AsNoTracking().AsQueryable();
+                List<string> listModelChange = new List<string>();
+                if (certificate != null)
+                {
+                    var entityType = typeof(HU_EMPLOYEE_CV);
+                    var dtoType = typeof(HuEmployeeCvDTO);
+                    var entityPropList = entityType.GetProperties().ToList();
+                    var dtoPropList = dtoType.GetProperties().ToList();
+
+                    var query = Activator.CreateInstance(dtoType);
+
+
+                    entityPropList.ForEach(prop =>
+                    {
+                        var value = prop.GetValue(certificate);
+                        var dtoProp = dtoPropList.SingleOrDefault(x => x.Name == prop.Name.SnakeToCamelCase().CamelToPascalCase());
+                        dtoProp?.SetValue(query, value);
+
+                    });
+
+
+                    if (query != null)
+                    {
+                        Type type = query.GetType();
+                        Type type2 = request.GetType();
+                        IList<PropertyInfo> props = new List<PropertyInfo>(type.GetProperties());
+                        IList<PropertyInfo> prop2s = new List<PropertyInfo>(type2.GetProperties());
+                        foreach (PropertyInfo prop in props)
+                        {
+                            foreach (PropertyInfo prop2 in prop2s)
+                            {
+
+                                if (prop.Name != "Id" && prop.Name != null && prop.Name == prop2.Name && prop.GetValue(query) != null && prop2.GetValue(request) != null && prop.GetValue(query)!.ToString() != prop2.GetValue(request)!.ToString())
+                                {
+                                    listModelChange.Add(Char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1));
+                                }
+
+                            }
+                        }
+                        request.ModelChange = string.Join(";", listModelChange);
+                    }
+                }
+                List<UploadFileResponse> uploadFiles1 = new();
+                // First of all we need to upload all the attachments
+                if (request.FirstAttachmentBuffer != null)
+                {
+                    string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
+                    var uploadFileResponse = await _fileService.UploadFile(new UploadRequest()
+                    {
+                        ClientFileName = request.FirstAttachmentBuffer.ClientFileName,
+                        ClientFileType = request.FirstAttachmentBuffer.ClientFileType,
+                        ClientFileData = request.FirstAttachmentBuffer.ClientFileData
+                    }, location, sid);
+
+                    // Assign saved paths
+                    var property = typeof(HuCertificateEditDTO).GetProperty("FileName");
+
+                    if (property != null)
+                    {
+                        property?.SetValue(request, uploadFileResponse.SavedAs);
+                        uploadFiles1.Add(uploadFileResponse);
+                    }
+                    else
+                    {
+                        return Ok(new FormatedResponse()
+                        {
+                            ErrorType = EnumErrorType.CATCHABLE,
+                            StatusCode = EnumStatusCode.StatusCode400,
+                            MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": FirstAttachment"
+                        });
+                    }
+                }
+
+                var updateResponse = await _HuCertificateEditRepository.Update(_uow, request, sid, pathMode);
+                return Ok(updateResponse);
+            }
+            if(request.Id == null || request.Id == 0) //thêm mới bản ghi và gửi duyệt
+            {
+                request.IsSendPortal = true;
+                request.IsSavePortal = false;
+                request.IsApprovePortal = false;
+                request.StatusId = getOtherList?.Id;
+
+                List<UploadFileResponse> uploadFiles1 = new();
+                // First of all we need to upload all the attachments
+                if (request.FirstAttachmentBuffer != null)
+                {
+                    string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
+                    var uploadFileResponse = await _fileService.UploadFile(new UploadRequest()
+                    {
+                        ClientFileName = request.FirstAttachmentBuffer.ClientFileName,
+                        ClientFileType = request.FirstAttachmentBuffer.ClientFileType,
+                        ClientFileData = request.FirstAttachmentBuffer.ClientFileData
+                    }, location, sid);
+
+                    // Assign saved paths
+                    var property = typeof(HuCertificateEditDTO).GetProperty("FileName");
+
+                    if (property != null)
+                    {
+                        property?.SetValue(request, uploadFileResponse.SavedAs);
+                        uploadFiles1.Add(uploadFileResponse);
+                    }
+                    else
+                    {
+                        return Ok(new FormatedResponse()
+                        {
+                            ErrorType = EnumErrorType.CATCHABLE,
+                            StatusCode = EnumStatusCode.StatusCode400,
+                            MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": FirstAttachment"
+                        });
+                    }
+                }
+
+                var createResponse = await _HuCertificateEditRepository.Create(_uow, request, sid);
+                return Ok(createResponse);
+            }
+
+            request.IsSendPortal = true;
+            request.IsSavePortal = false;
+            request.IsApprovePortal = false;
+            request.StatusId = getOtherList?.Id;
+            //request.IdHuCertificate = request.Id;
+            request.Id = null;
+
+            if (request.IdHuCertificate != null)
+            {
+                var certificate = _uow.Context.Set<HU_CERTIFICATE>().Where(x => x.ID == request.IdHuCertificate).AsNoTracking().AsQueryable();
+                List<string> listModelChange = new List<string>();
+                if (certificate != null)
+                {
+                    var entityType = typeof(HU_EMPLOYEE_CV);
+                    var dtoType = typeof(HuEmployeeCvDTO);
+                    var entityPropList = entityType.GetProperties().ToList();
+                    var dtoPropList = dtoType.GetProperties().ToList();
+
+                    var query = Activator.CreateInstance(dtoType);
+
+
+                    entityPropList.ForEach(prop =>
+                    {
+                        var value = prop.GetValue(certificate);
+                        var dtoProp = dtoPropList.SingleOrDefault(x => x.Name == prop.Name.SnakeToCamelCase().CamelToPascalCase());
+                        dtoProp?.SetValue(query, value);
+
+                    });
+
+
+                    if (query != null)
+                    {
+                        Type type = query.GetType();
+                        Type type2 = request.GetType();
+                        IList<PropertyInfo> props = new List<PropertyInfo>(type.GetProperties());
+                        IList<PropertyInfo> prop2s = new List<PropertyInfo>(type2.GetProperties());
+                        foreach (PropertyInfo prop in props)
+                        {
+                            foreach (PropertyInfo prop2 in prop2s)
+                            {
+
+                                if (prop.Name != "Id" && prop.Name != null && prop.Name == prop2.Name && prop.GetValue(query) != null && prop2.GetValue(request) != null && prop.GetValue(query)!.ToString() != prop2.GetValue(request)!.ToString())
+                                {
+                                    listModelChange.Add(Char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1));
+                                }
+
+                            }
+                        }
+                        request.ModelChange = string.Join(";", listModelChange);
+                    }
+                }
+            }
+            List<UploadFileResponse> uploadFiles = new();
+            // First of all we need to upload all the attachments
+            if (request.FirstAttachmentBuffer != null)
+            {
+                string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
+                var uploadFileResponse = await _fileService.UploadFile(new UploadRequest()
+                {
+                    ClientFileName = request.FirstAttachmentBuffer.ClientFileName,
+                    ClientFileType = request.FirstAttachmentBuffer.ClientFileType,
+                    ClientFileData = request.FirstAttachmentBuffer.ClientFileData
+                }, location, sid);
+
+                // Assign saved paths
+                var property = typeof(HuCertificateEditDTO).GetProperty("FileName");
+
+                if (property != null)
+                {
+                    property?.SetValue(request, uploadFileResponse.SavedAs);
+                    uploadFiles.Add(uploadFileResponse);
+                }
+                else
+                {
+                    return Ok(new FormatedResponse()
+                    {
+                        ErrorType = EnumErrorType.CATCHABLE,
+                        StatusCode = EnumStatusCode.StatusCode400,
+                        MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": FirstAttachment"
+                    });
+                }
+            }
+
+
+            var response = await _HuCertificateEditRepository.Create(_uow, request, sid);
+            return Ok(response);
+
+            //request.IsSendPortal = true;
+            //request.IsSavePortal = false;
+            //request.IsApprovePortal = false;
+            //request.StatusId = getOtherList?.Id;
+
+
+            ////List<string> listModelChange = new List<string>();
+            ////HuCertificateDTO query = new HuCertificateDTO();
+            ////HU_CERTIFICATE entity = new HU_CERTIFICATE();
+
+
+            //if (request.Id != null)
+            //{
+            //    //if (request.IdHuCertificate != null)
+            //    //{
+            //    //    entity = _uow.Context.Set<HU_CERTIFICATE>().Where(x => x.ID == request.IdHuCertificate).FirstOrDefault()!;
+            //    //}
+            //    //else
+            //    //{
+            //    //    entity = _uow.Context.Set<HU_CERTIFICATE>().Where(x => x.ID == request.Id).FirstOrDefault()!;
+            //    //}
+
+
+            //    //if (entity != null)
+            //    //{
+
+            //    //    query = CoreMapper<HuCertificateDTO, HU_CERTIFICATE>.EntityToDto(entity, new HuCertificateDTO());
+
+            //    //    if (query != null)
+            //    //    {
+            //    //        Type type = request.GetType();
+            //    //        Type type2 = query.GetType();
+            //    //        if (request != null)
+            //    //        {
+            //    //            IList<PropertyInfo> props = new List<PropertyInfo>(type.GetProperties());
+            //    //            IList<PropertyInfo> prop2s = new List<PropertyInfo>(type2.GetProperties());
+
+            //    //            foreach (PropertyInfo prop in props)
+            //    //            {
+            //    //                foreach (PropertyInfo prop2 in prop2s)
+            //    //                {
+
+            //    //                    if (prop.Name != "Id" && prop.Name != null && prop.Name == prop2.Name && prop.GetValue(request) != null && prop2.GetValue(query) != null && prop.GetValue(request)!.ToString() != prop2.GetValue(query)!.ToString())
+            //    //                    {
+            //    //                        listModelChange.Add(Char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1));
+            //    //                    }
+
+            //    //                }
+            //    //            }
+            //    //            request.ModelChange = string.Join(";", listModelChange);
+            //    //        }
+            //    //    }
+            //    //}
+
+            //    //request.IdHuCertificate = request.Id;
+            //    //request.IdHuCertificate = request.IdHuCertificate;
+            //    //request.Id = null;
+            //    List<UploadFileResponse> uploadFiles = new();
+            //    // First of all we need to upload all the attachments
+            //    if (request.FirstAttachmentBuffer != null)
+            //    {
+            //        string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
+            //        var uploadFileResponse = await _fileService.UploadFile(new UploadRequest()
+            //        {
+            //            ClientFileName = request.FirstAttachmentBuffer.ClientFileName,
+            //            ClientFileType = request.FirstAttachmentBuffer.ClientFileType,
+            //            ClientFileData = request.FirstAttachmentBuffer.ClientFileData
+            //        }, location, sid);
+
+            //        // Assign saved paths
+            //        var property = typeof(HuCertificateEditDTO).GetProperty("FileName");
+
+            //        if (property != null)
+            //        {
+            //            property?.SetValue(request, uploadFileResponse.SavedAs);
+            //            uploadFiles.Add(uploadFileResponse);
+            //        }
+            //        else
+            //        {
+            //            return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": FirstAttachment" });
+            //        }
+
+            //    }
+            //    var response = await _HuCertificateEditRepository.Update(_uow, request, sid);
+            //    return Ok(response);
         }
+        //else
+        //{
+        //    List<UploadFileResponse> uploadFiles = new();
+        //    // First of all we need to upload all the attachments
+        //    if (request.FirstAttachmentBuffer != null)
+        //    {
+        //        string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
+        //        var uploadFileResponse = await _fileService.UploadFile(new UploadRequest()
+        //        {
+        //            ClientFileName = request.FirstAttachmentBuffer.ClientFileName,
+        //            ClientFileType = request.FirstAttachmentBuffer.ClientFileType,
+        //            ClientFileData = request.FirstAttachmentBuffer.ClientFileData
+        //        }, location, sid);
+
+        //        // Assign saved paths
+        //        var property = typeof(HuCertificateEditDTO).GetProperty("FileName");
+
+        //        if (property != null)
+        //        {
+        //            property?.SetValue(request, uploadFileResponse.SavedAs);
+        //            uploadFiles.Add(uploadFileResponse);
+        //        }
+        //        else
+        //        {
+        //            return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": FirstAttachment" });
+        //        }
+
+        //    }
+        //    var response = await _HuCertificateEditRepository.Create(_uow, request, sid);
+        //    return Ok(response);
+        //}
+        //}
+
     }
 }
 

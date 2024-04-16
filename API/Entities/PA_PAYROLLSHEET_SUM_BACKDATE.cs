@@ -16,5 +16,4 @@ public class PA_PAYROLLSHEET_SUM_BACKDATE : BASE_ENTITY
     public DateTime? TO_DATE { get; set; }
     public DateTime? JOIN_DATE { get; set; }
     public long? JOBPOSITION_ID { get; set; }
-    public long? FUND_ID { get; set; }
 }

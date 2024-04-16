@@ -36,7 +36,7 @@ namespace API.Controllers.TrPlan
             IOptions<AppSettings> options)
         {
             _uow = new GenericUnitOfWork(dbContext);
-            _TrPlanRepository = new TrPlanRepository(dbContext, _uow);
+            _TrPlanRepository = new TrPlanRepository(dbContext, _uow, env, options, fileService);
             _appSettings = options.Value;
             _env = env;
             _fileService = fileService;
@@ -95,6 +95,8 @@ namespace API.Controllers.TrPlan
             try
             {
                 var sid = Request.Sid(_appSettings);
+                if (sid == null) return Unauthorized();
+
                 if (model.AttachmentBuffer != null)
                 {
                     string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
@@ -117,18 +119,19 @@ namespace API.Controllers.TrPlan
                     }
                 }
                 //var id = _uow.Context.Set<TR_PLAN>().AsNoTracking().AsQueryable().Max(p => p.ID);
-                if (sid == null) return Unauthorized();
-                string newcode = "";
-                if (await _uow.Context.Set<TR_PLAN>().CountAsync() == 0)
-                {
-                    newcode = "KH001";
-                }
-                else
-                {
-                    string lastestData = _uow.Context.Set<TR_PLAN>().OrderByDescending(x => x.CODE).First().CODE!.ToString();
-                    newcode = lastestData.Substring(0, 2) + (int.Parse(lastestData.Substring(lastestData.Length - 3)) + 1).ToString("D3");
-                }
-                model.Code = newcode;
+                //string newcode = "";
+                //if (await _uow.Context.Set<TR_PLAN>().CountAsync() == 0)
+                //{
+                //    newcode = "KH001";
+                //}
+                //else
+                //{
+                //    string lastestData = _uow.Context.Set<TR_PLAN>().OrderByDescending(x => x.CODE).First().CODE!.ToString();
+                //    newcode = lastestData.Substring(0, 2) + (int.Parse(lastestData.Substring(lastestData.Length - 3)) + 1).ToString("D3");
+                //}
+                //model.Code = newcode;
+                model.JobFamilyIds = (model.ListJobFamilyIds != null ? string.Join(",", model.ListJobFamilyIds.ToArray()) : "");
+                model.JobIds = (model.ListJobIds != null ? string.Join(",", model.ListJobIds.ToArray()) : "");
                 var response = await _TrPlanRepository.Create(_uow, model, sid);
                 return Ok(response);
             }
@@ -156,10 +159,52 @@ namespace API.Controllers.TrPlan
         [HttpPost]
         public async Task<IActionResult> Update(TrPlanDTO model)
         {
-            var sid = Request.Sid(_appSettings);
-            if (sid == null) return Unauthorized();
-            var response = await _TrPlanRepository.Update(_uow, model, sid);
-            return Ok(response);
+            List<UploadFileResponse> uploadFiles = new();
+            try
+            {
+                var sid = Request.Sid(_appSettings);
+                if (sid == null) return Unauthorized();
+                if (model.AttachmentBuffer != null)
+                {
+                    string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
+                    var uploadFileResponse = await _fileService.UploadFile(new UploadRequest()
+                    {
+                        ClientFileName = model.AttachmentBuffer.ClientFileName,
+                        ClientFileType = model.AttachmentBuffer.ClientFileType,
+                        ClientFileData = model.AttachmentBuffer.ClientFileData
+                    }, location, sid);
+                    var property = typeof(TrPlanDTO).GetProperty("Filename");
+
+                    if (property != null)
+                    {
+                        property?.SetValue(model, uploadFileResponse.SavedAs);
+                        uploadFiles.Add(uploadFileResponse);
+                    }
+                    else
+                    {
+                        return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": Attachment" });
+                    }
+                }
+                model.JobFamilyIds = (model.ListJobFamilyIds != null ? string.Join(",", model.ListJobFamilyIds.ToArray()) : "");
+                model.JobIds = (model.ListJobIds != null ? string.Join(",", model.ListJobIds.ToArray()) : "");
+                var response = await _TrPlanRepository.Update(_uow, model, sid);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+
+                uploadFiles.ForEach(async f =>
+                {
+                    await _fileService.DeleteAttachment(f.SavedAs);
+                });
+
+                _uow.Rollback();
+                return Ok(new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message });
+            }
+            //var sid = Request.Sid(_appSettings);
+            //if (sid == null) return Unauthorized();
+            //var response = await _TrPlanRepository.Update(_uow, model, sid);
+            //return Ok(response);
         }
 
         [HttpPost]
@@ -221,7 +266,7 @@ namespace API.Controllers.TrPlan
         public async Task<IActionResult> GetCode()
         {
             decimal num;
-            var queryCode = (from x in _uow.Context.Set<TR_PLAN>() where x.CODE.Length == 5 select x.CODE).ToList();
+            var queryCode = await (from x in _uow.Context.Set<TR_PLAN>() where x.CODE.Length == 5 select x.CODE).ToListAsync();
             var existingCode = (from p in queryCode where Decimal.TryParse(p.Substring(2), out num) orderby p descending select p).ToList();
             string newcode = StringCodeGenerator.CreateNewCode("KH", 3, existingCode);
             return Ok(new FormatedResponse() { InnerBody = new { Code = newcode } });
@@ -278,13 +323,49 @@ namespace API.Controllers.TrPlan
                 return Ok(new FormatedResponse()
                 {
                     ErrorType = EnumErrorType.UNCATCHABLE,
-                    MessageCode = ex.Message ,
+                    MessageCode = ex.Message,
                     StatusCode = EnumStatusCode.StatusCode400,
                 });
             }
 
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetTrainingForm()
+        {
+            var response = await _TrPlanRepository.GetTrainingForm();
+            return Ok(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetJobByJobFamId(IdsRequest model)
+        {
+            var response = await _TrPlanRepository.GetJobByJobFamId(model.Ids);
+            return Ok(response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetJobFamily()
+        {
+            try
+            {
+                var entity = _uow.Context.Set<SYS_OTHER_LIST_TYPE>().AsNoTracking().AsQueryable();
+                var entitys = _uow.Context.Set<SYS_OTHER_LIST>().AsNoTracking().AsQueryable();
+                var r = await (from a in entity where (a.CODE == "HU_JOB_FAMILY") select a.ID).ToListAsync();
+                var joined = await (from p in entitys
+                                    where r.Contains(p.TYPE_ID!.Value)
+                                    select new
+                                    {
+                                        Id = p.ID,
+                                        Name = p.NAME,
+                                    }).FirstOrDefaultAsync();
+                return Ok(new FormatedResponse() { InnerBody = joined });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new FormatedResponse() { MessageCode = ex.Message, ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500 });
+            }
+        }
     }
 }
 

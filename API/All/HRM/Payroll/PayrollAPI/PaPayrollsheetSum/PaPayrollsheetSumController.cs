@@ -35,13 +35,6 @@ namespace API.Controllers.PaPayrollsheetSum
             _hubcontext = hubcontext;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> ComparePayrollFund(PaPayrollsheetSumDTO dto)
-        {
-            var response = await _PaPayrollsheetSumRepository.ComparePayrollFund(dto);
-            return Ok(response);
-        }
-
         [HttpGet]
         public async Task<IActionResult> GetPayrollByEmployee(long id, long salaryPeriodId)
         {

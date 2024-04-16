@@ -12,11 +12,11 @@ using Common.Extensions;
 using Common.Interfaces;
 using Common.DataAccess;
 using API.All.Services;
-using Common.Repositories;
+using System;
 
 namespace API.Controllers.HuOrganization
 {
-    public class HuOrganizationRepository : RepositoryBase<HU_ORGANIZATION>, IHuOrganizationRepository
+    public class HuOrganizationRepository : IHuOrganizationRepository
     {
         private readonly GenericUnitOfWork _uow;
         private readonly FullDbContext _dbContext;
@@ -29,7 +29,7 @@ namespace API.Controllers.HuOrganization
         private readonly IFileService _fileService;
         private IEmailService emailService;
 
-        public HuOrganizationRepository(FullDbContext context, IWebHostEnvironment env, IOptions<AppSettings> options, IFileService fileService, IEmailService emailService) : base(context)
+        public HuOrganizationRepository(FullDbContext context, IWebHostEnvironment env, IOptions<AppSettings> options, IFileService fileService, IEmailService emailService)
         {
             _dbContext = context;
             _uow = new(context);
@@ -516,8 +516,7 @@ namespace API.Controllers.HuOrganization
             try
             {
                 //dto.IsActive = null;
-                var data = await _dbContext.HuOrganizations.Where(p => p.ID == dto.Id).FirstAsync();
-
+                DateTime _dayNow = DateTime.Now.Date;
                 if (dto.AttachedFileBuffer != null)
                 {
                     string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
@@ -541,39 +540,58 @@ namespace API.Controllers.HuOrganization
                         return new() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": AttachmentFile" };
                     }
                 }
-                if (dto.DissolveDate != null && dto.DissolveDate.Value.Date == DateTime.Now.Date)
+                if (dto.DissolveDate != null)
                 {
-
-                    if (data != null)
+                    var checkExists = await _dbContext.HuPositions.Where(p => p.ORG_ID == dto.Id).ToListAsync();
+                    if (checkExists != null)
                     {
-                        var _checkEmp = await (from p in _dbContext.HuEmployees where p.ORG_ID == data.ID select p).FirstOrDefaultAsync();//nv thuoc phong ban
-                        if(_checkEmp != null)
+                        foreach (var i in checkExists)
                         {
-                            if (_checkEmp.WORK_STATUS_ID == OtherConfig.EMP_STATUS_WORKING)
+                            var _checkEmp = await (from p in _dbContext.HuEmployees where p.ID == i.MASTER select p).FirstOrDefaultAsync();
+                            //var _checkOrg = await (from p in _dbContext.HuOrganizations where p.ID == i.ORG_ID select p).FirstOrDefaultAsync();
+                            if (_checkEmp != null)
                             {
-                                return new FormatedResponse() { MessageCode = CommonMessageCode.DEPARTMENTS_CANNOT_BE_DISSOLVED_WHILE_EMPLOYEES_WORK, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                                if (_checkEmp.WORK_STATUS_ID == OtherConfig.EMP_STATUS_WORKING)
+                                {
+                                    return new FormatedResponse() { MessageCode = CommonMessageCode.DEPARTMENTS_CANNOT_BE_DISSOLVED_WHILE_EMPLOYEES_WORK, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                                }
                             }
-                        }
-                    }
-                    dto.IsActive = false;
-                }
-                var r = Map(dto, data);
-                //org.ID = (long)dto.Id!;
-                //org.NAME = dto.Name!;
-                //org.CODE = dto.Code!;
-                //org.COMPANY_ID = dto.CompanyId;
-                //org.PARENT_ID = dto.ParentId;
-                //org.FOUNDATION_DATE = dto.FoundationDate;
-                //org.DISSOLVE_DATE = dto.DissolveDate;
-                //org.ORG_LEVEL_ID = dto.OrgLevelId;
-                //org.HEAD_POS_ID = dto.HeadPosId;
-                //org.ORDER_NUM = dto.OrderNum;
-                //org.ADDRESS = dto.Address;
-                //org.ATTACHED_FILE = dto.AttachedFile;
-                //org.IS_ACTIVE = dto.IsActive;
-                //org.NOTE = dto.Note; 
 
-                _dbContext.UpdateRange(r);
+                        }
+
+                    }
+                    if (dto.DissolveDate.Value.Date == _dayNow)
+                    {
+                        ScanDissolveOrg();
+                    }
+                }
+
+                //if (dto.FoundationDate == null)
+                //{
+                //    dto.FoundationDate = null;
+                //}
+                //if (dto.DissolveDate == null)
+                //{
+                //    dto.DissolveDate = null;
+                //}
+                //var response = await _genericRepository.Update(_uow, dto, sid, patchMode);
+
+                org.ID = (long)dto.Id!;
+                org.NAME = dto.Name!;
+                org.CODE = dto.Code!;
+                org.COMPANY_ID = dto.CompanyId;
+                org.PARENT_ID = dto.ParentId;
+                org.FOUNDATION_DATE = dto.FoundationDate;
+                org.DISSOLVE_DATE = dto.DissolveDate;
+                org.ORG_LEVEL_ID = dto.OrgLevelId;
+                org.HEAD_POS_ID = dto.HeadPosId;
+                org.ORDER_NUM = dto.OrderNum;
+                org.ADDRESS = dto.Address;
+                org.ATTACHED_FILE = dto.AttachedFile;
+                org.IS_ACTIVE = dto.IsActive;
+                org.NOTE = dto.Note;
+
+                _dbContext.Update(org);
                 _uow.Save();
                 _uow.Commit();
                 return new FormatedResponse() { MessageCode = CommonMessageCode.UPDATE_SUCCESS, StatusCode = EnumStatusCode.StatusCode200, InnerBody = org };
@@ -700,7 +718,7 @@ namespace API.Controllers.HuOrganization
                 //ktra vi tri co nv dang o tt lam viec
                 if (_checkPos != null && _checkPos.Count != 0)
                 {
-                    foreach(var i in _checkPos)
+                    foreach (var i in _checkPos)
                     {
                         var _checkEmp = (from p in _dbContext.HuEmployees where p.ID == i.MASTER select p).FirstOrDefault();//nv o vi tri
                         if (_checkEmp != null && _checkEmp!.WORK_STATUS_ID != OtherConfig.EMP_STATUS_TERMINATE)//kt nv tt nghi viec
@@ -724,7 +742,7 @@ namespace API.Controllers.HuOrganization
                         _checkOrg.IS_ACTIVE = false;
                     }
                 }
-                 _dbContext.HuOrganizations.Update(_checkOrg!);
+                _dbContext.HuOrganizations.Update(_checkOrg!);
                 var re = _dbContext.SaveChanges();
                 return true;
 
@@ -742,6 +760,29 @@ namespace API.Controllers.HuOrganization
             {
                 await Dissolution(obj);
             });
+
+        }
+
+        public async Task<FormatedResponse> GetNewCode()
+        {
+            string newCode = "";
+            if (await _dbContext.HuOrganizations.CountAsync() == 0)
+            {
+                newCode = "VEA00001";
+            }
+            else
+            {
+                string lastestData = _dbContext.HuOrganizations.OrderByDescending(t => t.CODE).First().CODE!.ToString();
+
+                string newNumber = (Int32.Parse(lastestData.Substring(3)) + 1).ToString();
+                while (newNumber.Length < 5)
+                {
+                    newNumber = "0" + newNumber;
+                }
+                newCode = lastestData.Substring(0, 3) + newNumber;
+            }
+
+            return new FormatedResponse() { InnerBody = new { Code = newCode } };
 
         }
     }

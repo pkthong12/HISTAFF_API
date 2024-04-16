@@ -5,6 +5,7 @@
         public long? Id { get; set; }
         public long? BankId { get; set; }
         public string? ItimeId { get; set; }
+        public string? OtherName { get; set; }
         public long? BankId2 { get; set; }
         public long? BankBranchId { get; set; }
         public long? BankBranchId2 { get; set; }
@@ -17,7 +18,6 @@
         public long? PositionId { get; set; }
         public long? GenderId { get; set; }
         public long? NationId { get; set; }
-        public string? OtherName { get; set; }
         public long? NationalityId { get; set; }
         public long? ReligionId { get; set; }
         public string? Relations { get; set; }
@@ -150,5 +150,6 @@
         public string? LandForProduction { get; set; }
         public string? AdditionalInformation { get; set; }
         public long? ComputerSkillId { get; set; }
+        public long? DefenseSecurityTraining { get; set; }
     }
 }

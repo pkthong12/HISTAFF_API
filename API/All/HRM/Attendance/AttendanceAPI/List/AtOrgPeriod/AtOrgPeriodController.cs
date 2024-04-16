@@ -141,13 +141,6 @@ namespace API.Controllers.AtOrgPeriod
             return Ok(response);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> GetStatusByOrgAndPeriod(AtOrgPeriodDTO periodId)
-        {
-            var response = await _AtOrgPeriodRepository.GetStatusByOrgAndPeriod(periodId);
-            return Ok(response);
-        }
-
     }
 }
 

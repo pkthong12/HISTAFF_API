@@ -14,5 +14,7 @@ namespace API.Entities
         public long? ACTUAL_WORKING_HOURS { get; set; }
         public string? EXPLANATION_CODE { get; set; }
         public string? REASON { get; set; }
+        public long? REASON_ID { get; set; }
+        public long? TYPE_REGISTER_ID { get; set; }
     }
 }

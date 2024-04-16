@@ -42,6 +42,7 @@ namespace API.Controllers.InsChange
                          from cmp in _dbContext.HuCompanys.AsNoTracking().Where(cmp => cmp.ID == o.COMPANY_ID).DefaultIfEmpty()
                          from type in _dbContext.InsTypes.AsNoTracking().Where(type => type.ID == p.CHANGE_TYPE_ID).DefaultIfEmpty()
                          from otl in _dbContext.SysOtherLists.AsNoTracking().Where(otl => otl.ID == p.UNIT_INSURANCE_TYPE_ID).DefaultIfEmpty()
+                         orderby j.ORDERNUM
                          select new InsChangeDTO
                          {
                              Id = p.ID,
@@ -69,10 +70,12 @@ namespace API.Controllers.InsChange
                              UnitInsuranceTypeName = otl.NAME,
                              ChangeTypeId = p.CHANGE_TYPE_ID,
                              ChangeTypeName = type.NAME,
-                             SalaryBhxhBhytOld = p.SALARY_BHXH_BHYT_OLD ?? 0,
+                             //InsuranceType = type.NAME,//check lai
+                             SalaryBhxhBhytOld = p.SALARY_BHTN_OLD ?? 0,
                              SalaryBhxhBhytNew = p.SALARY_BHXH_BHYT_NEW ?? 0,
                              SalaryBhtnOld = p.SALARY_BHTN_OLD ?? 0,
                              SalaryBhtnNew = p.SALARY_BHTN_NEW ?? 0,
+                             SalaryNew = p.SALARY_NEW ?? 0,
                              EffectiveDate = p.EFFECTIVE_DATE,
                              ExpireDate = p.EXPIRE_DATE,
                              ChangeMonth = p.CHANGE_MONTH,
@@ -210,10 +213,18 @@ namespace API.Controllers.InsChange
                                   UnitInsuranceTypeName = otl.NAME,
                                   ChangeTypeId = p.CHANGE_TYPE_ID,
                                   ChangeTypeName = c.CODE,
-                                  SalaryBhxhBhytOld = p.SALARY_BHXH_BHYT_OLD ?? 0,
-                                  SalaryBhxhBhytNew = p.SALARY_BHXH_BHYT_NEW ?? 0,
-                                  SalaryBhtnOld = p.SALARY_BHTN_OLD ?? 0,
-                                  SalaryBhtnNew = p.SALARY_BHTN_NEW ?? 0,
+                                  SalaryBhxhBhytOld = p.SALARY_BHTN_OLD,
+                                  SalaryBhxhBhytNew = p.SALARY_BHXH_BHYT_NEW,
+                                  //Muc dong cu
+                                  SalaryBhxhOld = p.SALARY_BHXH_OLD,
+                                  SalaryBhytOld = p.SALARY_BHYT_OLD,
+                                  SalaryBhbnnOld = p.SALARY_BHBNN_OLD,
+                                  SalaryBhtnOld = p.SALARY_BHTN_OLD,
+                                  //Muc dong moi
+                                  SalaryBhxhNew = p.SALARY_BHXH_NEW ,
+                                  SalaryBhytNew = p.SALARY_BHYT_NEW ,
+                                  SalaryBhbnnNew = p.SALARY_BHBNN_NEW,
+                                  SalaryBhtnNew = p.SALARY_BHTN_NEW ,
                                   EffectiveDate = p.EFFECTIVE_DATE,
                                   ExpireDate = p.EXPIRE_DATE,
                                   ChangeMonth = p.CHANGE_MONTH,
@@ -287,7 +298,7 @@ namespace API.Controllers.InsChange
         public async Task<FormatedResponse> Create(GenericUnitOfWork _uow, InsChangeDTO dto, string sid)
         {
             var type = _dbContext.InsTypes.AsNoTracking().Where(p => p.ID == dto.ChangeTypeId && p.CODE == "TM").FirstOrDefault();
-            if(dto.EmployeeId==null || dto.UnitInsuranceTypeId ==null || dto.ChangeTypeId ==null || dto.InsuranceType == null || dto.EffectiveDate ==null || dto.DeclarationPeriodString == null)
+            if (dto.EmployeeId == null || dto.UnitInsuranceTypeId == null || dto.ChangeTypeId == null || dto.InsuranceType == null || dto.EffectiveDate == null || dto.DeclarationPeriodString == null)
             {
                 return new FormatedResponse() { MessageCode = CommonMessageCode.CONTROL_REQUEID_NOT_NULL, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
             }
@@ -345,13 +356,29 @@ namespace API.Controllers.InsChange
             var specObj = _dbContext.InsSpecifiedObjectss.Where(p => dto.EffectiveDate!.Value.Date >= p.EFFECTIVE_DATE!.Value.Date).OrderByDescending(p => p.EFFECTIVE_DATE).FirstOrDefault();
             if (specObj != null)
             {
-                if (specObj!.UI < dto.SalaryBhtnNew)
+                if (specObj!.SI_HI < dto.SalaryBhxhNew)
                 {
-                    return new FormatedResponse() { MessageCode = CommonMessageCode.UI_NEW_MUST_LESS_THAN_UI_OBJ, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                    return new FormatedResponse() { MessageCode = "SI_NEW_MUST_LESS_THAN_UI_OBJ", ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
                 }
-                if (specObj!.UI < dto.SalaryBhtnOld)
+                if (specObj!.SI_HI < dto.SalaryBhxhOld)
                 {
-                    return new FormatedResponse() { MessageCode = CommonMessageCode.UI_OLD_MUST_LESS_THAN_UI_OBJ, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                    return new FormatedResponse() { MessageCode = "SI_OLD_MUST_LESS_THAN_UI_OBJ", ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                }
+                if (specObj!.SI_HI < dto.SalaryBhytNew)
+                {
+                    return new FormatedResponse() { MessageCode = "HI_NEW_MUST_LESS_THAN_UI_OBJ", ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                }
+                if (specObj!.SI_HI < dto.SalaryBhytOld)
+                {
+                    return new FormatedResponse() { MessageCode = "HI_OLD_MUST_LESS_THAN_UI_OBJ", ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                }
+                if (specObj!.SI_HI < dto.SalaryBhbnnNew)
+                {
+                    return new FormatedResponse() { MessageCode = "AI_NEW_MUST_LESS_THAN_UI_OBJ", ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                }
+                if (specObj!.SI_HI < dto.SalaryBhbnnOld)
+                {
+                    return new FormatedResponse() { MessageCode = "AI_OLD_MUST_LESS_THAN_UI_OBJ", ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
                 }
             }
 
@@ -382,6 +409,10 @@ namespace API.Controllers.InsChange
                         return new FormatedResponse() { MessageCode = CommonMessageCode.UI_OLD_MUST_LESS_THAN_UI_OBJ, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
                     }
                 }
+                //get salary insu according to the latest salary records set for salary new
+                var wageLatest = await _dbContext.HuWorkings.AsNoTracking().Where(p => p.IS_WAGE == -1 && p.EMPLOYEE_ID == dto.EmployeeId && p.STATUS_ID == OtherConfig.STATUS_APPROVE).OrderByDescending(p => p.EFFECT_DATE).FirstOrDefaultAsync();
+                dto.SalaryNew = wageLatest == null ? 0 : ((double)(wageLatest.SAL_INSU??0));
+
                 var response = await _genericRepository.Create(_uow, dto, sid);
                 return response;
             }
@@ -460,13 +491,29 @@ namespace API.Controllers.InsChange
             var specObj = _dbContext.InsSpecifiedObjectss.Where(p => dto.EffectiveDate!.Value.Date >= p.EFFECTIVE_DATE!.Value.Date).OrderByDescending(p => p.EFFECTIVE_DATE).FirstOrDefault();
             if (specObj != null)
             {
-                if (specObj!.UI < dto.SalaryBhtnNew)
+                if (specObj!.SI_HI < dto.SalaryBhxhNew)
                 {
-                    return new FormatedResponse() { MessageCode = CommonMessageCode.UI_NEW_MUST_LESS_THAN_UI_OBJ, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                    return new FormatedResponse() { MessageCode = "SI_NEW_MUST_LESS_THAN_UI_OBJ", ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
                 }
-                if (specObj!.UI < dto.SalaryBhtnOld)
+                if (specObj!.SI_HI < dto.SalaryBhxhOld)
                 {
-                    return new FormatedResponse() { MessageCode = CommonMessageCode.UI_OLD_MUST_LESS_THAN_UI_OBJ, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                    return new FormatedResponse() { MessageCode = "SI_OLD_MUST_LESS_THAN_UI_OBJ", ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                }
+                if (specObj!.SI_HI < dto.SalaryBhytNew)
+                {
+                    return new FormatedResponse() { MessageCode = "HI_NEW_MUST_LESS_THAN_UI_OBJ", ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                }
+                if (specObj!.SI_HI < dto.SalaryBhytOld)
+                {
+                    return new FormatedResponse() { MessageCode = "HI_OLD_MUST_LESS_THAN_UI_OBJ", ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                }
+                if (specObj!.SI_HI < dto.SalaryBhbnnNew)
+                {
+                    return new FormatedResponse() { MessageCode = "AI_NEW_MUST_LESS_THAN_UI_OBJ", ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                }
+                if (specObj!.SI_HI < dto.SalaryBhbnnOld)
+                {
+                    return new FormatedResponse() { MessageCode = "AI_OLD_MUST_LESS_THAN_UI_OBJ", ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
                 }
             }
 
@@ -700,6 +747,7 @@ namespace API.Controllers.InsChange
                    }, false);
             return new FormatedResponse() { InnerBody = r[0], StatusCode = EnumStatusCode.StatusCode200 };
         }
+        //truy thu bao hiem
         public async Task<FormatedResponse> SpsInsArisingManualGet(InsChangeDTO dto)
         {
             if (dto.ChangeMonthString != null)
@@ -708,12 +756,12 @@ namespace API.Controllers.InsChange
                 var cd = DateTime.Parse(DateTime.Parse(dto.DeclarationPeriodString + "-06").ToString("yyyy-MM-dd HH:mm:ss.fff"));
                 var trFrom = DateTime.Parse(DateTime.Parse(dto.ArrearsFromMonthString + "-03").ToString("yyyy-MM-dd HH:mm:ss.fff"));
                 var trTo = DateTime.Parse(DateTime.Parse(dto.ArrearsToMonthString + "-06").ToString("yyyy-MM-dd HH:mm:ss.fff"));
-                var r = _dbContext.InsSpecifiedObjectss.AsNoTracking().Where(p => p.EFFECTIVE_DATE <= cm).OrderByDescending(p => p.EFFECTIVE_DATE).FirstOrDefault();
+                var r = _dbContext.InsSpecifiedObjectss.AsNoTracking().Where(p => p.EFFECTIVE_DATE!.Value.Date <= cm.Date).OrderByDescending(p => p.EFFECTIVE_DATE).FirstOrDefault();
                 double trXH = 0;
                 double trYT = 0;
                 double trTN = 0;
                 double trBNN = 0;
-                if (trFrom < cm || cm > cd || trFrom > trTo)
+                if (trFrom.Date < cm.Date || cm.Date > cd.Date || trFrom.Date > trTo.Date)
                 {
                     return new FormatedResponse()
                     {
@@ -729,12 +777,12 @@ namespace API.Controllers.InsChange
                 }
                 if (r != null)
                 {
-                    TimeSpan m = trTo - trFrom;
+                    TimeSpan m = trTo.Date - trFrom.Date;
                     var mx = (double)Math.Ceiling(m.TotalDays / 30) > 0 ? (double)Math.Ceiling(m.TotalDays / 30) : 1;
-                    trXH = (double)(r.SI_EMP! + r.SI_COM!) * (double)(dto.SalaryBhxhBhytNew! ?? 0) * (mx);
-                    trYT = (double)(r.HI_EMP! + r.HI_COM!) * (double)(dto.SalaryBhxhBhytNew! ?? 0) * (mx);
+                    trXH = (double)(r.SI_EMP! + r.SI_COM!) * (double)(dto.SalaryBhxhNew! ?? 0) * (mx);
+                    trYT = (double)(r.HI_EMP! + r.HI_COM!) * (double)(dto.SalaryBhytNew! ?? 0) * (mx);
                     trTN = (double)(r.UI_EMP! + r.UI_COM!) * (double)(dto.SalaryBhtnNew! ?? 0) * (mx);
-                    trBNN = (double)(r.AI_OAI_EMP! + r.AI_OAI_COM!) * (double)(dto.SalaryBhxhBhytNew! ?? 0) * (mx);
+                    trBNN = (double)(r.AI_OAI_EMP! + r.AI_OAI_COM!) * (double)(dto.SalaryBhbnnNew! ?? 0) * (mx);
                 }
                 return new FormatedResponse()
                 {
@@ -760,6 +808,7 @@ namespace API.Controllers.InsChange
                 StatusCode = EnumStatusCode.StatusCode200
             };
         }
+        //thoai thu bao hiem
         public async Task<FormatedResponse> SpsInsArisingManualGet2(InsChangeDTO dto)
         {
             if (dto.ChangeMonthString != null)
@@ -773,7 +822,7 @@ namespace API.Controllers.InsChange
                 double ttYT = 0;
                 double ttTN = 0;
                 double ttBNN = 0;
-                if (ttFrom < cm || cm > cd || ttFrom > ttTo)
+                if (ttFrom.Date < cm.Date || cm.Date > cd.Date || ttFrom.Date > ttTo.Date)
                 {
                     return new FormatedResponse()
                     {
@@ -791,10 +840,10 @@ namespace API.Controllers.InsChange
                 {
                     TimeSpan m = ttTo - ttFrom;
                     var mx = (double)Math.Ceiling(m.TotalDays / 30) > 0 ? (double)Math.Ceiling(m.TotalDays / 30) : 1;
-                    ttXH = (double)(r.SI_EMP! + r.SI_COM!) * (double)(dto.SalaryBhxhBhytOld! ?? 0) * (mx);
-                    ttYT = (double)(r.HI_EMP! + r.HI_COM!) * (double)(dto.SalaryBhxhBhytOld! ?? 0) * (mx);
+                    ttXH = (double)(r.SI_EMP! + r.SI_COM!) * (double)(dto.SalaryBhxhOld! ?? 0) * (mx);
+                    ttYT = (double)(r.HI_EMP! + r.HI_COM!) * (double)(dto.SalaryBhytOld! ?? 0) * (mx);
                     ttTN = (double)(r.UI_EMP! + r.UI_COM!) * (double)(dto.SalaryBhtnOld! ?? 0) * (mx);
-                    ttBNN = (double)(r.AI_OAI_EMP! + r.AI_OAI_COM!) * (double)(dto.SalaryBhxhBhytOld! ?? 0) * (mx);
+                    ttBNN = (double)(r.AI_OAI_EMP! + r.AI_OAI_COM!) * (double)(dto.SalaryBhtnOld! ?? 0) * (mx);
                 }
                 return new FormatedResponse()
                 {

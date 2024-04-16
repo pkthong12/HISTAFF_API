@@ -5,10 +5,6 @@ using CORE.Enum;
 using CORE.StaticConstant;
 using API.All.DbContexts;
 using CORE.AutoMapper;
-using System.Net.Mail;
-using System.Net;
-using System.Text;
-using Common.Extensions;
 
 namespace API.Controllers.SeConfig
 {
@@ -92,8 +88,6 @@ namespace API.Controllers.SeConfig
                 return new FormatedResponse() { MessageCode = CommonMessageCode.ENTITY_NOT_FOUND, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
             }
         }
-
-        
 
         public async Task<FormatedResponse> GetById(string id)
         {

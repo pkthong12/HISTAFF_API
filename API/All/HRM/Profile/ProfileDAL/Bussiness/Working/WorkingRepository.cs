@@ -65,7 +65,9 @@ namespace ProfileDAL.Repositories
                          from s in _appContext.Employees.Where(c => c.ID == p.SIGN_ID).DefaultIfEmpty()
                          from eo in _appContext.OtherLists.Where(f => f.ID == p.EMPLOYEE_OBJ_ID).DefaultIfEmpty()
                          from co in _appContext.CompanyInfos.Where(f => f.ID == o.COMPANY_ID).DefaultIfEmpty()
-                         orderby p.STATUS_ID, p.EFFECT_DATE descending
+                         from j in _appContext.HUJobs.Where(x => x.ID == t.JOB_ID).DefaultIfEmpty()
+                             //orderby p.STATUS_ID, p.EFFECT_DATE descending
+                         orderby p.STATUS_ID, j.ORDERNUM
                          where p.IS_WAGE == 0 || p.IS_WAGE == null
                          select new HuWorkingDTO
                          {
@@ -90,6 +92,7 @@ namespace ProfileDAL.Repositories
                              EmployeeObjName = eo.NAME,
                              EmployeeObjectId = eo.ID,
                              WageId = p.WAGE_ID,
+                             JobOrderNum = Convert.ToInt32(j.ORDERNUM ?? 999)
                          };
             //request.Sort = new List<SortItem>();
             //request.Sort.Add(new SortItem() { Field = "Id", SortDirection = EnumSortDirection.DESC });
@@ -255,6 +258,7 @@ namespace ProfileDAL.Repositories
                                from o in _appContext.Organizations.Where(c => c.ID == p.ORG_ID)
                                from o2 in _appContext.Organizations.Where(c => c.ID == o.PARENT_ID).DefaultIfEmpty()
                                from co in _appContext.CompanyInfos.Where(c => c.ID == o.COMPANY_ID).DefaultIfEmpty()
+                               from pos in _appContext.Positions.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
                                where p.ID == id
                                select new WorkingInputDTO
                                {
@@ -273,11 +277,12 @@ namespace ProfileDAL.Repositories
                                    Note = p.NOTE,
                                    SignId = p.SIGN_ID,
                                    SignerName = p.SIGNER_NAME,
-                                   SignerPosition = p.SIGNER_POSITION,
+                                   SignerPosition = pos.NAME,
                                    SignDate = p.SIGN_DATE,
                                    Coefficient = p.COEFFICIENT,
                                    EmployeeObjId = p.EMPLOYEE_OBJ_ID,
                                    IsResponsible = p.IS_RESPONSIBLE,
+                                   IsResponsibleSalary = p.IS_RESPONSIBLE_SALARY,
                                    WageId = p.WAGE_ID,
                                    WorkPlaceName = co.WORK_ADDRESS,
                                    Attachment = p.ATTACHMENT,
@@ -370,10 +375,8 @@ namespace ProfileDAL.Repositories
                     id = 0;
                     date = DateTime.Now;
                 }
-                empExist = (from p in _appContext.Workings
-                            where p.EMPLOYEE_ID == empId && p.EFFECT_DATE <= date && (p.IS_WAGE == 0 || p.IS_WAGE == null)
-                            && p.STATUS_ID == 994 && p.ID != id && p.IS_RESPONSIBLE == true
-                            select p).OrderByDescending(x => x.EFFECT_DATE).Take(1).FirstOrDefault();
+                empExist = (from p in _appContext.Workings where p.EMPLOYEE_ID == empId && p.EFFECT_DATE <= date && (p.IS_WAGE == 0 || p.IS_WAGE == null) 
+                            && p.STATUS_ID == 994 && p.ID != id && p.IS_RESPONSIBLE == true select p).OrderByDescending(x => x.EFFECT_DATE).Take(1).FirstOrDefault();
                 var r = new WorkingInputDTO();
                 if (empExist != null)
                 {
@@ -404,6 +407,7 @@ namespace ProfileDAL.Repositories
                                    EmployeeObjId = p.EMPLOYEE_OBJ_ID,
                                    EmployeeObjName = eo.NAME,
                                    IsResponsible = p.IS_RESPONSIBLE,
+                                   IsResponsibleSalary = p.IS_RESPONSIBLE_SALARY,
                                    WorkPlaceName = co.WORK_ADDRESS,
                                }).FirstOrDefaultAsync();
                 }
@@ -448,6 +452,11 @@ namespace ProfileDAL.Repositories
                 {
                     return new ResultWithError(Message.MASTER_DONOT_DECISION_SWAP);
                 }
+                //var r2 = _appContext.Workings.Where(x => x.DECISION_NO == param.DecisionNo && (x.IS_WAGE == 0 || x.IS_WAGE == null)).Count();
+                //if (r2 > 0)
+                //{
+                //    return new ResultWithError(Consts.CODE_EXISTS);
+                //}
                 // Kiểm tra xem có QĐ nào có ngày hiệu lực lớn hơn ngày QĐ đang làm (chỉ tính các quyết định đã phê duyệt)
                 var r = await _appContext.Workings.Where(x => x.EMPLOYEE_ID == param.EmployeeId && x.STATUS_ID == OtherConfig.STATUS_APPROVE && (x.IS_WAGE == 0 || x.IS_WAGE == null)).OrderByDescending(f => f.EFFECT_DATE).FirstOrDefaultAsync();
                 if (r != null && param.IsResponsible == true)
@@ -478,7 +487,7 @@ namespace ProfileDAL.Repositories
                     {
                         return new ResultWithError("EMPLOYEE_NOT_FOUND");
                     }
-                    await ApproveWorking(data);
+                    param.IsNotResign = await ApproveWorking(data);
                 }
                 await _appContext.SaveChangesAsync();
 
@@ -524,177 +533,217 @@ namespace ProfileDAL.Repositories
         public async Task<bool> ApproveWorking(HU_WORKING obj)
         {
 
-            if (obj.EFFECT_DATE.Value.Date > DateTime.Now.Date || obj.STATUS_ID != OtherConfig.STATUS_APPROVE)
-            {
-                return true;
-            }
-            var e = (from p in _appContext.Employees where p.ID == obj.EMPLOYEE_ID select p).FirstOrDefault();
             var typeInfor = (from p in _appContext.OtherLists where p.ID == obj.TYPE_ID select p).FirstOrDefault();
-            var workStatusEmp = (from p in _appContext.OtherLists
-                                 from dt in _appContext.OtherListTypes.Where(f => f.ID == p.TYPE_ID)
-                                 where dt.CODE == "EMP_STATUS"
-                                 select p).ToList();
-            var workStatusEmpDetail = (from p in _appContext.OtherLists
-                                       from dt in _appContext.OtherListTypes.Where(f => f.ID == p.TYPE_ID)
-                                       where dt.CODE == "STATUS_DETAIL"
-                                       select p).ToList();
-
-            var posIdCur = e.POSITION_ID;
-
-            e.ORG_ID = obj.ORG_ID;
-            e.POSITION_ID = obj.POSITION_ID;
-            e.LAST_WORKING_ID = obj.ID;
-            e.EFFECT_DATE = obj.EFFECT_DATE;
-            if (e.JOIN_DATE == null)
+            if (typeInfor == null)
             {
-                e.JOIN_DATE = obj.EFFECT_DATE;
+                throw new Exception("TYPE_IS_NULL");
             }
-            e.EMPLOYEE_OBJECT_ID = obj.EMPLOYEE_OBJ_ID;
-
-            var positionItemApp = _appContext.Positions.AsNoTracking().Where(x => x.ID == obj.POSITION_ID).FirstOrDefault();
-            var master = positionItemApp.MASTER;
-            var interim = positionItemApp.INTERIM;
-
-            positionItemApp.MASTER = obj.EMPLOYEE_ID;
-            if (master != null)
+            else
             {
-                var DecisionMaster = await GetLastWorking(master, obj.EFFECT_DATE);
-                var DecisionMasterDto = (WorkingInputDTO)DecisionMaster.Data;
-                if (DecisionMasterDto == null)
+                if (typeInfor.CODE == "TGCV" || typeInfor.CODE == "QDTH" || typeInfor.CODE == "TTTH" || typeInfor.CODE == "MN" || typeInfor.CODE == "00355" || typeInfor.CODE == "00356 ")
                 {
-                    if (master == obj.EMPLOYEE_ID)
+                    if (obj.EFFECT_DATE!.Value.Date <= DateTime.Now.Date || obj.STATUS_ID == OtherConfig.STATUS_APPROVE)
                     {
-                        positionItemApp.INTERIM = null;
+                        var position = await _appContext.Positions.AsNoTracking().SingleOrDefaultAsync(p => p.ID == obj.POSITION_ID);
+                        if (position != null)
+                        {
+                            if (position.MASTER == obj.EMPLOYEE_ID)
+                            {
+                                position.MASTER = null;
+                                _appContext.Positions.Update(position);
+                                await _appContext.SaveChangesAsync();
+                            }
+                            if (position.INTERIM == obj.EMPLOYEE_ID)
+                            {
+                                position.INTERIM = null;
+                                _appContext.Positions.Update(position);
+                                await _appContext.SaveChangesAsync();
+                            }
+                        }
+                        return false;
                     }
-                    else
-                    {
-                        positionItemApp.INTERIM = master;
-                    }
+                    return false;
                 }
+                if (!obj.IS_RESPONSIBLE.HasValue || obj.IS_RESPONSIBLE.Value == false) return true;
+
                 else
                 {
-                    if ((DecisionMasterDto.TypeCode.Trim().ToUpper() == "BN" || DecisionMasterDto.TypeCode.Trim().ToUpper() == "DC" || DecisionMasterDto.TypeCode.Trim().ToUpper() == "DDCV" || DecisionMasterDto.TypeCode.Trim().ToUpper() == "DDBN" || DecisionMasterDto.TypeCode.Trim().ToUpper() == "BP") && positionItemApp.INTERIM == master)
+                    if (obj.EFFECT_DATE!.Value.Date > DateTime.Now.Date || obj.STATUS_ID != OtherConfig.STATUS_APPROVE)
                     {
-                        positionItemApp.INTERIM = null;
-                        positionItemApp.MASTER = null;
+                        return true;
                     }
-                    else
+                    var e = (from p in _appContext.Employees where p.ID == obj.EMPLOYEE_ID select p).FirstOrDefault();
+                    var workStatusEmp = (from p in _appContext.OtherLists
+                                         from dt in _appContext.OtherListTypes.Where(f => f.ID == p.TYPE_ID)
+                                         where dt.CODE == "EMP_STATUS"
+                                         select p).ToList();
+                    var workStatusEmpDetail = (from p in _appContext.OtherLists
+                                               from dt in _appContext.OtherListTypes.Where(f => f.ID == p.TYPE_ID)
+                                               where dt.CODE == "STATUS_DETAIL"
+                                               select p).ToList();
+
+                    var posIdCur = e.POSITION_ID;
+
+                    e.ORG_ID = obj.ORG_ID;
+                    e.POSITION_ID = obj.POSITION_ID;
+                    e.LAST_WORKING_ID = obj.ID;
+                    e.EFFECT_DATE = obj.EFFECT_DATE;
+                    if (e.JOIN_DATE == null)
                     {
-                        if (master == obj.EMPLOYEE_ID)
+                        e.JOIN_DATE = obj.EFFECT_DATE;
+                    }
+                    e.EMPLOYEE_OBJECT_ID = obj.EMPLOYEE_OBJ_ID;
+
+                    var positionItemApp = _appContext.Positions.AsNoTracking().Where(x => x.ID == obj.POSITION_ID).FirstOrDefault();
+                    var master = positionItemApp!.MASTER;
+                    var interim = positionItemApp.INTERIM;
+
+                    positionItemApp.MASTER = obj.EMPLOYEE_ID;
+                    if (master != null)
+                    {
+                        var DecisionMaster = await GetLastWorking(master, obj.EFFECT_DATE);
+                        var DecisionMasterDto = (WorkingInputDTO)DecisionMaster.Data;
+                        if (DecisionMasterDto == null)
                         {
-                            positionItemApp.INTERIM = null;
+                            if (master == obj.EMPLOYEE_ID)
+                            {
+                                positionItemApp.INTERIM = null;
+                            }
+                            else
+                            {
+                                positionItemApp.INTERIM = master;
+                            }
                         }
                         else
                         {
-                            positionItemApp.INTERIM = master;
+                            if ((DecisionMasterDto!.TypeCode!.Trim().ToUpper() == "BN" || DecisionMasterDto.TypeCode.Trim().ToUpper() == "DC" || DecisionMasterDto.TypeCode.Trim().ToUpper() == "DDCV" || DecisionMasterDto.TypeCode.Trim().ToUpper() == "DDBN" || DecisionMasterDto.TypeCode.Trim().ToUpper() == "BP") && positionItemApp.INTERIM == master)
+                            {
+                                positionItemApp.INTERIM = null;
+                                positionItemApp.MASTER = null;
+                            }
+                            else
+                            {
+                                if (master == obj.EMPLOYEE_ID)
+                                {
+                                    positionItemApp.INTERIM = null;
+                                }
+                                else
+                                {
+                                    positionItemApp.INTERIM = master;
+                                }
+                            }
                         }
                     }
+                    if (typeInfor != null)
+                    {
+                        if (e.WORK_STATUS_ID == OtherConfig.EMP_STATUS_TERMINATE) { }
+                        else
+                        {
+                            var workStatusEmp_resault = new SYS_OTHER_LIST();
+                            var workStatusEmpDetail_resault = new SYS_OTHER_LIST();
+                            switch (typeInfor!.CODE!.Trim().ToUpper())
+                            {
+
+                                case "00024": // tạm hoãn HĐLĐ                                  
+                                    workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESW" select p).FirstOrDefault();
+                                    //Điều động, luân chuyển
+                                    workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "00006" select p).FirstOrDefault();
+                                    if (workStatusEmp_resault != null)
+                                    {
+                                        e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                    }
+
+                                    if (workStatusEmpDetail_resault != null)
+                                    {
+                                        e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                    }
+                                    break;
+                                case "DC":// Quyết định điều chuyển nhân sự
+                                    workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESW" select p).FirstOrDefault();
+                                    //Điều động, luân chuyển
+                                    workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "00008" select p).FirstOrDefault();
+                                    if (workStatusEmp_resault != null)
+                                    {
+                                        e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                    }
+
+                                    if (workStatusEmpDetail_resault != null)
+                                    {
+                                        e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                    }
+                                    break;
+                                case "DDCV": //Quyết định về điều động chuyên viên
+                                    workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESW" select p).FirstOrDefault();
+                                    //Điều động, luân chuyển
+                                    workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "00008" select p).FirstOrDefault();
+                                    if (workStatusEmp_resault != null)
+                                    {
+                                        e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                    }
+
+                                    if (workStatusEmpDetail_resault != null)
+                                    {
+                                        e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                    }
+                                    break;
+                                case "DDBN": //Quyết định về điều động, bổ nhiệm lại cán bộ
+                                    workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESW" select p).FirstOrDefault();
+                                    //Điều động, luân chuyển
+                                    workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "00008" select p).FirstOrDefault();
+                                    if (workStatusEmp_resault != null)
+                                    {
+                                        e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                    }
+
+                                    if (workStatusEmpDetail_resault != null)
+                                    {
+                                        e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                    }
+                                    break;
+                                case "K":
+                                    // Trường hợp khác
+                                    workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "00023" select p).FirstOrDefault();
+                                    //Trường hợp khác
+                                    workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "00009" select p).FirstOrDefault();
+                                    if (workStatusEmp_resault != null)
+                                    {
+                                        e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                    }
+
+                                    if (workStatusEmpDetail_resault != null)
+                                    {
+                                        e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                    }
+
+                                    break;
+                            }
+                        }
+                    }
+
+                    //xoa vi tri khi da dieu chuyen
+                    var t = _appContext.Positions.AsNoTracking().Where(p => p.ID == posIdCur).FirstOrDefault();
+                    if ((typeInfor!.CODE!.Trim().ToUpper() == "BN" || typeInfor.CODE.Trim().ToUpper() == "DC" || typeInfor.CODE.Trim().ToUpper() == "DDCV" || typeInfor.CODE.Trim().ToUpper() == "DDBN" || typeInfor.CODE.Trim().ToUpper() == "BP"))
+                    {
+
+                        if (t.INTERIM == obj.EMPLOYEE_ID)
+                        {
+                            t.INTERIM = null;
+                        }
+                        if (t.MASTER == obj.EMPLOYEE_ID)
+                        {
+                            t.MASTER = null;
+                        }
+                    }
+                    List<HU_POSITION> newPos = new List<HU_POSITION>() { positionItemApp };
+                    if (t.ID != positionItemApp.ID) newPos.Add(t);
+
+                    var result = _appContext.Employees.Update(e);
+                    _appContext.Positions.UpdateRange(newPos);
+                    //var result2 = _appContext.Positions.Update(positionItemApp);
+                    var rs = _appContext.SaveChanges();
+                    return true;
                 }
             }
-            if (typeInfor != null)
-            {
-                var workStatusEmp_resault = new SYS_OTHER_LIST();
-                var workStatusEmpDetail_resault = new SYS_OTHER_LIST();
-                switch (typeInfor.CODE.Trim().ToUpper())
-                {
-
-                    case "00024": // tạm hoãn HĐLĐ                                  
-                        workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "00023" select p).FirstOrDefault();
-                        //Điều động, luân chuyển
-                        workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "00006" select p).FirstOrDefault();
-                        if (workStatusEmp_resault != null)
-                        {
-                            e.WORK_STATUS_ID = workStatusEmp_resault.ID;
-                        }
-
-                        if (workStatusEmpDetail_resault != null)
-                        {
-                            e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
-                        }
-                        break;
-                    case "DC":// Quyết định điều chuyển nhân sự
-                        workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "00023" select p).FirstOrDefault();
-                        //Điều động, luân chuyển
-                        workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "00008" select p).FirstOrDefault();
-                        if (workStatusEmp_resault != null)
-                        {
-                            e.WORK_STATUS_ID = workStatusEmp_resault.ID;
-                        }
-
-                        if (workStatusEmpDetail_resault != null)
-                        {
-                            e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
-                        }
-                        break;
-                    case "DDCV": //Quyết định về điều động chuyên viên
-                        workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "00023" select p).FirstOrDefault();
-                        //Điều động, luân chuyển
-                        workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "00008" select p).FirstOrDefault();
-                        if (workStatusEmp_resault != null)
-                        {
-                            e.WORK_STATUS_ID = workStatusEmp_resault.ID;
-                        }
-
-                        if (workStatusEmpDetail_resault != null)
-                        {
-                            e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
-                        }
-                        break;
-                    case "DDBN": //Quyết định về điều động, bổ nhiệm lại cán bộ
-                        workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "00023" select p).FirstOrDefault();
-                        //Điều động, luân chuyển
-                        workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "00008" select p).FirstOrDefault();
-                        if (workStatusEmp_resault != null)
-                        {
-                            e.WORK_STATUS_ID = workStatusEmp_resault.ID;
-                        }
-
-                        if (workStatusEmpDetail_resault != null)
-                        {
-                            e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
-                        }
-                        break;
-                    case "K":
-                        // Trường hợp khác
-                        workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "00023" select p).FirstOrDefault();
-                        //Trường hợp khác
-                        workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "00009" select p).FirstOrDefault();
-                        if (workStatusEmp_resault != null)
-                        {
-                            e.WORK_STATUS_ID = workStatusEmp_resault.ID;
-                        }
-
-                        if (workStatusEmpDetail_resault != null)
-                        {
-                            e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
-                        }
-
-                        break;
-                }
-            }
-
-            //xoa vi tri khi da dieu chuyen
-            var t = _appContext.Positions.AsNoTracking().Where(p => p.ID == posIdCur).FirstOrDefault();
-            if ((typeInfor.CODE.Trim().ToUpper() == "BN" || typeInfor.CODE.Trim().ToUpper() == "DC" || typeInfor.CODE.Trim().ToUpper() == "DDCV" || typeInfor.CODE.Trim().ToUpper() == "DDBN" || typeInfor.CODE.Trim().ToUpper() == "BP"))
-            {
-
-                if (t.INTERIM == obj.EMPLOYEE_ID)
-                {
-                    t.INTERIM = null;
-                }
-                if (t.MASTER == obj.EMPLOYEE_ID)
-                {
-                    t.MASTER = null;
-                }
-            }
-            List<HU_POSITION> newPos = new List<HU_POSITION>() { positionItemApp };
-            if (t.ID != positionItemApp.ID) newPos.Add(t);
-
-            var result = _appContext.Employees.Update(e);
-            _appContext.Positions.UpdateRange(newPos);
-            //var result2 = _appContext.Positions.Update(positionItemApp);
-            var rs = _appContext.SaveChanges();
-            return true;
         }
 
         /// <summary>
@@ -738,14 +787,14 @@ namespace ProfileDAL.Repositories
                 var data = Map(param, r);
                 var result = _appContext.Workings.Update(data);
                 // Nếu là trạng thái đã phê duyệt thì cập nhật thông tin mới nhất vào Employee
-                if (data.STATUS_ID == OtherConfig.STATUS_APPROVE && data.IS_RESPONSIBLE == true)
+                if (data.STATUS_ID == OtherConfig.STATUS_APPROVE)
                 {
                     var e = _appContext.Employees.Where(x => x.ID == param.EmployeeId).FirstOrDefault();
                     if (e == null)
                     {
                         return new ResultWithError(Message.EMP_NOT_EXIST);
                     }
-                    await ApproveWorking(data);
+                    param.IsNotResign = await ApproveWorking(data);
                 }
 
                 await _appContext.SaveChangesAsync();
@@ -1132,34 +1181,7 @@ namespace ProfileDAL.Repositories
         // WAGE - IS_WAGE <> 0
 
         public async Task<GenericPhaseTwoListResponse<HuWorkingDTO>> TwoPhaseQueryListWage(GenericQueryListDTO<HuWorkingDTO> request)
-
         {
-            //var raw = _appContext.Workings.AsQueryable();
-            //var phase1 = await genericReducer.FirstPhaseReduce(raw, request);
-
-            //if (phase1.ErrorType != EnumErrorType.NONE)
-            //{
-            //    return new()
-            //    {
-            //        ErrorType = phase1.ErrorType,
-            //        MessageCode = phase1.MessageCode,
-            //        ErrorPhase = 1
-            //    };
-            //}
-
-            //if (phase1.Queryable == null)
-            //{
-            //    return new()
-            //    {
-            //        ErrorType = EnumErrorType.CATCHABLE,
-            //        MessageCode = CommonMessageCode.ENTITIES_NOT_FOUND,
-            //        ErrorPhase = 1
-            //    };
-            //}
-
-            //var phase1IdsResult = phase1.Queryable.ToList().Aggregate("", (prev, curr) => prev + curr.ID.ToString() + ";");
-            //var ids = phase1IdsResult.Split(';');
-
             var joined = from p in _appContext.Workings
                          from e in _appContext.Employees.Where(c => c.ID == p.EMPLOYEE_ID)
                          from t in _appContext.Positions.Where(c => c.ID == p.POSITION_ID)
@@ -1219,10 +1241,49 @@ namespace ProfileDAL.Repositories
                              EffectUpsalDate = p.EFFECT_UPSAL_DATE,
                              ReasonUpsal = p.REASON_UPSAL,
                              StatusId = p.STATUS_ID,
-                             JobOrderNum = (int)(j.ORDERNUM ?? 999)
+                             JobOrderNum = Convert.ToInt32(j.ORDERNUM ?? 999),
+                             SalInsu = p.SAL_INSU
                          };
 
             var phase2 = await genericReducer.SinglePhaseReduce(joined, request);
+
+
+            // fill data for "RegionMinimumWage"
+            if (phase2.List != null && phase2.List.Count() > 0)
+            {
+                foreach (var mainItem in phase2.List)
+                {
+                    var record = _appContext.Workings.FirstOrDefault(x => x.ID == mainItem.Id);
+
+                    record.EFFECT_DATE = new DateTime(record.EFFECT_DATE.Value.Year, record.EFFECT_DATE.Value.Month, record.EFFECT_DATE.Value.Day, 0, 0, 0);
+
+                    var getAreaId = (from item in _appContext.Workings.Where(x => x.ID == mainItem.Id)
+                                     from he in _appContext.Employees.Where(x => x.ID == item.EMPLOYEE_ID).DefaultIfEmpty()
+                                     from ho in _appContext.Organizations.Where(x => x.ID == he.ORG_ID).DefaultIfEmpty()
+                                     from hc in _appContext.CompanyInfos.Where(x => x.ID == ho.COMPANY_ID).DefaultIfEmpty()
+                                     select hc.REGION_ID).FirstOrDefault();
+
+                    var listInsRegions = (from item in _appContext.InsRegions
+                                          where item.AREA_ID == getAreaId
+                                                && item.IS_ACTIVE == true
+                                          orderby item.EFFECT_DATE descending
+                                          select item).ToList();
+
+                    var list = listInsRegions.Select(x => new
+                    {
+                        EffectDate = new DateTime(x.EFFECT_DATE.Value.Year, x.EFFECT_DATE.Value.Month, x.EFFECT_DATE.Value.Day, 0, 0, 0),
+                        Money = x.MONEY
+                    });
+
+                    var regionMinimumWage = (from item in list
+                                             where item.EffectDate <= record.EFFECT_DATE
+                                             select item.Money).FirstOrDefault();
+
+                    mainItem.RegionMinimumWage = (long?)regionMinimumWage;
+                }
+            }
+
+
             return phase2;
         }
         /// <summary>
@@ -1378,6 +1439,32 @@ namespace ProfileDAL.Repositories
         {
             try
             {
+                var record = _appContext.Workings.FirstOrDefault(x => x.ID == id);
+
+                record.EFFECT_DATE = new DateTime(record.EFFECT_DATE.Value.Year, record.EFFECT_DATE.Value.Month, record.EFFECT_DATE.Value.Day, 0, 0, 0);
+
+                var getAreaId = (from item in _appContext.Workings.Where(x => x.ID == id)
+                                 from he in _appContext.Employees.Where(x => x.ID == item.EMPLOYEE_ID).DefaultIfEmpty()
+                                 from ho in _appContext.Organizations.Where(x => x.ID == he.ORG_ID).DefaultIfEmpty()
+                                 from hc in _appContext.CompanyInfos.Where(x => x.ID == ho.COMPANY_ID).DefaultIfEmpty()
+                                 select hc.REGION_ID).FirstOrDefault();
+
+                var listInsRegions = (from item in _appContext.InsRegions
+                                      where item.AREA_ID == getAreaId
+                                            && item.IS_ACTIVE == true
+                                      orderby item.EFFECT_DATE descending
+                                      select item).ToList();
+
+                var list = listInsRegions.Select(x => new
+                {
+                    EffectDate = new DateTime(x.EFFECT_DATE.Value.Year, x.EFFECT_DATE.Value.Month, x.EFFECT_DATE.Value.Day, 0, 0, 0),
+                    Money = x.MONEY
+                });
+
+                var regionMinimumWage = (from item in list
+                                         where item.EffectDate <= record.EFFECT_DATE
+                                         select item.Money).FirstOrDefault();
+
                 List<int> lstcheckInsItems = new List<int>();
                 var r = await (from p in _appContext.Workings
                                from e in _appContext.Employees.Where(c => c.ID == p.EMPLOYEE_ID)
@@ -1449,6 +1536,8 @@ namespace ProfileDAL.Repositories
                                    lstCheckIns = lstcheckInsItems,
                                    Attachment = p.ATTACHMENT,
                                    //AttachmentBuffer = p.ATTACHMENT,
+                                   SalInsu = p.SAL_INSU,
+                                   RegionMinimumWage = regionMinimumWage
                                }).FirstOrDefaultAsync();
                 lstcheckInsItems = new List<int>();
                 if (r.isBHXH != null && r.isBHXH == -1)
@@ -1571,71 +1660,53 @@ namespace ProfileDAL.Repositories
                 }
 
 
-                // Gencode
-                //var DecisionCode = "";
+                // very important code to fix bug!
+                if (param.SalaryLevelId == null) param.Coefficient = null;
+                if (param.SalaryLevelDcvId == null) param.coefficientDcv = null;
+
+
                 var data = Map(param, new HU_WORKING());
-                var PCCoef = (from p in _appContext.WorkingAllowances
-                              from a in _appContext.Allowances.Where(f => f.ID == p.ALLOWANCE_ID)
-                              where p.WORKING_ID == data.ID && p.COEFFICIENT != null
-                              select p.COEFFICIENT).ToList();
-                var coef = param.Allowances!.Select(p => p.Coefficient).ToList();
-                decimal? sumPCCoef = 0;
-                if (coef.Count() == 0)
-                {
-                    sumPCCoef = 0;
-                }
-                else
-                {
-                    sumPCCoef = coef.Sum();
-                }
-                var moneyRegion = (from p in _appContext.Regions where p.AREA_ID == param.ReligionId && p.EFFECT_DATE <= data.EFFECT_DATE orderby p.EFFECT_DATE descending select p.MONEY).FirstOrDefault();
-                if (moneyRegion == null)
-                {
-                    moneyRegion = 0;
-                }
-                var moneyOMN = (from p in _appContext.OtherLists where p.CODE == "OMN" && p.IS_ACTIVE == true select p.NOTE).FirstOrDefault();
-                if (moneyOMN == null)
-                {
-                    moneyOMN = "0";
-                }
-                if (data.COEFFICIENT == null)
-                {
-                    data.COEFFICIENT = 0;
-                }
-                if (data.COEFFICIENT_DCV == null)
-                {
-                    data.COEFFICIENT_DCV = 0;
-                }
-                //tinh luong dong bh
+
+
+                // tính SAL_INSU mới theo task VEAM-1
                 if (param.shortTempSalary == null)
                 {
-                    //lam tron so
-                    var listFive = new List<string>() { "TBL001", "TBL002", "TBL003", "TBL004", "TBL010" };
-                    var listThree = new List<string>() { "TBL005", "TBL006", "TBL007", "TBL008", "TBL011 ", "TBL012", "TBL013", "TBL014" };
-
-                    var salaryScale = _appContext.SalaryScales.AsNoTracking().Where(p => p.ID == param.SalaryScaleId).FirstOrDefault();
-
-                    data.SAL_INSU = (((moneyRegion * data.COEFFICIENT) + (decimal.Parse(moneyOMN) * data.COEFFICIENT_DCV))) + (sumPCCoef * moneyRegion);
-
-                    if (salaryScale == null)
+                    if (param.Coefficient != null)
                     {
-                        return new ResultWithError(400, "SALARY_SCALE_IS_NOT_EXITS");
+                        var effectDate = new DateTime(param.EffectDate.Value.Year, param.EffectDate.Value.Month, param.EffectDate.Value.Day, 0, 0, 0);
+
+                        var getOrgId = _appContext.Employees.FirstOrDefault(x => x.ID == param.EmployeeId)?.ORG_ID;
+
+                        var getCompanyId = _appContext.Organizations.FirstOrDefault(x => x.ID == getOrgId)?.COMPANY_ID;
+
+                        var getRegionId = _appContext.CompanyInfos.FirstOrDefault(x => x.ID == getCompanyId)?.REGION_ID;
+
+                        var list = await _appContext.Regions
+                                         .Where(x => x.IS_ACTIVE == true && x.AREA_ID == getRegionId)
+                                         .OrderByDescending(x => x.EFFECT_DATE)
+                                         .Select(x => new
+                                         {
+                                             Money = x.MONEY,
+                                             EffectDate = new DateTime(x.EFFECT_DATE.Value.Year, x.EFFECT_DATE.Value.Month, x.EFFECT_DATE.Value.Day, 0, 0, 0)
+                                         })
+                                         .ToListAsync();
+
+                        var moneyRegion = (from item in list
+                                           where item.EffectDate <= effectDate
+                                           select item.Money).FirstOrDefault();
+
+                        var salInsu = param.Coefficient * moneyRegion;
+
+                        data.SAL_INSU = Math.Floor((decimal)salInsu);
                     }
                     else
                     {
-                        if (listFive.Contains(salaryScale.CODE))
-                        {
-                            data.SAL_INSU = Math.Round((decimal)data.SAL_INSU! / 100000) * 100000;
-                        }
-                        if (listThree.Contains(salaryScale.CODE))
-                        {
-                            data.SAL_INSU = Math.Round((decimal)data.SAL_INSU! / 1000) * 1000;
-                        }
+                        data.SAL_INSU = null;
                     }
                 }
                 else
                 {
-                    data.SAL_INSU = 0;
+                    data.SAL_INSU = null;
                 }
                 //data.DECISION_NO = DecisionCode;
                 await _appContext.Database.BeginTransactionAsync();
@@ -1697,28 +1768,6 @@ namespace ProfileDAL.Repositories
                     _appContext.Employees.Update(e);
                 }
 
-                if (param.Allowances != null && param.Allowances.Count > 0)
-                {
-                    var d = _appContext.WorkingAllowances.Where(x => x.WORKING_ID == param.Id).ToList();
-                    if (d != null)
-                    {
-                        _appContext.WorkingAllowances.RemoveRange(d);
-                    }
-                    foreach (var item in param.Allowances)
-                    {
-                        item.Id = null;
-                        var dataAllow = Map(item, new HU_WORKING_ALLOW());
-                        dataAllow.WORKING_ID = data.ID;
-
-
-                        // Round to 5 decimal places
-                        int decimalPlaces = 5;
-                        dataAllow.COEFFICIENT = Math.Round((decimal)dataAllow.COEFFICIENT, decimalPlaces);
-
-
-                        await _appContext.WorkingAllowances.AddAsync(dataAllow);
-                    }
-                }
                 await _appContext.SaveChangesAsync();
 
                 _appContext.Database.CommitTransaction();
@@ -1740,6 +1789,24 @@ namespace ProfileDAL.Repositories
         {
             try
             {
+                var empRecord = _appContext.Employees.Where(x => x.ID == param.EmployeeId).FirstOrDefault();
+
+                if (empRecord == null)
+                {
+                    return new ResultWithError(Message.EMP_NOT_EXIST);
+                }
+
+                var organization = (from p in _appContext.Organizations.Where(p => p.ID == empRecord.ORG_ID) select p).FirstOrDefault();
+
+                var company = (from p in _appContext.CompanyInfos.Where(p => p.ID == organization.COMPANY_ID) select p).FirstOrDefault();
+
+                var insRegion = _appContext.Regions.Where(x => x.AREA_ID == company!.REGION_ID && x.EFFECT_DATE < param.EffectDate).Any();
+
+                if (!insRegion)
+                {
+                    return new ResultWithError("THERE_IS_NO_AVAILABILITY_MINIMUM_WAGE");
+                }
+
 
                 var r = (from p in _appContext.Workings where p.ID == param.Id select p).FirstOrDefault();
 
@@ -1747,16 +1814,6 @@ namespace ProfileDAL.Repositories
                 if (r.STATUS_ID == OtherConfig.STATUS_APPROVE)
                 {
                     return new ResultWithError(CommonMessageCode.NOT_UPDATE_BECAUSE_ROW_APPROVED);
-                }
-                var organization = (from p in _appContext.Organizations.Where(p => p.ID == r.ORG_ID) select p).FirstOrDefault();
-                var company = (from p in _appContext.CompanyInfos.Where(p => p.ID == organization!.COMPANY_ID) select p).FirstOrDefault();
-                //check effdate 0 namm trong vung
-                DateTime effDate = param.EffectDate!.Value;
-                var insRegion = _appContext.Regions.Where(x => x.AREA_ID == company!.REGION_ID && x.EFFECT_DATE < param.EffectDate).Any();
-
-                if (!insRegion)
-                {
-                    return new ResultWithError("THERE_IS_NO_AVAILABILITY_MINIMUM_WAGE");
                 }
 
                 var workingMax = await GetLastWorking(param.EmployeeId, null);
@@ -1773,8 +1830,14 @@ namespace ProfileDAL.Repositories
                     return new ResultWithError("EFFECTDATE_NOT_LESS_CURRENT");
                 }
 
-                //param.DecisionNo = null;
+
+                // very important code to fix bug!
+                if (param.SalaryLevelId == null) param.Coefficient = null;
+                if (param.SalaryLevelDcvId == null) param.coefficientDcv = null;
+
+
                 var data = Map(param, r);
+
                 if (data.EXPIRE_UPSAL_DATE != null)
                 {
                     // vì trên màn hình lưu bị -1 nên phải bù lại
@@ -1782,71 +1845,47 @@ namespace ProfileDAL.Repositories
                 }
                 data.IS_WAGE = -1;
 
-                var PCCoef = (from p in _appContext.WorkingAllowances
-                              from a in _appContext.Allowances.Where(f => f.ID == p.ALLOWANCE_ID)
-                              where p.WORKING_ID == data.ID && p.COEFFICIENT != null
-                              select p.COEFFICIENT).ToList();
-                var coef = param.Allowances.Select(p => p.Coefficient).ToList();
-                decimal? sumPCCoef = 0;
-                if (coef.Count() == 0)
-                {
-                    sumPCCoef = 0;
-                }
-                else
-                {
-                    sumPCCoef = coef.Sum();
-                }
-                var moneyRegion = (from p in _appContext.Regions where p.AREA_ID == param.ReligionId && p.EFFECT_DATE <= data.EFFECT_DATE orderby p.EFFECT_DATE descending select p.MONEY).FirstOrDefault();
-                if (moneyRegion == null)
-                {
-                    moneyRegion = 0;
-                }
-                var moneyOMN = (from p in _appContext.OtherLists where p.CODE == "OMN" && p.IS_ACTIVE == true select p.NOTE).FirstOrDefault();
-                if (moneyOMN == null)
-                {
-                    moneyOMN = "0";
-                }
-                if (data.COEFFICIENT == null)
-                {
-                    data.COEFFICIENT = 0;
-                }
-                if (data.COEFFICIENT_DCV == null)
-                {
-                    data.COEFFICIENT_DCV = 0;
-                }
 
-                //tinh luong dong bh
+                // tính SAL_INSU mới theo task VEAM-1
                 if (param.shortTempSalary == null)
                 {
-                    //lam tron so
-                    var listFive = new List<string>() { "TBL001", "TBL002", "TBL003", "TBL004", "TBL010" };
-                    var listThree = new List<string>() { "TBL005", "TBL006", "TBL007", "TBL008", "TBL011 ", "TBL012", "TBL013", "TBL014" };
-
-                    var salaryScale = _appContext.SalaryScales.AsNoTracking().Where(p => p.ID == param.SalaryScaleId).FirstOrDefault();
-
-                    data.SAL_INSU = (((moneyRegion * data.COEFFICIENT) + (decimal.Parse(moneyOMN) * data.COEFFICIENT_DCV))) + (sumPCCoef * moneyRegion);
-
-                    if (salaryScale == null)
+                    if (param.Coefficient != null)
                     {
-                        return new ResultWithError(400, "SALARY_SCALE_IS_NOT_EXITS");
+                        var effectDate = new DateTime(param.EffectDate.Value.Year, param.EffectDate.Value.Month, param.EffectDate.Value.Day, 0, 0, 0);
+
+                        var getOrgId = _appContext.Employees.FirstOrDefault(x => x.ID == param.EmployeeId)?.ORG_ID;
+
+                        var getCompanyId = _appContext.Organizations.FirstOrDefault(x => x.ID == getOrgId)?.COMPANY_ID;
+
+                        var getRegionId = _appContext.CompanyInfos.FirstOrDefault(x => x.ID == getCompanyId)?.REGION_ID;
+
+                        var list = await _appContext.Regions
+                                         .Where(x => x.IS_ACTIVE == true && x.AREA_ID == getRegionId)
+                                         .OrderByDescending(x => x.EFFECT_DATE)
+                                         .Select(x => new
+                                         {
+                                             Money = x.MONEY,
+                                             EffectDate = new DateTime(x.EFFECT_DATE.Value.Year, x.EFFECT_DATE.Value.Month, x.EFFECT_DATE.Value.Day, 0, 0, 0)
+                                         })
+                                         .ToListAsync();
+
+                        var moneyRegion = (from item in list
+                                           where item.EffectDate <= effectDate
+                                           select item.Money).FirstOrDefault();
+
+                        var salInsu = param.Coefficient * moneyRegion;
+
+                        data.SAL_INSU = Math.Floor((decimal)salInsu);
                     }
                     else
                     {
-                        if (listFive.Contains(salaryScale.CODE))
-                        {
-                            data.SAL_INSU = Math.Round((decimal)data.SAL_INSU! / 100000) * 100000;
-                        }
-                        if (listThree.Contains(salaryScale.CODE))
-                        {
-                            data.SAL_INSU = Math.Round((decimal)data.SAL_INSU! / 1000) * 1000;
-                        }
+                        data.SAL_INSU = null;
                     }
                 }
                 else
                 {
-                    data.SAL_INSU = 0;
+                    data.SAL_INSU = null;
                 }
-                
 
                 if (rs != null)
                 {
@@ -1903,42 +1942,6 @@ namespace ProfileDAL.Repositories
                     //}
                     _appContext.Employees.Update(e);
                 }
-
-                if (param.Allowances != null && param.Allowances.Count > 0)
-                {
-                    var d = _appContext.WorkingAllowances.Where(x => x.WORKING_ID == param.Id).ToList();
-                    if (d != null)
-                    {
-                        _appContext.WorkingAllowances.RemoveRange(d);
-                    }
-                    foreach (var item in param.Allowances)
-                    {
-                        item.Id = null;
-                        var dataAllow = Map(item, new HU_WORKING_ALLOW());
-                        dataAllow.WORKING_ID = data.ID;
-
-
-                        // Round to 5 decimal places
-                        int decimalPlaces = 5;
-                        dataAllow.COEFFICIENT = Math.Round((decimal)dataAllow.COEFFICIENT, decimalPlaces);
-
-
-                        await _appContext.WorkingAllowances.AddAsync(dataAllow);
-                    }
-                }
-
-
-                // this test case is delete all record
-                // in table HU_WORKING_ALLOW
-                if (param.Allowances != null && param.Allowances.Count == 0)
-                {
-                    var d = _appContext.WorkingAllowances.Where(x => x.WORKING_ID == param.Id).ToList();
-                    if (d != null)
-                    {
-                        _appContext.WorkingAllowances.RemoveRange(d);
-                    }
-                }
-
 
                 await _appContext.SaveChangesAsync();
                 return new ResultWithError(param);
@@ -2319,9 +2322,16 @@ namespace ProfileDAL.Repositories
         }
         public async Task<ResultWithError> CalculateExpireShortTemp(long? p_empId, string? p_dDate, long? levelId)
         {
-            DateTime? dDate = Convert.ToDateTime(p_dDate.Replace("_", "/"));
             try
             {
+                string[] arr = p_dDate.Split("_");
+
+                int day = Convert.ToInt32(arr[1]);
+                int month = Convert.ToInt32(arr[0]);
+                int year = Convert.ToInt32(arr[2]);
+
+                DateTime? dDate = new DateTime(year, month, day);
+
                 var levelItem = new HU_SALARY_LEVEL();
                 if (levelId != null)
                 {
@@ -2331,6 +2341,10 @@ namespace ProfileDAL.Repositories
                 if (levelItem != null && levelItem.HOLDING_MONTH != null)
                 {
                     holdingMonth = levelItem.HOLDING_MONTH;
+                }
+                else if (levelItem.HOLDING_MONTH == null)
+                {
+                    return new ResultWithError(0);
                 }
                 var commendItem = await (from p in _appContext.Commends
                                          from ce in _appContext.CommendEmployees.Where(f => f.COMMEND_ID == p.ID)
@@ -2446,6 +2460,91 @@ namespace ProfileDAL.Repositories
             catch (Exception ex)
             {
                 return new ResultWithError(ex.Message);
+            }
+        }
+
+        public async Task<FormatedResponse> GetSalaryMinimumOfRegion(ContextModel request)
+        {
+            try
+            {
+                // add 1 day for "Effect Date"
+                // because it auto reduce 1 day
+                // var effectDate = request.EffectDate.AddDays(1);
+
+                var effectDate = new DateTime(request.EffectDate.Year, request.EffectDate.Month, request.EffectDate.Day, 0, 0, 0);
+
+
+                var getOrgId = _appContext.Employees.FirstOrDefault(x => x.ID == request.EmployeeId)?.ORG_ID;
+
+                var getCompanyId = _appContext.Organizations.FirstOrDefault(x => x.ID == getOrgId)?.COMPANY_ID;
+
+                var getRegionId = _appContext.CompanyInfos.FirstOrDefault(x => x.ID == getCompanyId)?.REGION_ID;
+
+                var list = await _appContext.Regions
+                                 .Where(x => x.IS_ACTIVE == true && x.AREA_ID == getRegionId)
+                                 .OrderByDescending(x => x.EFFECT_DATE)
+                                 .Select(x => new
+                                 {
+                                     Money = x.MONEY,
+                                     EffectDate = new DateTime(x.EFFECT_DATE.Value.Year, x.EFFECT_DATE.Value.Month, x.EFFECT_DATE.Value.Day, 0, 0, 0)
+                                 })
+                                 .ToListAsync();
+
+                var moneyRegion = (from item in list
+                                   where item.EffectDate <= effectDate
+                                   select item.Money).FirstOrDefault();
+
+                return new FormatedResponse()
+                {
+                    InnerBody = moneyRegion
+                };
+            }
+            catch (Exception ex)
+            {
+                return new FormatedResponse()
+                {
+                    MessageCode = ex.Message,
+                    ErrorType = EnumErrorType.UNCATCHABLE,
+                    StatusCode = EnumStatusCode.StatusCode500
+                };
+            }
+        }
+
+        public async Task<bool> CheckIsResign(HU_WORKING obj)
+        {
+            var typeInfor = (from p in _appContext.OtherLists where p.ID == obj.TYPE_ID select p).FirstOrDefault();
+            if (typeInfor == null)
+            {
+                throw new Exception("TYPE_IS_NULL");
+            }
+            else
+            {
+                if (typeInfor.CODE == "TGCV" || typeInfor.CODE == "QDTH" || typeInfor.CODE == "TTTH" || typeInfor.CODE == "MN" || typeInfor.CODE == "00355" || typeInfor.CODE == "00356 ")
+                {
+                    if (obj.EFFECT_DATE!.Value.Date <= DateTime.Now.Date || obj.STATUS_ID == OtherConfig.STATUS_APPROVE)
+                    {
+                        var position = await _appContext.Positions.AsNoTracking().SingleOrDefaultAsync(p => p.ID == obj.POSITION_ID);
+                        if (position != null)
+                        {
+                            if (position.MASTER == obj.EMPLOYEE_ID)
+                            {
+                                position.MASTER = null;
+                                _appContext.Positions.Update(position);
+                                await _appContext.SaveChangesAsync();
+                            }
+                            if (position.INTERIM == obj.EMPLOYEE_ID)
+                            {
+                                position.INTERIM = null;
+                                _appContext.Positions.Update(position);
+                                await _appContext.SaveChangesAsync();
+                            }
+                        }
+                        return false;
+                    }
+                    return false;
+                }
+                if (!obj.IS_RESPONSIBLE.HasValue || obj.IS_RESPONSIBLE.Value == false) return true;
+                return true;
             }
         }
     }

@@ -207,7 +207,7 @@ namespace API.Controllers.HuEmployeeCv
                            from cv in _dbContext.HuEmployeeCvs.AsNoTracking().Where(cv => cv.ID == e.PROFILE_ID).DefaultIfEmpty()
 
                            where i1.CODE == "EMP_STATUS" && h1.CODE == "ESW"
-                           && ((DateTime)cv.BIRTH_DATE!).Month == thisMonth
+                           && ((DateTime)cv.BIRTH_DATE!).Month == thisMonth && ((DateTime)cv.BIRTH_DATE!).Day >= today
 
                             select new
                            {

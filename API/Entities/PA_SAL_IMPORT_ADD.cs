@@ -24,9 +24,10 @@ namespace API.Entities
         public double? CLCHINH8 { get; set; }
         public double? CLCHINH3 { get; set; }
         public double? CLCHINH4 { get; set; }
-        public double? DEDUCT5 { get; set; }
-        public double? CL8 { get; set; }
         public string? NOTE { get; set; }
+        public double? LBS9 { get; set; }
+        public double? LBS23 { get; set; }
+        public double? LBS25 { get; set; }
 
     }
 }

@@ -100,7 +100,7 @@ namespace API.All.HRM.Profile.ProfileAPI.HuCertificateImport
 
                 var certificateType = typeof(HU_CERTIFICATE);
                 var certificateTypeProperties = certificateType.GetProperties().ToList();
-                var res = new HU_CERTIFICATE();
+
                 certificateImport.ForEach(tmpCv =>
                 {
                     var obj = Activator.CreateInstance(typeof(HU_CERTIFICATE)) ?? throw new Exception(CommonMessageCode.ACTIVATOR_CREATE_INSTANCE_RETURNS_NULL);
@@ -125,49 +125,10 @@ namespace API.All.HRM.Profile.ProfileAPI.HuCertificateImport
                             }
                         }
                     });
-                    if (certificate.EFFECT_FROM > certificate.EFFECT_TO)
-                    {
-                        throw new Exception(CommonMessageCode.EXP_MUST_LESS_THAN_EFF);
-                    }
-
-                    if (certificate.EMPLOYEE_ID == null)
-                    {
-                        throw new Exception("EMPLOYEE_ID_CANNOT_NULL" + " " + tmpCv.XLSX_ROW);
-                    }
-
-                    if (certificate.EFFECT_FROM == null || certificate.EFFECT_TO == null)
-                    {
-                        throw new Exception("EFFECT_FROM_AND_EFFECT_TO_CANNOT_NULL" + " " + tmpCv.XLSX_ROW);
-                    }
-
-                    if (certificate.IS_PRIME == null)
-                    {
-                        throw new Exception("IS_PRIME_CANNOT_NULL" + " " + tmpCv.XLSX_ROW);
-                    }
-                    if(certificate.TYPE_CERTIFICATE == null)
-                    {
-                        throw new Exception("TYPE_CERTIFICATE_CANNOT_NULL" + " " + tmpCv.XLSX_ROW);
-                    }
-                    if(certificate.TRAIN_FROM_DATE == null)
-                    {
-                        throw new Exception("TRAIN_CERTIFICATE_CANNOT_NULL" + " " + tmpCv.XLSX_ROW);
-                    }
-                    if(certificate.TRAIN_TO_DATE == null)
-                    {
-                        throw new Exception("TRAIN_TO_DATE_CANNOT_NULL" + " " + tmpCv.XLSX_ROW);
-                    }
-                    if(certificate.LEVEL_ID == null)
-                    {
-                        throw new Exception("LEVEL_ID_CANNOT_NULL" + " " + tmpCv.XLSX_ROW);
-                    }
-                    if(certificate.SCHOOL_ID == null)
-                    {
-                        throw new Exception("SCHOOL_ID_CANNOT_NULL" + " " + tmpCv.XLSX_ROW);
-                    }
 
                     certificate.CREATED_DATE = now;
                     certificate.CREATED_BY = request.XlsxSid;
-                    res = certificate;
+
                     _dbContext.HuCertificates.Add(certificate);
                     _dbContext.SaveChanges();
 
@@ -178,7 +139,7 @@ namespace API.All.HRM.Profile.ProfileAPI.HuCertificateImport
                 _dbContext.SaveChanges();
 
                 _uow.Commit();
-                return new() { InnerBody = res, StatusCode = EnumStatusCode.StatusCode200, MessageCode = CommonMessageCode.CREATE_SUCCESS };
+                return new() { InnerBody = true };
 
             }
             catch (Exception ex)

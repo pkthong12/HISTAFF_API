@@ -189,6 +189,27 @@ namespace API.Controllers.AtPeriodStandard
         {
             try
             {
+                var entity = _uow.Context.Set<AT_PERIOD_STANDARD>().AsNoTracking().AsQueryable();
+
+                // check for duplicates
+                bool checkForDuplicates = entity
+                                          .Any(x =>
+                                              x.YEAR == model.Year
+                                              && x.PERIOD_ID == model.PeriodId
+                                              && x.OBJECT_ID == model.ObjectId
+                                              );
+
+                if (checkForDuplicates)
+                {
+                    return Ok(new FormatedResponse()
+                    {
+                        ErrorType = EnumErrorType.CATCHABLE,
+                        MessageCode = "Không được trùng năm, kỳ công, đối tượng công",
+                        StatusCode = EnumStatusCode.StatusCode400
+                    });
+                }
+
+
                 model.IsActive = true;
                 var sid = Request.Sid(_appSettings);
                 var response = await _genericRepository.Create(_uow, model, sid ?? "");
@@ -206,6 +227,28 @@ namespace API.Controllers.AtPeriodStandard
         {
             try
             {
+                var entity = _uow.Context.Set<AT_PERIOD_STANDARD>().AsNoTracking().AsQueryable();
+
+                // check for duplicates
+                bool checkForDuplicates = entity
+                                          .Any(x =>
+                                              x.YEAR == model.Year
+                                              && x.PERIOD_ID == model.PeriodId
+                                              && x.OBJECT_ID == model.ObjectId
+                                              && x.ID != model.Id
+                                              );
+
+                if (checkForDuplicates)
+                {
+                    return Ok(new FormatedResponse()
+                    {
+                        ErrorType = EnumErrorType.CATCHABLE,
+                        MessageCode = "Không được trùng năm, kỳ công, đối tượng công",
+                        StatusCode = EnumStatusCode.StatusCode400
+                    });
+                }
+
+
                 var response = await _genericRepository.Update(_uow, model, Request.Sid(_appSettings));
                 return Ok(response);
             }

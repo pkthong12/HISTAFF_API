@@ -274,5 +274,72 @@ namespace ProfileDAL.Repositories
                 return new ResultWithError(ex.Message);
             }
         }
+
+        public async Task<FormatedResponse> GetCodeByJobFamily(long id)
+        {
+            try
+            {
+                string code = "";
+                string newCode = "";
+                var jobFamily = await (from p in _appContext.OtherLists
+                                       where p.ID == id
+                                       select new
+                                       {
+                                           Id = p.ID,
+                                           Code = p.CODE,
+                                           Name = p.NAME,
+                                       }).FirstOrDefaultAsync();
+                switch (jobFamily!.Code)
+                {
+                    case "00338":
+                        code = "BKS";
+                        break;
+                    case "00339":
+                        code = "NLD";
+                        break;
+                    case "00340":
+                        code = "DDT";
+                        break;
+                    case "00341":
+                        code = "NDDV";
+                        break;
+                    case "00342":
+                        code = "K";
+                        break;
+                    case "00343":
+                        code = "NQL";
+                        break;
+                    case "00344":
+                        code = "BP";
+                        break;
+                    default:
+                        code = "";
+                        break;
+                }
+                var lastestJob = _appContext.HUJobs.FirstOrDefault(x => x.CODE.Contains(code));
+                if(lastestJob == null)
+                {
+                    newCode = code + "0001";
+                }
+                else
+                {
+                    string lastestData = _appContext.HUJobs.Where(x => x.CODE.Contains(code)).OrderByDescending(t => t.CODE).First().CODE!.ToString();
+
+                    string newNumber = (Int32.Parse(lastestData.Substring(code.Length)) + 1).ToString();
+                    while (newNumber.Length < 4)
+                    {
+                        newNumber = "0" + newNumber;
+                    }
+                    newCode = lastestData.Substring(0, code.Length) + newNumber;
+                }
+
+                return new FormatedResponse() { InnerBody = new { Code = newCode } };
+            }
+            catch (Exception ex)
+            {
+                return new FormatedResponse() { MessageCode = ex.Message };
+            }
+        }
+    
     }
 }

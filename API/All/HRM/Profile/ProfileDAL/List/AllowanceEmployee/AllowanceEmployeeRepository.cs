@@ -33,7 +33,8 @@ namespace ProfileDAL.Repositories
                             from e in _appContext.Employees.Where(x => x.ID == p.EMPLOYEE_ID)
                             from o in _appContext.Organizations.Where(x => x.ID == e.ORG_ID)
                             from t in _appContext.Positions.Where(x => x.ID == e.POSITION_ID)
-                            
+                            from j in _appContext.HUJobs.Where(x => x.ID == t.JOB_ID).DefaultIfEmpty()
+                            orderby j.ORDERNUM
                             select new AllowanceEmpDTO
                             {
                                 Id = p.ID,
@@ -54,7 +55,8 @@ namespace ProfileDAL.Repositories
                                 UpdatedBy = p.UPDATED_BY,
                                 CreateDate = p.CREATED_DATE,
                                 UpdatedDate = p.UPDATED_DATE,
-                                Coefficient=p.COEFFICIENT
+                                Coefficient=p.COEFFICIENT,
+                                JobOrderNum = (int)(j.ORDERNUM ?? 99)
                             };
 
             var orgIds = await QueryData.ExecuteList(Procedures.PKG_COMMON_LIST_ORG,
@@ -170,10 +172,9 @@ namespace ProfileDAL.Repositories
                     var result = await _appContext.AllowanceEmps.AddAsync(data);
                 }
                 await _appContext.SaveChangesAsync();
-                var newRecord = await _appContext.AllowanceEmps.OrderByDescending(x => x.ID).FirstOrDefaultAsync();
                 return new FormatedResponse{
                     MessageCode = CommonMessageCode.CREATE_SUCCESS,
-                    InnerBody = newRecord,
+                    InnerBody = param,
                     StatusCode = EnumStatusCode.StatusCode200
                 };
             }
@@ -287,7 +288,7 @@ namespace ProfileDAL.Repositories
                             from o in _appContext.Organizations.Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
                             from t in _appContext.Positions.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
                             from j in _appContext.HUJobs.Where(x => x.ID == t.JOB_ID).DefaultIfEmpty()
-
+                            orderby j.ORDERNUM
                             select new HuAllowanceEmpDTO
                             {
                                 Id = p.ID,
@@ -310,7 +311,7 @@ namespace ProfileDAL.Repositories
                                 UpdatedDate = p.UPDATED_DATE,
                                 Coefficient=p.COEFFICIENT,
                                 WorkStatusId=e.WORK_STATUS_ID,
-                                JobOrderNum = (int)(j.ORDERNUM ?? 99)
+                                JobOrderNum = Convert.ToInt32(j.ORDERNUM ?? 999)
                             };
 
             var singlePhaseResult = await genericReducer.SinglePhaseReduce(queryable, request);

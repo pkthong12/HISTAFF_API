@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Common.Extensions;
 using System;
 using Aspose.Cells;
-using DocumentFormat.OpenXml.Office.CustomUI;
 
 namespace API.Controllers.SysOtherList
 {
@@ -112,6 +111,16 @@ namespace API.Controllers.SysOtherList
         public async Task<FormatedResponse> Create(GenericUnitOfWork _uow, SysOtherListDTO dto, string sid)
         {
             dto.IsActive = true;
+            //check trung name && type
+            var _ck = await _dbContext.SysOtherLists.AsNoTracking().Where(x => x.TYPE_ID == dto.TypeId && x.NAME.Trim().ToLower() == dto.Name.Trim().ToLower()).AnyAsync();
+            if (_ck == true)
+            {
+                return new FormatedResponse() { 
+                    MessageCode = "THE_PLANNING_TITLE_ALREADY_EXISTS", 
+                    ErrorType = EnumErrorType.CATCHABLE, 
+                    StatusCode = EnumStatusCode.StatusCode400 
+                };
+            }
             var response = await _genericRepository.Create(_uow, dto, sid);
             return response;
         }
@@ -126,6 +135,17 @@ namespace API.Controllers.SysOtherList
 
         public async Task<FormatedResponse> Update(GenericUnitOfWork _uow, SysOtherListDTO dto, string sid, bool patchMode = true)
         {
+            //check trung name && type
+            var _ck = await _dbContext.SysOtherLists.AsNoTracking().Where(x => x.TYPE_ID == dto.TypeId && x.NAME.Trim().ToLower() == dto.Name.Trim().ToLower()).AnyAsync();
+            if (_ck == true)
+            {
+                return new FormatedResponse()
+                {
+                    MessageCode = "THE_PLANNING_TITLE_ALREADY_EXISTS",
+                    ErrorType = EnumErrorType.CATCHABLE,
+                    StatusCode = EnumStatusCode.StatusCode400
+                };
+            }
             var response = await _genericRepository.Update(_uow, dto, sid, patchMode);
             return response;
         }
@@ -153,51 +173,6 @@ namespace API.Controllers.SysOtherList
             foreach(var id in ids)
             {
                 var check = _dbContext.SysOtherLists.Where(x => x.ID == id && x.IS_ACTIVE == true).Any();
-                //check data dang su dung tai man hsnv
-                var empcv = await _dbContext.HuEmployeeCvs.AsNoTracking().Where(e => e.GENDER_ID == id || e.NATIONALITY_ID == id || e.MARITAL_STATUS_ID == id || e.BANK_ID == id
-                                           || e.LEARNING_LEVEL_ID == id || e.TRAINING_FORM_ID == id || e.NATIVE_ID == id || e.RELIGION_ID == id || e.EDUCATION_LEVEL_ID == id
-                                           || e.EMPLOYEE_OBJECT_ID == id || e.LICENSE_ID == id || e.COMPUTER_SKILL_ID == id || e.SCHOOL_ID == id || e.RELIGION_ID == id).AnyAsync();
-                var emp = await _dbContext.HuEmployees.AsNoTracking().Where(x => x.WORK_STATUS_ID == id || x.STATUS_DETAIL_ID == id).AnyAsync();
-                //check data dang su dung tai man bien dong bh
-                var insAri = await _dbContext.InsArisings.AsNoTracking().Where(x => x.INS_ORG_ID == id).AnyAsync();
-                //check data dang su dung tai quan ly ky luat
-                var descipline = await _dbContext.HuDisciplines.AsNoTracking().Where(x => x.DISCIPLINE_OBJ == id || x.DISCIPLINE_TYPE == id).AnyAsync();
-                //check data dang su dung tai quan ly ky luat
-                //var descipline = await _dbContext.HuDisciplines.AsNoTracking().Where(x => x.DISCIPLINE_OBJ == id).AnyAsync();
-                //check data dang su dung tai quan ly ky luat
-                //var descipline = await _dbContext.HuDisciplines.AsNoTracking().Where(x => x.DISCIPLINE_OBJ == id).AnyAsync();
-                //check data dang su dung tai quan ly ky luat
-                //var descipline = await _dbContext.HuDisciplines.AsNoTracking().Where(x => x.DISCIPLINE_OBJ == id).AnyAsync();
-
-                var seDocument = await _dbContext.SeDocuments.Where(x => x.DOCUMENT_TYPE == id ).AsNoTracking().AnyAsync();
-                var huCommend = await _dbContext.HuCommends.Where(x => x.COMMEND_OBJ_ID == id || x.AWARD_TITLE_ID == id || x.REWARD_ID == id || x.STATUS_ID == id).AsNoTracking().AnyAsync();
-                var huDisciplines = await _dbContext.HuDisciplines.Where(x => x.DISCIPLINE_OBJ == id || x.STATUS_ID == id).AsNoTracking().AnyAsync();
-                var huCertificate = await _dbContext.HuCertificates.Where(x => x.TYPE_CERTIFICATE == id || x.TYPE_TRAIN == id || x.LEVEL_ID == id || x.LEVEL_TRAIN == id).AnyAsync();
-                var paListSalaries = await _dbContext.PaListsalariess.Where(x => x.DATA_TYPE == id).AnyAsync();
-                var atRegisterLave = await _dbContext.AtRegisterLeaves.Where(x => x.TYPE_ID == id).AnyAsync();
-                var potalRegisterOff = await _dbContext.PortalRegisterOffs.Where(x => x.TYPE_ID == id).AnyAsync();
-                var huEvaluate = await _dbContext.HuEvaluates.Where(x => x.EVALUATE_TYPE == id || x.CLASSIFICATION_ID == id).AnyAsync();
-                var insRegimes = await _dbContext.InsRegimess.Where(x => x.CAL_DATE_TYPE == id).AnyAsync();
-                var huTerminate = await _dbContext.HuTerminates.Where(x => x.TYPE_ID == id || x.REASON_ID == id || x.STATUS_ID == id).AnyAsync();
-                var huWorking = await _dbContext.HuWorkings.Where(x => x.TYPE_ID == id || x.STATUS_ID == id || x.SALARY_TYPE_ID == id).AnyAsync();
-                var paListSalary = await _dbContext.PaListSals.Where(x => x.LIST_KYHIEU_ID == id).AnyAsync();
-                var huJob = await _dbContext.HuJobs.Where(x => x.JOB_FAMILY_ID == id).AnyAsync();
-
-                //code sys_other_list
-                var code = await _dbContext.SysOtherLists.Where(x => x.ID == id).Select(c => c.CODE).FirstAsync();
-                var portalRQC = await _dbContext.PortalRequestChanges.Where(x => x.SYS_OTHER_CODE == code).AnyAsync();
-                var huFamily = await _dbContext.HuFamilys.Where(x => x.RELATIONSHIP_ID == id).AnyAsync();
-                if (descipline || insAri || empcv || huDisciplines || huCommend || seDocument || huCertificate || potalRegisterOff || atRegisterLave || paListSalary || huEvaluate
-                    || insRegimes || huTerminate || huWorking || portalRQC || huFamily || paListSalaries || huJob)
-                {
-                    return new FormatedResponse()
-                    {
-                        ErrorType = EnumErrorType.CATCHABLE,
-                        MessageCode = CommonMessageCode.CAN_NOT_DELETE_RECORDS_HAVE_USE,
-                        StatusCode = EnumStatusCode.StatusCode400
-                    };
-                }
-
                 if (check)
                 {
                     return new FormatedResponse()

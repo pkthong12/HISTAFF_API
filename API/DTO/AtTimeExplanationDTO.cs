@@ -18,9 +18,14 @@ namespace API.DTO
         public string? ShiftName { get; set; }
         public DateTime? SwipeIn { get; set; }
         public DateTime? SwipeOut { get; set; }
+        public string? SwipeInStr { get; set; }
+        public string? SwipeOutStr { get; set; }
         public long? ActualWorkingHours { get; set; }
         public string? ExplanationCode { get; set; }
-        public string? Reason { get; set; }
         public int? JobOrderNum { get; set; }
+        public long? ReasonId { get; set; }
+        public string? Reason { get; set; }
+        public long? TypeRegisterId { get; set; }
+        public string? TypeRegisterName { get; set; }
     }
 }

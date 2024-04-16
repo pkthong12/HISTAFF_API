@@ -256,11 +256,11 @@ namespace API.Controllers.AtTimeTimesheetDaily
 
                 dataSet = QueryData.ExecuteStoreToTable("PKG_GET_DATA_TIMESHEET_IMPORT", new
                 {
-                    P_PERIOD_ID = dto.periodId??0,
+                    P_PERIOD_ID = dto.periodId ?? 0,
                     P_ORG_ID = orgids,
                     P_PAGE_INDEX = 0,
                     P_PAGE_SIZE = 1000,
-                    P_EMPLOYEE_ID = dto.employeeId??0,
+                    P_EMPLOYEE_ID = dto.employeeId ?? 0,
                     P_COLOR = 0
                 }, false);
 

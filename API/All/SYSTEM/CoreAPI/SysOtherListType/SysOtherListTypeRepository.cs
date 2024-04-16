@@ -95,7 +95,7 @@ namespace API.Controllers.SysOtherListType
         public async Task<FormatedResponse> Create(GenericUnitOfWork _uow, SysOtherListTypeDTO dto, string sid)
         {
             var getListData = _dbContext.SysOtherListTypes.Where( x => x.NAME == dto.Name);
-            if(getListData != null)
+            if(getListData.Any())
             {
                 return new FormatedResponse() { MessageCode = CommonMessageCode.DATA_HAVE_BEEN_IN_DATABASE, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
             }

@@ -16,6 +16,7 @@ namespace API.DTO
 
         public double? SalaryOld { get; set; }
         public double? SalaryNew { get; set; }
+        public long? SalaryInsu { get; set; }
 
         public string? Note { get; set; }
         public bool? IsBhxh { get; set; }
@@ -51,8 +52,18 @@ namespace API.DTO
         public List<int>? InsuranceType { get; set; } = new List<int>();//loai bao hiem
         public decimal? SalaryBhxhBhytOld { get; set; }//mức đóng bhxh-bhyt cũ
         public decimal? SalaryBhxhBhytNew { get; set; }//------------------ mới
+
+
+        public long? SalaryBhxhOld { get; set; }//mức đóng bhxh cũ
+        public long? SalaryBhytOld { get; set; }//mức đóng bhyt cũ
+        public long? SalaryBhbnnOld { get; set; }//mức đóng bhbnn cũ
         public decimal? SalaryBhtnOld { get; set; } //mức đóng bhtn cũ
+
+        public long? SalaryBhxhNew{ get; set; }//mức đóng bhxh mới
+        public long? SalaryBhytNew { get; set; }//mức đóng bhyt mới
+        public long? SalaryBhbnnNew { get; set; }//mức đóng bhbnn mới
         public decimal? SalaryBhtnNew { get; set; }//------------- mới
+
         public DateTime? EffectiveDate { get; set; }//ngày hiệu lực
         public DateTime? ExpireDate { get; set; }//hết hiệu lực
         public DateTime? DeclarationPeriod { get; set; }//đợt khai báo

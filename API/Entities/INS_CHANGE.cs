@@ -21,8 +21,16 @@ public partial class INS_CHANGE : BASE_ENTITY
     public bool? IS_BNN { get; set; }
     public decimal? SALARY_BHXH_BHYT_OLD { get; set; }
     public decimal? SALARY_BHXH_BHYT_NEW { get; set; }
-    public decimal? SALARY_BHTN_OLD { get; set; }
-    public decimal? SALARY_BHTN_NEW { get; set; }
+    public long? SALARY_BHXH_OLD { get; set; }//mức đóng bhxh cũ
+    public long? SALARY_BHYT_OLD { get; set; }//mức đóng bhyt cũ
+    public long? SALARY_BHBNN_OLD { get; set; }//mức đóng bhbnn cũ
+    public decimal? SALARY_BHTN_OLD { get; set; } //mức đóng bhtn cũ
+
+    public long? SALARY_BHXH_NEW { get; set; }//mức đóng bhxh mới
+    public long? SALARY_BHYT_NEW { get; set; }//mức đóng bhyt mới
+    public long? SALARY_BHBNN_NEW { get; set; }//mức đóng bhbnn mới
+    public decimal? SALARY_BHTN_NEW { get; set; }//mức đóng bhtn mới
+
     public DateTime? EFFECTIVE_DATE { get; set; }
     public DateTime? EXPIRE_DATE { get; set; }
     public DateTime? DECLARATION_PERIOD { get; set; }

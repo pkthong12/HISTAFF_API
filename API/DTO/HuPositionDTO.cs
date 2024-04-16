@@ -55,7 +55,6 @@
         public string? CsmName { get; set; }
         public string? CsmJobName { get; set; }
         public string? JobName { get; set; }
-        public string? Active { get; set; }
 
     }
 }
