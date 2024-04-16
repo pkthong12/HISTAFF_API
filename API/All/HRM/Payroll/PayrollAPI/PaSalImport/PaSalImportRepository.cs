@@ -70,7 +70,6 @@ namespace API.Controllers.PaSalImport
                            from wo in _dbContext.HuWorkings.Where(x => x.EMPLOYEE_ID == e.ID && result.Contains(x.ID))
                            from ob in _dbContext.HuSalaryTypes.Where(x => x.ID == wo.SALARY_TYPE_ID).DefaultIfEmpty()
                            from p in _dbContext.PaSalImports.Where(x => x.EMPLOYEE_ID == e.ID && x.PERIOD_ID == periodId && x.OBJ_SALARY_ID == objSalId).DefaultIfEmpty()
-                           orderby j.ORDERNUM
                            select new PaSalImportDTO
                            {
                                Id = e.ID,
@@ -86,17 +85,12 @@ namespace API.Controllers.PaSalImport
                                CreatedDate = p.CREATED_DATE,
                                UpdatedBy = p.UPDATED_BY,
                                UpdatedDate = p.UPDATED_DATE,
-                               Cl11 = p.CL11,
-                               Cl29 = p.CL29,
-                               Cl31 = p.CL31,
-                               Cl33 = p.CL33,
+                               Deduct5 = p.DEDUCT5,
                                Clchinh8 = p.CLCHINH8,
-                               Deduct3 = p.DEDUCT3,
-                               Tax54 = p.TAX54,
-                               Csum1 = p.CSUM1,
-                               Csum2 = p.CSUM2,
+                               Csum4= p.CSUM4,
+                               Tax54= p.TAX54,
                                PeriodId = p.PERIOD_ID,
-                               Note = p.NOTE,
+                               Note= p.NOTE,
                                JobOrderNum = (int)(j.ORDERNUM ?? 999),
                            };
 

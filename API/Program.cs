@@ -21,18 +21,18 @@ using Hangfire.Dashboard;
 using API.All.Logger;
 using Hangfire.Oracle.Core;
 using CORE.StaticConstant;
-using CORE.Middleware;
 using System.IdentityModel.Tokens.Jwt;
 using API.GrpcServices;
+using CORE.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
 var services = builder.Services;
 
 IConfiguration config = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
     .AddEnvironmentVariables()
     .Build();
-
 
 builder.Logging.ClearProviders();
 builder.Logging.AddTextLogger(options =>
@@ -83,7 +83,7 @@ services.AddAuthentication(options =>
 });
 
 #region DbContexts
-services.AddDbContext<PatternDbContext>();
+//services.AddDbContext<PatternDbContext>();
 services.AddDbContext<FullDbContext>();
 services.AddDbContext<TestDbContext>();
 services.AddDbContext<CoreDbContext>();
@@ -160,17 +160,17 @@ services.AddGrpcSwagger();
 
 services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("system", new OpenApiInfo { Title = "Histaff SYSTEM Swagger UI", Version = "v5472" });
-    c.SwaggerDoc("om", new OpenApiInfo { Title = "Histaff OM Swagger UI", Version = "v5472" });
-    c.SwaggerDoc("profile", new OpenApiInfo { Title = "Histaff PROFILE Swagger UI", Version = "v5472" });
-    c.SwaggerDoc("attendance", new OpenApiInfo { Title = "Histaff ATTENDANCE Swagger UI", Version = "v5472" });
-    c.SwaggerDoc("payroll", new OpenApiInfo { Title = "Histaff PAYROLL Swagger UI", Version = "v5472" });
-    c.SwaggerDoc("insurance", new OpenApiInfo { Title = "Histaff INSURANCE Swagger UI", Version = "v5472" });
-    c.SwaggerDoc("training", new OpenApiInfo { Title = "Histaff TRAINING Swagger UI", Version = "v5472" });
-    c.SwaggerDoc("developer", new OpenApiInfo { Title = "Histaff DEVELOPER TESTING Swagger UI", Version = "v5472" });
-    c.SwaggerDoc("recruitment", new OpenApiInfo { Title = "Histaff RECRUITMENT Swagger UI", Version = "v5472" });
-    c.SwaggerDoc("portal", new OpenApiInfo { Title = "Histaff PORTAL Swagger UI", Version = "v5472" });
-    c.SwaggerDoc("gRPC", new OpenApiInfo { Title = "gRPC using .NET 7+", Version = "v1" });
+    c.SwaggerDoc("system", new OpenApiInfo { Title = "Histaff VNS - SYSTEM Swagger UI", Version = "v5472" });
+    c.SwaggerDoc("om", new OpenApiInfo { Title = "Histaff VNS - OM Swagger UI", Version = "v5472" });
+    c.SwaggerDoc("profile", new OpenApiInfo { Title = "Histaff VNS - PROFILE Swagger UI", Version = "v5472" });
+    c.SwaggerDoc("attendance", new OpenApiInfo { Title = "Histaff VNS - ATTENDANCE Swagger UI", Version = "v5472" });
+    c.SwaggerDoc("payroll", new OpenApiInfo { Title = "Histaff VNS - PAYROLL Swagger UI", Version = "v5472" });
+    c.SwaggerDoc("insurance", new OpenApiInfo { Title = "Histaff VNS - INSURANCE Swagger UI", Version = "v5472" });
+    c.SwaggerDoc("training", new OpenApiInfo { Title = "Histaff VNS - TRAINING Swagger UI", Version = "v5472" });
+    c.SwaggerDoc("developer", new OpenApiInfo { Title = "Histaff VNS - DEVELOPER TESTING Swagger UI", Version = "v5472" });
+    c.SwaggerDoc("recruitment", new OpenApiInfo { Title = "Histaff VNS - RECRUITMENT Swagger UI", Version = "v5472" });
+    c.SwaggerDoc("portal", new OpenApiInfo { Title = "Histaff VNS - PORTAL Swagger UI", Version = "v5472" });
+    c.SwaggerDoc("gRPC", new OpenApiInfo { Title = "gRPC using .NET 7", Version = "v1" });
 
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -342,7 +342,7 @@ configuration: builder =>
 });
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment() || _appSettings!.SwaggerUiEnabled)
+if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>

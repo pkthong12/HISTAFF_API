@@ -13,8 +13,5 @@ namespace API.DTO
         public string? UpdatedLog { get; set; }
         public bool? IsActive { get; set; }
         public string? Status { get; set; }
-        public long? TrTrainField { get; set; }
-        public string? TrTrainFieldName { get; set; }
-        public string? ProfessionalTrainning { get; set; }
     }
 }

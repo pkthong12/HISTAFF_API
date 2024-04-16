@@ -6,9 +6,6 @@ using CORE.Enum;
 using CORE.GenericUOW;
 using CORE.StaticConstant;
 using System.Diagnostics;
-using API.All.SYSTEM.Common;
-using API.Main;
-using API.Controllers.HuEmployeeCv;
 
 namespace API.All.HRM.Profile.ProfileAPI.HuEmployeeImport
 {
@@ -205,7 +202,29 @@ namespace API.All.HRM.Profile.ProfileAPI.HuEmployeeImport
 
                 var tmp1 = await _dbContext.HuEmployeeCvImports.Where(x => x.XLSX_USER_ID == request.XlsxSid && x.XLSX_EX_CODE == request.XlsxExCode && x.XLSX_SESSION == request.XlsxSession).ToListAsync();
                 var tmp2 = await _dbContext.HuEmployeeImports.Where(x => x.XLSX_USER_ID == request.XlsxSid && x.XLSX_EX_CODE == request.XlsxExCode && x.XLSX_SESSION == request.XlsxSession).ToListAsync();
-
+                
+                //Check identity for employeecv and employee
+                if(tmp1.Count > 0 && tmp2.Count > 0)
+                {
+                    tmp1.ForEach(check =>
+                    {
+                        if(check.ID_NO == "")
+                        {
+                            throw new Exception("Cột Căn cước công dân không được để trống");
+                        }
+                    });
+                    tmp2.ForEach(check =>
+                    {
+                        if(check.CODE == "")
+                        {
+                            throw new Exception("Mã nhân viên không được để trống");
+                        }
+                        if(check.ITIME_ID == "")
+                        {
+                            throw new Exception("Mã chấm công không được để trống");
+                        }
+                    });
+                }
                 var tmp1Type = typeof(HU_EMPLOYEE_CV_IMPORT);
                 var tmp1Properties = tmp1Type.GetProperties()?
                     .Where(x => !XLSX_COLUMNS.Contains(x.Name))
@@ -220,7 +239,7 @@ namespace API.All.HRM.Profile.ProfileAPI.HuEmployeeImport
                 var employeeType = typeof(HU_EMPLOYEE);
                 var employeeTypeProperties = employeeType.GetProperties().ToList();
 
-                foreach (var tmpCv in tmp1)
+                tmp1.ForEach(tmpCv =>
                 {
                     var obj1 = Activator.CreateInstance(typeof(HU_EMPLOYEE_CV)) ?? throw new Exception(CommonMessageCode.ACTIVATOR_CREATE_INSTANCE_RETURNS_NULL);
                     var cv = (HU_EMPLOYEE_CV)obj1;
@@ -239,8 +258,7 @@ namespace API.All.HRM.Profile.ProfileAPI.HuEmployeeImport
                                 // gan gia tri cho thuoc tinh o bang chinh
                                 cvProperty.SetValue(cv, tmp1Value);
                             };
-                        }
-                        else
+                        } else
                         {
                             if (tmp1Value != null)
                             {
@@ -251,119 +269,6 @@ namespace API.All.HRM.Profile.ProfileAPI.HuEmployeeImport
 
                     cv.CREATED_DATE = now;
                     cv.CREATED_BY = request.XlsxSid;
-
-
-                    // check FULL_NAME
-                    if (cv.FULL_NAME == null || cv.FULL_NAME == "")
-                    {
-                        return new FormatedResponse()
-                        {
-                            ErrorType = EnumErrorType.CATCHABLE,
-                            MessageCode = CommonMessageCodes.REQURIED_FULL_NAME,
-                            StatusCode = EnumStatusCode.StatusCode400
-                        };
-                    }
-
-
-                    // check duplicate CCCD/CMND
-                    var checkDuplicate = _dbContext.HuEmployeeCvs.Any(x => x.ID_NO == cv.ID_NO && x.ID_NO != "" && x.ID_NO != null);
-                    if (checkDuplicate)
-                    {
-                        return new FormatedResponse()
-                        {
-                            ErrorType = EnumErrorType.CATCHABLE,
-                            MessageCode = CommonMessageCodes.DUPLICATE_ID_NO,
-                            StatusCode = EnumStatusCode.StatusCode400
-                        };
-                    }
-
-
-                    if (cv.GENDER_ID == null)
-                    {
-                        return new FormatedResponse()
-                        {
-                            ErrorType = EnumErrorType.CATCHABLE,
-                            MessageCode = CommonMessageCodes.REQURIED_GENDER_ID,
-                            StatusCode = EnumStatusCode.StatusCode400
-                        };
-                    }
-
-
-                    if (cv.BIRTH_DATE == null)
-                    {
-                        return new FormatedResponse()
-                        {
-                            ErrorType = EnumErrorType.CATCHABLE,
-                            MessageCode = CommonMessageCodes.REQURIED_BIRTH_DATE,
-                            StatusCode = EnumStatusCode.StatusCode400
-                        };
-                    }
-
-
-                    if (cv.PROVINCE_ID == null)
-                    {
-                        return new FormatedResponse()
-                        {
-                            ErrorType = EnumErrorType.CATCHABLE,
-                            MessageCode = CommonMessageCodes.REQURIED_PROVINCE_ID,
-                            StatusCode = EnumStatusCode.StatusCode400
-                        };
-                    }
-
-
-                    if (cv.DISTRICT_ID == null)
-                    {
-                        return new FormatedResponse()
-                        {
-                            ErrorType = EnumErrorType.CATCHABLE,
-                            MessageCode = CommonMessageCodes.REQURIED_DISTRICT_ID,
-                            StatusCode = EnumStatusCode.StatusCode400
-                        };
-                    }
-
-
-                    if (cv.WARD_ID == null)
-                    {
-                        return new FormatedResponse()
-                        {
-                            ErrorType = EnumErrorType.CATCHABLE,
-                            MessageCode = CommonMessageCodes.REQURIED_WARD_ID,
-                            StatusCode = EnumStatusCode.StatusCode400
-                        };
-                    }
-
-
-                    if (cv.ADDRESS == null || cv.ADDRESS == "")
-                    {
-                        return new FormatedResponse()
-                        {
-                            ErrorType = EnumErrorType.CATCHABLE,
-                            MessageCode = CommonMessageCodes.REQURIED_ADDRESS,
-                            StatusCode = EnumStatusCode.StatusCode400
-                        };
-                    }
-
-
-                    // check TAX_CODE
-                    if (cv.TAX_CODE == "")
-                    {
-                        cv.TAX_CODE = null;
-                    }
-                    else
-                    {
-                        var checkTaxCodeExist = _dbContext.HuEmployeeCvs.Any(x => x.TAX_CODE == cv.TAX_CODE);
-
-                        if (checkTaxCodeExist)
-                        {
-                            return new FormatedResponse()
-                            {
-                                ErrorType = EnumErrorType.CATCHABLE,
-                                MessageCode = CommonMessageCodes.DUPLICATE_TAX_CODE,
-                                StatusCode = EnumStatusCode.StatusCode400
-                            };
-                        }
-                    }
-
 
                     _dbContext.HuEmployeeCvs.Add(cv);
                     _dbContext.SaveChanges();
@@ -394,83 +299,10 @@ namespace API.All.HRM.Profile.ProfileAPI.HuEmployeeImport
                     employee.CREATED_DATE = now;
                     employee.CREATED_BY = request.XlsxSid;
 
-
-                    if (employee.CODE != null)
-                    {
-                        var checkEmployeeCodeExist = _dbContext.HuEmployees.Any(x => x.CODE == employee.CODE);
-
-                        if (checkEmployeeCodeExist)
-                        {
-                            return new FormatedResponse()
-                            {
-                                ErrorType = EnumErrorType.CATCHABLE,
-                                MessageCode = CommonMessageCodes.DUPLICATE_EMPLOYEE_CODE,
-                                StatusCode = EnumStatusCode.StatusCode400
-                            };
-                        }
-                    }
-
-
-                    if (employee.ORG_ID == null)
-                    {
-                        return new FormatedResponse()
-                        {
-                            ErrorType = EnumErrorType.CATCHABLE,
-                            MessageCode = CommonMessageCodes.REQURIED_ORG_ID,
-                            StatusCode = EnumStatusCode.StatusCode400
-                        };
-                    }
-
-
-                    if (employee.POSITION_ID == null)
-                    {
-                        return new FormatedResponse()
-                        {
-                            ErrorType = EnumErrorType.CATCHABLE,
-                            MessageCode = CommonMessageCodes.REQURIED_POSITION_ID,
-                            StatusCode = EnumStatusCode.StatusCode400
-                        };
-                    }
-
-
-                    if (employee.EMPLOYEE_OBJECT_ID == null)
-                    {
-                        return new FormatedResponse()
-                        {
-                            ErrorType = EnumErrorType.CATCHABLE,
-                            MessageCode = CommonMessageCodes.REQURIED_EMPLOYEE_OBJECT_ID,
-                            StatusCode = EnumStatusCode.StatusCode400
-                        };
-                    }
-
-
-                    if (
-                        (employee.CODE == null || employee.CODE == "")
-                        && (employee.PROFILE_CODE == null || employee.PROFILE_CODE == "")
-                    )
-                    {
-                        var getComCode = (from ho in _dbContext.HuOrganizations.Where(x => x.ID == employee.ORG_ID)
-                                          from hc in _dbContext.HuCompanys.Where(x => x.ID == ho.COMPANY_ID)
-                                          select hc.CODE).FirstOrDefault();
-
-                        if (getComCode != null) //tạo code lúc insert
-                        {
-                            decimal num;
-                            var queryCode = await (from x in _dbContext.HuEmployees
-                                                   where x.CODE.Length - getComCode.Length == 4
-                                                   select x.CODE).ToListAsync();
-                            queryCode = queryCode.Where(x => HuEmployeeCvRepository.CheckForSpecialCharacters(x) == false && x.AsEnumerable().All(c => Char.IsDigit(c)) == true).ToList();
-                            var existingCode = (from p in queryCode where Decimal.TryParse(p.Substring(getComCode.Length), out num) orderby p descending select p).ToList();
-                            string newcode = StringCodeGenerator.CreateNewCode(getComCode, 4, existingCode);
-                            employee.CODE = newcode;
-                            employee.PROFILE_CODE = newcode;
-                        }
-                    }
-
-
                     _dbContext.HuEmployees.Add(employee);
                     _dbContext.SaveChanges();
-                }
+
+                });
 
                 // Clear tmp
                 _dbContext.HuEmployeeCvImports.RemoveRange(tmp1);
@@ -478,12 +310,7 @@ namespace API.All.HRM.Profile.ProfileAPI.HuEmployeeImport
                 _dbContext.SaveChanges();
 
                 _uow.Commit();
-                return new FormatedResponse()
-                {
-                    MessageCode = CommonMessageCodes.IMPORT_SUCCESS,
-                    InnerBody = true,
-                    StatusCode = EnumStatusCode.StatusCode200
-                };
+                return new() { InnerBody = true };
 
             } catch (Exception ex)
             {

@@ -14,7 +14,7 @@ namespace API.Entities
         public DateTime? END_DATE { get; set; }
         public long? DAY_CALCULATOR { get; set; }
         public long? ACCUMULATE_DAY { get; set; }
-        public long? CHILDREN_NO { get; set; }
+        public string? CHILDREN_NO { get; set; }
         public long? AVERAGE_SAL_SIX_MONTH { get; set; }
         public long? BHXH_SALARY { get; set; }
         public long? REGIME_SALARY { get; set; }

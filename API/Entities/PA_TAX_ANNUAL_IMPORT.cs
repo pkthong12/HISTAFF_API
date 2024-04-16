@@ -38,8 +38,6 @@ namespace API.Entities
         public double? CL27 { get; set; }
         public double? TAX18 { get; set; }
         public double? TAX26 { get; set; }
-        public double? TAX23 { get; set; }
-        public double? TAX44 { get; set; }
     }
 
 }

@@ -150,13 +150,6 @@ namespace API.Controllers.PaListfund
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetListFundByPeriodId(long periodId)
-        {
-            var response = await _PaListfundRepository.GetListFundByPeriodId(periodId);
-            return Ok(response);
-        }
-
-        [HttpGet]
         public async Task<IActionResult> GetListFund()
         {
             var response = await _PaListfundRepository.GetListFund();

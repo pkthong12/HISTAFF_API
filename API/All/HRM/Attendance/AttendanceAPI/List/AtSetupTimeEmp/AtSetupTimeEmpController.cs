@@ -5,9 +5,11 @@ using CORE.DTO;
 using CORE.Enum;
 using CORE.GenericUOW;
 using CORE.StaticConstant;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using System;
+using System.Globalization;
 
 namespace API.Controllers.AtSetupTimeEmp
 {
@@ -77,15 +79,63 @@ namespace API.Controllers.AtSetupTimeEmp
         [HttpPost]
         public async Task<IActionResult> Create(AtSetupTimeEmpDTO model)
         {
-            var sid = Request.Sid(_appSettings);
-            if (sid == null) return Unauthorized();
-            var checkExists = _fullDbContext.AtSetupTimeEmps.Where(x => x.EMPLOYEE_ID == model.EmployeeId && x.IS_ACTIVE == true).Count();
-            if (checkExists > 0)
+            try
             {
-                return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = "EXIST_RECORD_APPLICABLE_STATE" });
+                var sid = Request.Sid(_appSettings);
+                if (sid == null) return Unauthorized();
+
+                var data = _fullDbContext.AtSetupTimeEmps.Where(x => x.EMPLOYEE_ID == model.EmployeeId && x.IS_ACTIVE == true).ToList();
+                if (data != null)
+                {
+                    foreach (var item in data)
+                    {
+                        DateTime sDate = item.START_DATE_HL!.Value;//ngay hieu luc cua ban ghi nv da co
+                        //DateTime eDate = item.END_DATE_HL!.Value;//ngay het hieu luc cua ban ghi nv da co
+                        DateTime sDateNew = model.StartDateHl!.Value;//ngay hieu luc ban ghi nv moi
+
+                        if (item.END_DATE_HL != null && model.EndDateHl != null) //(model.EndDateHl != null)
+                        {
+                            DateTime eDate = item.END_DATE_HL!.Value;//ngay het hieu luc cua ban ghi nv da co
+                            DateTime eDateNew = model.EndDateHl!.Value;//ngay het hieu luc ban ghi nv moi
+                            if ((sDateNew >= sDate && sDateNew <= eDate) || (eDateNew >= sDate && eDateNew <= eDate) || (sDateNew <= sDate && eDateNew >= eDate)
+                             || (sDate >= sDateNew && sDate <= sDateNew) || (sDate >= sDateNew && sDate <= eDateNew) || (eDate >= sDateNew && eDate <= eDateNew))
+                            {
+                                return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = "THE_EMPLOYEE_HAS_RECORDS_FOR_THIS_TIME_PERIOD" });
+                            }
+                        }
+                        else if(item.END_DATE_HL != null)
+                        {
+                            DateTime eDate = item.END_DATE_HL!.Value;//ngay het hieu luc cua ban ghi nv da co
+                            if ((sDate >= sDateNew && sDate <= sDateNew) || sDateNew >= sDate && sDateNew <= eDate)
+                            {
+                                return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = "THE_EMPLOYEE_HAS_RECORDS_FOR_THIS_TIME_PERIOD" });
+                            }
+
+                            //update ngay het hieu cho ban ghi cu (null)
+                            var updateDate = await _fullDbContext.AtSetupTimeEmps.Where(p => p.EMPLOYEE_ID == model.EmployeeId).OrderByDescending(p => p.ID).FirstAsync();
+                            //var updateDate = await _fullDbContext.AtSetupTimeEmps.AsNoTracking().Where(x => x.ID == item.ID).FirstOrDefaultAsync();
+                            updateDate!.END_DATE_HL = sDateNew.AddDays(-1);
+                            _fullDbContext.Entry(updateDate).State = EntityState.Modified;
+                            await _fullDbContext.SaveChangesAsync();
+                            _uow.Commit();
+                        }
+
+                    }
+                }
+                //var checkExists = _fullDbContext.AtSetupTimeEmps.Where(x => x.EMPLOYEE_ID == model.EmployeeId && x.IS_ACTIVE == true).Count();
+                //if (checkExists > 0)
+                //{
+                //    return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = "EXIST_RECORD_APPLICABLE_STATE" });
+                //}
+                var response = await _AtSetupTimeEmpRepository.Create(_uow, model, sid);
+                return Ok(response);
             }
-            var response = await _AtSetupTimeEmpRepository.Create(_uow, model, sid);
-            return Ok(response);
+            catch (Exception ex)
+            {
+                _uow.Rollback();
+                return Ok(new FormatedResponse() { MessageCode = ex.Message, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 });
+
+            }
         }
         [HttpPost]
         public async Task<IActionResult> CreateRange(List<AtSetupTimeEmpDTO> models)

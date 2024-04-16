@@ -157,7 +157,7 @@ namespace API.Controllers.SeProcessApprove
                     var pos = newObjResponse.InnerBody as SE_PROCESS_APPROVE_POS;
                     if (newObj != null)
                     {
-                        if (model.PosIds != null && model.PosIds.Count != 0)
+                        if (model.PosIds != null && model.PosIds.Count != 0 && model.PosIds[0] != null)
                         {
                             List<SeProcessApprovePosDTO> list = new();
                             model.PosIds.ForEach(item =>
@@ -267,7 +267,7 @@ namespace API.Controllers.SeProcessApprove
                     model.IsDirectMngOfDirectMng = false;
                 }
                 var updateObjResponse = await _SeProcessApproveRepository.Update(_uow, model, sid, patchMode);
-                if (model.PosIds != null && model.PosIds.Count != 0)
+                if (model.PosIds != null && model.PosIds.Count != 0 && model.PosIds[0] != null)
                 {
                     _fullDbContext.SeProcessApprovePos.RemoveRange(_fullDbContext.SeProcessApprovePos.Where(x => x.PROCESS_APPROVE_ID == model.Id));
                     foreach (long item in model.PosIds)

@@ -14,8 +14,6 @@ namespace API.Entities
         public string? CREATED_LOG { get; set; }
         public string? UPDATED_LOG { get; set; }
         public bool? IS_ACTIVE { get; set; }
-        public long? TR_TRAIN_FIELD { get; set; }
-        public string? PROFESSIONAL_TRAINNING { get; set; }
 
     }
 }

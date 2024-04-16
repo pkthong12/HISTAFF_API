@@ -30,7 +30,7 @@ namespace API.DTO
         public string? OrgName { get; set; }
         public string? PositionName { get; set; }
         public string? CommendObjName { get; set; }
-        public string? StatusName { get; set; }
+        public string?  StatusName { get; set; }
         public string? SourceCostName { get; set; }
         public int? SalaryIncreaseTime { get; set; }
         public long? OrgLevelId { get; set; }
@@ -51,7 +51,7 @@ namespace API.DTO
         public string? RewardLevelName { get; set; }
         public int? MonthTax { get; set; }
         public string? Attachment { get; set; }
-        public AttachmentDTO? AttachmentBuffer { get; set; }
+        public AttachmentDTO?   AttachmentBuffer { get; set; }
         public List<long>? EmployeeIds { get; set; }
         public string? OrgLevelName { get; set; }
         public long? CommendId { get; set; }

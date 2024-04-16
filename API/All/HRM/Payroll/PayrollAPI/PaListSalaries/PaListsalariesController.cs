@@ -67,13 +67,6 @@ namespace API.Controllers.PaListsalaries
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetListObj(string typeCode)
-        {
-            var response = await _PaListsalariesRepository.GetListObj(typeCode);
-            return Ok(response);
-        }
-
-        [HttpGet]
         public async Task<IActionResult> GetByStringId(string id)
         {
             var response = await _PaListsalariesRepository.GetById(id);

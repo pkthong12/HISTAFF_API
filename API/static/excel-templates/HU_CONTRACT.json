@@ -13,7 +13,7 @@
         {
           "Table": "HU_CONTRACT_TYPE",
           "UniqueIndexColumns": [ "NAME" ],
-          "Condition": "(IS_ACTIVE = 1 AND CODE != 'PLHD')"
+          "Condition": "(IS_ACTIVE = 1 AND CODE != 'PLHDLD')"
         },
         {
           "Table": "HU_EMPLOYEE_CV",
@@ -74,12 +74,7 @@
             "CONTRACT_NO",
             "PROFILE_ID",
             "CONTRACT_TYPE_ID",
-            "START_DATE",
-            "SIGNER_POSITION",
-            "SIGN_PROFILE_ID",
-            "SIGN_ID",
-            "SIGN_DATE",
-            "WORKING_ID"
+            "START_DATE"
           ],
           "UniqueIndexes": [],
           "Rules": [

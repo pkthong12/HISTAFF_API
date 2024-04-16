@@ -11,8 +11,6 @@ using Common.Interfaces;
 using Common.DataAccess;
 using MimeKit.Text;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System.Data;
 
 namespace API.Controllers.PaListsalaries
 {
@@ -54,7 +52,7 @@ namespace API.Controllers.PaListsalaries
                              GroupType = otl1.ID,
                              GroupTypeName = otl1.NAME,
                              EffectiveDate = p.EFFECTIVE_DATE,
-                             ColIndex = p.COL_INDEX != null ? p.COL_INDEX : 999,
+                             ColIndex = p.COL_INDEX,
                              Status = p.IS_ACTIVE.HasValue ? "Áp dụng" : "Ngừng áp dụng",
                              IsFormula = p.IS_FORMULA,
                              IsSumFormula = p.IS_SUM_FORMULA,
@@ -196,28 +194,6 @@ namespace API.Controllers.PaListsalaries
             //        StatusCode = EnumStatusCode.StatusCode400
             //    };
             //}
-            if (dto.IsImport == true)
-            {
-                var data = await _dbContext.PaListSals.Where(p => p.ID == dto.CodeSal).FirstAsync();
-                var r = await QueryData.ExecuteNonQuery("PKG_PAYROLL_ADD_COLUMN",
-                    new
-                    {
-                        COL_NAME = data.CODE_LISTSAL!.ToUpper().Replace(' ', '_'),
-                        DATA_TYPE = dto.DataType == 1054 ? "FLOAT" : "NVARCHAR(50)",
-                        FROM_TABLE = "PA_LISTSALARIES",
-                    }, false);
-            }
-            else
-            {
-                var data = await _dbContext.PaListSals.Where(p => p.ID == dto.CodeSal).FirstAsync();
-                var r = await QueryData.ExecuteNonQuery("PKG_PAYROLL_DELETE_COLUMN",
-                    new
-                    {
-                        COL_NAME = data.CODE_LISTSAL!.ToUpper().Replace(' ', '_'),
-                        DATA_TYPE = dto.DataType == 1054 ? "FLOAT" : "NVARCHAR(50)",
-                        FROM_TABLE = "PA_LISTSALARIES",
-                    }, false);
-            }
             var response = await _genericRepository.Update(_uow, dto, sid, patchMode);
             return response;
         }
@@ -367,19 +343,6 @@ namespace API.Controllers.PaListsalaries
                                }).ToListAsync();
             return new FormatedResponse() { InnerBody = query };
         }
-
-        public async Task<FormatedResponse> GetListObj(string typeCode)
-        {
-            var query = await (from t in _dbContext.SysOtherLists.AsNoTracking().Where(p => p.CODE == typeCode).DefaultIfEmpty()
-                               from s in _dbContext.HuSalaryTypes.AsNoTracking().Where(o => o.IS_ACTIVE == true && o.SALARY_TYPE_GROUP == t.ID).OrderBy(o => o.NAME).DefaultIfEmpty()
-                               select new
-                               {
-                                   Id = s.ID,
-                                   Name = s.NAME,
-                               }).ToListAsync();
-            return new FormatedResponse() { InnerBody = query };
-        }
-
     }
 }
 

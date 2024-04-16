@@ -139,7 +139,7 @@ namespace API.Controllers.PaListfund
             {
                 var check = await _dbContext.PaListfunds.AsNoTracking()
                         .Where(a => a.LISTFUND_NAME.ToLower().Trim() == dto.ListfundName.ToLower().Trim()
-                        && a.COMPANY_ID == dto.CompanyId && dto.Id != a.ID).AnyAsync();
+                        && a.COMPANY_ID == dto.CompanyId).AnyAsync();
                 if (check)
                 {
                     //return new FormatedResponse()
@@ -190,13 +190,23 @@ namespace API.Controllers.PaListfund
                 foreach( var item in ids)
                 {
                     var query = _dbContext.PaListfunds.Where(x => x.ID == item && x.IS_ACTIVE == true).Any();
+                    var check1 = await _dbContext.PaPayrollsheetSums.Where(x => x.FUND_ID == item).AsNoTracking().AnyAsync();
+                    var check2 = await _dbContext.PaPayrollsheetSumBackdates.Where(x => x.FUND_ID == item).AsNoTracking().AnyAsync();
+                    var check3 = await _dbContext.PaPayrollsheetSumSubs.Where(x => x.FUND_ID == item).AsNoTracking().AnyAsync();
                     if (query)
                     {
                         return new FormatedResponse()
                         {
                             MessageCode = CommonMessageCode.CAN_NOT_DELETE_RECORD_IS_ACTIVE,
-                            StatusCode = EnumStatusCode.StatusCode400,
-                            ErrorType = EnumErrorType.CATCHABLE,
+                            StatusCode = EnumStatusCode.StatusCode400
+                        };
+                    }
+                    else if(check1 == true || check2 == true || check3 == true)
+                    {
+                        return new FormatedResponse()
+                        {
+                            MessageCode = CommonMessageCode.CAN_NOT_DELETE_RECORDS_HAVE_USE,
+                            StatusCode = EnumStatusCode.StatusCode400
                         };
                     }
                 }
@@ -256,20 +266,6 @@ namespace API.Controllers.PaListfund
         {
             var query = await (from s in _dbContext.PaListfunds.AsNoTracking()
                               .Where(s => s.IS_ACTIVE == true)
-                               orderby s.ID
-                               select new
-                               {
-                                   Id = s.ID,
-                                   Name = s.LISTFUND_NAME,
-                               }).ToListAsync();
-            return new FormatedResponse() { InnerBody = query };
-        }
-
-        public async Task<FormatedResponse> GetListFundByPeriodId(long periodId)
-        {
-            var query = await (from s in _dbContext.PaListfunds.AsNoTracking().Where(s => s.IS_ACTIVE == true).DefaultIfEmpty()
-                               from t in _dbContext.PaPayrollFunds.AsNoTracking().Where(t => t.LIST_FUND_ID == s.ID).DefaultIfEmpty()
-                               where t.SALARY_PERIOD_ID == periodId
                                orderby s.ID
                                select new
                                {

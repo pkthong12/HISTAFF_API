@@ -334,8 +334,7 @@ namespace API.All.SYSTEM.CoreAPI.Excel
         #endregion
 
         #region import dữ liệu công
-        public async Task<byte[]> ExportTempImportTimeSheet
-            (string filePath, DataSet dtDataValue, long? periodId)
+        public async Task<byte[]> ExportTempImportTimeSheet(string filePath, DataSet dtDataValue, long? periodId)
         {
             var QueryData = new SqlQueryDataTemplate(_dbContext);
             var periodObj = await _dbContext.AtSalaryPeriods.FirstOrDefaultAsync(x => x.ID == periodId);
@@ -651,7 +650,7 @@ namespace API.All.SYSTEM.CoreAPI.Excel
             }
             catch (Exception ex)
             {
-                throw new Exception("An error occurred while exporting the template.", ex);
+                return null;
             }
             return new byte[0];
         }
@@ -1173,14 +1172,14 @@ namespace API.All.SYSTEM.CoreAPI.Excel
                     }
                     if (row["NUMBER_DAY_OFF"].ToString() != "")
                     {
-                        objParam.NUMBER_DAY_OFF = Convert.ToDecimal(row["NUMBER_DAY_OFF"].ToString());
+                        objParam.NUMBER_DAY_OFF = long.Parse(row["NUMBER_DAY_OFF"].ToString());
                     }
 
                     objParam.REASON_ADJUST_DAY_OFF = row["REASON_ADJUST_DAY_OFF"].ToString();
 
                     if (row["TOTAL"].ToString() != "")
                     {
-                        objParam.TOTAL = Convert.ToDecimal(row["TOTAL"].ToString());
+                        objParam.TOTAL = long.Parse(row["TOTAL"].ToString());
                     }
                     objParam.CREATED_DATE = DateTime.Now;
                     objParam.CREATED_BY = _dbContext.UserName;
@@ -1520,7 +1519,7 @@ namespace API.All.SYSTEM.CoreAPI.Excel
             return null;
         }
         #endregion
-
+         
         #region import đăng ký OT
         public async Task<byte[]> CheckValidImportRegisterOT(string errorFilePath, string base64)
         {

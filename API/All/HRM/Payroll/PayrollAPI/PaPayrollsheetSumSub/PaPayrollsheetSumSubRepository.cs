@@ -7,7 +7,6 @@ using API.All.DbContexts;
 using CORE.AutoMapper;
 using Common.Interfaces;
 using Common.DataAccess;
-using Microsoft.AspNetCore.Http.Metadata;
 
 namespace API.Controllers.PaPayrollsheetSumSub
 {
@@ -30,7 +29,7 @@ namespace API.Controllers.PaPayrollsheetSumSub
 
         public async Task<FormatedResponse> GetDynamicName(PaPayrollsheetSumSubDTO param)
         {
-            var result = await (from p in _dbContext.PaListSals.AsNoTracking()
+            var result = await (from p in _dbContext.PaListSals.AsNoTracking().Where(p=> p.CODE_LISTSAL != "CL7")
                                 from t in _dbContext.PaListsalariess.AsNoTracking().Where(t => t.CODE_SAL == p.ID && t.OBJ_SAL_ID == param.ObjSalaryId && t.IS_VISIBLE == true)
                                 orderby t.COL_INDEX, t.NAME
                                 select new
@@ -99,23 +98,6 @@ namespace API.Controllers.PaPayrollsheetSumSub
                 if (checkLockOrg)
                 {
                     return new FormatedResponse() { MessageCode = CommonMessageCode.PHASE_ADVANCE_PERIOD_IS_LOCKED, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
-                }
-                var phaseAdvance = await _dbContext.PaPhaseAdvances.FirstOrDefaultAsync(x => x.ID == param.PhaseAdvanceId);
-                var monthStart = await _dbContext.AtSalaryPeriods.FirstOrDefaultAsync(x => x.ID == phaseAdvance!.FROM_SALARY);
-                var monthEnd = await _dbContext.AtSalaryPeriods.FirstOrDefaultAsync(x => x.ID == phaseAdvance!.TO_SALARY);
-                for(int i = (int)monthStart!.MONTH!; i <= (int)monthEnd!.MONTH!; i++)
-                {
-                    // check khoa bang cong tong hop tung thang
-                    var checkLock =  await (from s in _dbContext.AtSalaryPeriods.AsNoTracking().Where(s => s.MONTH == i && s.YEAR == phaseAdvance!.YEAR)
-                                            from p in _dbContext.AtOrgPeriods.AsNoTracking().Where(p => p.PERIOD_ID == s.ID && param.OrgIds!.ToList().Contains(p.ORG_ID!.Value) && p.STATUSCOLEX == 0)
-                                             select new
-                                             {
-                                                 Id = p.ID
-                                            }).FirstOrDefaultAsync();
-                    if (checkLock != null)
-                    {
-                        return new FormatedResponse() { MessageCode = CommonMessageCode.AT_TIME_TIMESHEETSUMMARY_HAVE_NOT_LOCK, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
-                    }
                 }
                 var r = await QueryData.ExecuteList("PKG_PA_PAYROLL_LOAD_DATA_BS",
                     new
@@ -311,16 +293,15 @@ namespace API.Controllers.PaPayrollsheetSumSub
 
         public async Task<FormatedResponse> GetPhaseAdvance(PaPayrollsheetSumSubDTO param)
         {
-            var queryable = await (from p in _dbContext.PaPhaseAdvances.AsNoTracking().Where(p => p.IS_ACTIVE == true)
-                                   from s in _dbContext.AtSalaryPeriods.AsNoTracking().Where(s => s.ID == param.PeriodId).DefaultIfEmpty()
-                                   where s.MONTH == p.PHASE_DAY!.Value.Month && s.YEAR == p.PHASE_DAY!.Value.Year
+            var queryable = await (from p in _dbContext.PaPhaseAdvances.AsNoTracking().Where(p => p.IS_ACTIVE == true && p.PERIOD_ID == param.PeriodId)
+                                   from s in _dbContext.AtSalaryPeriods.AsNoTracking().Where(s => s.ID == p.PERIOD_ID).DefaultIfEmpty()
                                    orderby s.MONTH ascending
                                    select new
                                    {
                                        Id = p.ID,
                                        SalaryName = s.NAME,
                                        Month = s.MONTH,
-                                       Name = p.NAME_VN + " [" + p.PHASE_DAY!.Value.ToString("dd/MM/yyyy") + "]",
+                                       Name = p.NAME_VN + "[" + p.PHASE_DAY!.Value.ToString("dd/MM/yyyy") + "]",
                                        Day = p.PHASE_DAY
                                    }).ToListAsync();
             return new() { InnerBody = queryable };

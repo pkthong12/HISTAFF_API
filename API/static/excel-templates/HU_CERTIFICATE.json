@@ -69,10 +69,11 @@
             "TRAIN_FROM_DATE",
             "TRAIN_TO_DATE",
             "LEVEL_ID",
-            "SCHOOL_ID",
-            "YEAR"
+            "SCHOOL_ID"
           ],
-          "UniqueIndexes": [],
+          "UniqueIndexes": [
+
+          ],
           "Rules": [
             {
               "Column": "PROFILE_ID",

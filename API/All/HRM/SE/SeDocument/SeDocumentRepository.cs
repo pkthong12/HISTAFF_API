@@ -169,6 +169,15 @@ namespace API.Controllers.SeDocument
 
         public virtual async Task<FormatedResponse> ToggleActiveIds(GenericUnitOfWork _uow, List<long> ids, bool valueToBind, string sid)
         {
+            if(ids != null)
+            {
+                return new FormatedResponse()
+                {
+                    ErrorType = EnumErrorType.CATCHABLE,
+                    MessageCode = "THE_TASK_CANNOT_BE_PERFORMED",
+                    StatusCode = EnumStatusCode.StatusCode400
+                };
+            }
             var response = await _genericRepository.ToggleActiveIds(_uow, ids, valueToBind, sid);
             return response;
         }

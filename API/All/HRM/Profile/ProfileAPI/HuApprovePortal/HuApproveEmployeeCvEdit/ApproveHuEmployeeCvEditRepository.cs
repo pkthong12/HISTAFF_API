@@ -153,6 +153,7 @@ namespace API.Controllers.HuEmployeeCvEdit
 
         public async Task<GenericPhaseTwoListResponse<HuEmployeeCvEditDTO>> QueryListCvEdit(GenericQueryListDTO<HuEmployeeCvEditDTO> request)
         {
+            string[] arrEmpty = Array.Empty<string>();
             var employee = _uow.Context.Set<HU_EMPLOYEE>().AsNoTracking().AsQueryable();
             var employeeEdit = _uow.Context.Set<HU_EMPLOYEE_CV_EDIT>().AsNoTracking().AsQueryable();
             var employeeCv = _uow.Context.Set<HU_EMPLOYEE_CV>().AsNoTracking().AsQueryable();
@@ -189,13 +190,16 @@ namespace API.Controllers.HuEmployeeCvEdit
                                IdPlace = ee.ID_PLACE,
                                StatusName = s.NAME,
                                IdentityAddressName = pr.NAME,
-                               OrgId = e.ORG_ID
+                               OrgId = e.ORG_ID,
+                               IdDateStr = (ee.ID_DATE != null) ? ee.ID_DATE.Value.ToString("dd/MM/yyyy") : "",
+                               ModelChanges = !string.IsNullOrEmpty(ee.MODEL_CHANGE) ? ee.MODEL_CHANGE!.Split(";", StringSplitOptions.None) : arrEmpty
                            };
             var singlePhaseResult = await _genericReducer.SinglePhaseReduce(response, request);
             return singlePhaseResult;
         }
         public async Task<GenericPhaseTwoListResponse<HuEmployeeCvEditDTO>> QueryListContactEdit(GenericQueryListDTO<HuEmployeeCvEditDTO> request)
         {
+            string[] arrEmpty = Array.Empty<string>();
             var employeeCvEdit = _uow.Context.Set<HU_EMPLOYEE_CV_EDIT>().AsNoTracking().AsQueryable();
             var employeeCv = _uow.Context.Set<HU_EMPLOYEE_CV>().AsNoTracking().AsQueryable();
             var employee = _uow.Context.Set<HU_EMPLOYEE>().AsNoTracking().AsNoTracking();
@@ -240,7 +244,8 @@ namespace API.Controllers.HuEmployeeCvEdit
                                MobilePhoneLand = ee.MOBILE_PHONE_LAND,
                                Email = ee.EMAIL,
                                StatusName = sys.NAME,
-                               OrgId = e.ORG_ID
+                               OrgId = e.ORG_ID,
+                               ModelChanges = !string.IsNullOrEmpty(ee.MODEL_CHANGE) ? ee.MODEL_CHANGE!.Split(";",StringSplitOptions.None) : arrEmpty
                            };
             var singlePhaseResult = await _genericReducer.SinglePhaseReduce(response, request);
             return singlePhaseResult;
@@ -248,6 +253,7 @@ namespace API.Controllers.HuEmployeeCvEdit
         }
         public async Task<GenericPhaseTwoListResponse<HuEmployeeCvEditDTO>> QueryListAdditionalInfoEdit(GenericQueryListDTO<HuEmployeeCvEditDTO> request)
         {
+            string[] arrEmpty = Array.Empty<string>();
             var employeeCvEdit = _uow.Context.Set<HU_EMPLOYEE_CV_EDIT>().AsNoTracking().AsQueryable();
             var employee = _uow.Context.Set<HU_EMPLOYEE>().AsNoTracking().AsQueryable();
             var positon = _uow.Context.Set<HU_POSITION>().AsNoTracking().AsQueryable();
@@ -282,13 +288,16 @@ namespace API.Controllers.HuEmployeeCvEdit
                                WorkPermitExpire = ee.WORK_PERMIT_EXPIRE,
                                WorkPermitPlace = ee.WORK_PERMIT_PLACE,
                                StatusName = sys.NAME,
-                               OrgId = e.ORG_ID
+                               OrgId = e.ORG_ID,
+                               ModelChanges = !string.IsNullOrEmpty(ee.MODEL_CHANGE) ? ee.MODEL_CHANGE!.Split(";",StringSplitOptions.None) : arrEmpty
+
                            };
             var singlePhaseResult = await _genericReducer.SinglePhaseReduce(response, request);
             return singlePhaseResult;
         }
         public async Task<GenericPhaseTwoListResponse<HuEmployeeCvEditDTO>> QueryListBankInfoEdit(GenericQueryListDTO<HuEmployeeCvEditDTO> request)
         {
+            string[] arrEmpty = Array.Empty<string>();
             var employeeCvEdit = _uow.Context.Set<HU_EMPLOYEE_CV_EDIT>().AsNoTracking().AsQueryable();
             var employee = _uow.Context.Set<HU_EMPLOYEE>().AsNoTracking().AsQueryable();
             var bank = _uow.Context.Set<HU_BANK>().AsNoTracking().AsQueryable();
@@ -323,7 +332,8 @@ namespace API.Controllers.HuEmployeeCvEdit
                                BankName2 = b2.NAME,
                                BankBranchName2 = br2.NAME,
                                StatusName = sys.NAME,
-                               OrgId = e.ORG_ID
+                               OrgId = e.ORG_ID,
+                               ModelChanges = !string.IsNullOrEmpty(ee.MODEL_CHANGE) ? ee.MODEL_CHANGE!.Split(";", StringSplitOptions.None) : arrEmpty
                            };
             var singlePhaseResult = await _genericReducer.SinglePhaseReduce(response, request);
             return singlePhaseResult;
@@ -331,6 +341,7 @@ namespace API.Controllers.HuEmployeeCvEdit
 
         public async Task<GenericPhaseTwoListResponse<HuEmployeeCvEditDTO>> QueryListEducationEdit(GenericQueryListDTO<HuEmployeeCvEditDTO> request)
         {
+            string[] arrEmpty = Array.Empty<string>();
             var employeeCvEdit = _uow.Context.Set<HU_EMPLOYEE_CV_EDIT>().AsNoTracking().AsQueryable();
             var employee = _uow.Context.Set<HU_EMPLOYEE>().AsNoTracking().AsQueryable();
             var position = _uow.Context.Set<HU_POSITION>().AsNoTracking().AsNoTracking();
@@ -377,7 +388,8 @@ namespace API.Controllers.HuEmployeeCvEdit
                                TrainingFormName3 = tf.NAME,
                                OrgId = e.ORG_ID,
                                ComputerSkill = reference_1.NAME,
-                               License = reference_2.NAME
+                               License = reference_2.NAME,
+                               ModelChanges = !string.IsNullOrEmpty(ee.MODEL_CHANGE) ? ee.MODEL_CHANGE!.Split(";",StringSplitOptions.None) : arrEmpty
                            };
             var singlePhaseResult = await _genericReducer.SinglePhaseReduce(response, request);
             return singlePhaseResult;

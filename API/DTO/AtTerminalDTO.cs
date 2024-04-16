@@ -22,5 +22,10 @@ namespace API.DTO
 
         public string? Note { get; set; }
 
+        public DateTime? LastTimeStatus { get; set; }
+        public string? TerminalStatus { get; set; }
+        public long? TerminalRow { get; set; }
+        public DateTime? LastTimeUpdate { get; set; }
+
     }
 }

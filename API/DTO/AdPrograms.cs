@@ -13,6 +13,5 @@
         public string? TemplateTypeIn { get; set; }
         public string? TemplateTypeOut { get; set; }
         public string? TemplateUrl { get; set; }
-        public string? Note { get; set; }
     }
 }

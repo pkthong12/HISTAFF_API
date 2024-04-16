@@ -2,7 +2,7 @@
 
 namespace API.Entities;
 [Table("HU_FILECONTRACT")]
-public partial class HU_FILECONTRACT
+public class HU_FILECONTRACT
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public long? ID { get; set; }
@@ -48,5 +48,6 @@ public partial class HU_FILECONTRACT
      public long? ORG_ID { get; set; }
      public long? POSITION_ID { get; set; }
     public string? UPLOAD_FILE { get; set; }
+    public string? INFORMATION_EDIT { get; set; }
 
 }

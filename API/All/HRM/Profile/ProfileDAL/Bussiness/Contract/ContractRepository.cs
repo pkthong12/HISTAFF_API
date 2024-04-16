@@ -15,7 +15,7 @@ using API.DTO;
 using API.All.SYSTEM.CoreAPI.Xlsx;
 using System.Globalization;
 using System.Diagnostics.Contracts;
-using System.Drawing;
+using API.All.HRM.Profile.ProfileDAL.Bussiness.Contract;
 using DocumentFormat.OpenXml.Office2010.Excel;
 
 
@@ -37,23 +37,22 @@ namespace ProfileDAL.Repositories
         {
             var queryable = from p in _appContext.Contracts
                             join e in _appContext.Employees on p.EMPLOYEE_ID equals e.ID
-                            
-                            from ho in _appContext.Organizations.Where(x => x.ID == p.ORG_ID).DefaultIfEmpty()
-                            from hp in _appContext.Positions.Where(x => x.ID == p.POSITION_ID).DefaultIfEmpty()
-                            
-                            from j in _appContext.HUJobs.Where(x => x.ID == hp.JOB_ID).DefaultIfEmpty()
+                            join o in _appContext.Organizations on p.ORG_ID equals o.ID into tmp1
+                            from o1 in tmp1.DefaultIfEmpty()
+                            from t in _appContext.Positions.Where(f => p.POSITION_ID == f.ID).DefaultIfEmpty()
+                            from j in _appContext.HUJobs.Where(x => x.ID == t.JOB_ID).DefaultIfEmpty()
                             from f in _appContext.OtherLists.Where(c => c.ID == p.STATUS_ID).DefaultIfEmpty()
                             join l in _appContext.ContractTypes on p.CONTRACT_TYPE_ID equals l.ID
-                            //orderby p.STATUS_ID, p.START_DATE descending
-                            orderby j.ORDERNUM ascending
+
+                            orderby p.STATUS_ID, p.START_DATE descending
                             select new ContractDTO
                             {
                                 Id = p.ID,
                                 EmployeeId = p.EMPLOYEE_ID,
                                 EmployeeCode = e.CODE,
                                 EmployeeName = e.Profile!.FULL_NAME,
-                                OrgName = ho.NAME,
-                                OrgId = p.ORG_ID,
+                                OrgName = o1.NAME,
+                                OrgId = e.ORG_ID,
                                 StartDate = p.START_DATE,
                                 ExpireDate = p.EXPIRE_DATE,
                                 ContractNo = p.CONTRACT_NO,
@@ -64,11 +63,10 @@ namespace ProfileDAL.Repositories
                                 WorkStatusId = e.WORK_STATUS_ID,
                                 StatusId = p.STATUS_ID,
                                 ContractTypeName = l.NAME,
-                                PosId = hp.ID,
-                                PositionName = hp.NAME,
+                                PositionName = t.NAME,
                                 LiquidationDate = p.LIQUIDATION_DATE,
                                 LiquidationReason = p.LIQUIDATION_REASON,
-                                JobOrderNum = Convert.ToInt32(j.ORDERNUM ?? 999)
+                                JobOrderNum = (int)(j.ORDERNUM ?? 99)
                             };
             var singlePhaseResult = await genericReducer.SinglePhaseReduce(queryable, request);
             return singlePhaseResult;
@@ -218,43 +216,13 @@ namespace ProfileDAL.Repositories
         {
             try
             {
-                // get workingId
-                var workingId = _appContext.Contracts.FirstOrDefault(x => x.ID == id)!.WORKING_ID;
-
-                // get record name is "salary records"
-                var record = _appContext.Workings.FirstOrDefault(x => x.ID == workingId);
-
-                record!.EFFECT_DATE = new DateTime(record.EFFECT_DATE!.Value.Year, record.EFFECT_DATE.Value.Month, record.EFFECT_DATE.Value.Day, 0, 0, 0);
-
-                var getAreaId = (from item in _appContext.Workings.Where(x => x.ID == workingId)
-                                 from he in _appContext.Employees.Where(x => x.ID == item.EMPLOYEE_ID).DefaultIfEmpty()
-                                 from ho in _appContext.Organizations.Where(x => x.ID == he.ORG_ID).DefaultIfEmpty()
-                                 from hc in _appContext.CompanyInfos.Where(x => x.ID == ho.COMPANY_ID).DefaultIfEmpty()
-                                 select hc.REGION_ID).FirstOrDefault();
-
-                var listInsRegions = (from item in _appContext.InsRegions
-                                      where item.AREA_ID == getAreaId
-                                            && item.IS_ACTIVE == true
-                                      orderby item.EFFECT_DATE descending
-                                      select item).ToList();
-
-                var list = listInsRegions.Select(x => new
-                {
-                    EffectDate = new DateTime(x.EFFECT_DATE!.Value.Year, x.EFFECT_DATE.Value.Month, x.EFFECT_DATE.Value.Day, 0, 0, 0),
-                    Money = x.MONEY
-                });
-
-                var regionMinimumWage = (from item in list
-                                         where item.EffectDate <= record.EFFECT_DATE
-                                         select item.Money).FirstOrDefault();
-
                 var n = await (from p in _appContext.Contracts
                                join e in _appContext.Employees on p.EMPLOYEE_ID equals e.ID
-                               
-                               from ho in _appContext.Organizations.Where(x => x.ID == p.ORG_ID).DefaultIfEmpty()
-                               from hp in _appContext.Positions.Where(x => x.ID == p.POSITION_ID).DefaultIfEmpty()
-
-                               from ho2 in _appContext.Organizations.Where(x => x.ID == ho.PARENT_ID).DefaultIfEmpty()
+                               join o in _appContext.Organizations on e.ORG_ID equals o.ID
+                               join o2 in _appContext.Organizations on o.PARENT_ID equals o2.ID into tmp1
+                               from o3 in tmp1.DefaultIfEmpty()
+                               join t in _appContext.Positions on e.POSITION_ID equals t.ID into tmp2
+                               from t1 in tmp2.DefaultIfEmpty()
                                join w in _appContext.Workings on p.WORKING_ID equals w.ID into tmp5
                                from w1 in tmp5.DefaultIfEmpty()
                                from wo in _appContext.Organizations.Where(c => c.ID == w1.ORG_ID).DefaultIfEmpty()
@@ -275,10 +243,10 @@ namespace ProfileDAL.Repositories
                                    EmployeeId = p.EMPLOYEE_ID,
                                    EmployeeName = e.Profile!.FULL_NAME,
                                    EmployeeCode = e.CODE,
-                                   PositionName = hp.NAME,
+                                   PositionName = t1.NAME,
                                    OrgId = e.ORG_ID,
-                                   OrgName = ho.NAME,
-                                   OrgParentName = ho2.NAME,
+                                   OrgName = o.NAME,
+                                   OrgParentName = o3.NAME,
                                    StartDate = p.START_DATE,
                                    ExpireDate = p.EXPIRE_DATE,
                                    ContractNo = p.CONTRACT_NO,
@@ -311,8 +279,6 @@ namespace ProfileDAL.Repositories
                                    salaryLevelDcvName = sldcv.NAME,
                                    regionName = re.NAME,
                                    UploadFile = p.UPLOAD_FILE,
-                                   RegionMinimumWage = regionMinimumWage,
-                                   SalInsu = record.SAL_INSU
                                }).FirstOrDefaultAsync();
                 return new ResultWithError(n);
             }
@@ -353,7 +319,7 @@ namespace ProfileDAL.Repositories
                         DateTime DateLiquidation = latest_contract.LIQUIDATION_DATE.Value;
                         DateLiquidation = DateLiquidation.Date.Add(new TimeSpan(0, 0, 0));
 
-                        DateTime START_DATE = param.StartDate;
+                        DateTime START_DATE = param.StartDate.Value.Date;
                         START_DATE = START_DATE.Date.Add(new TimeSpan(0, 0, 0));
 
                         int checkDate1 = DateTime.Compare(START_DATE, DateLiquidation);
@@ -373,7 +339,7 @@ namespace ProfileDAL.Repositories
 
                 // Kiểm tra xem ngày bắt đầu HĐ mới có lớn hơn ngày kết thúc của HĐ gần nhất không
                 var r = await _appContext.Contracts.Where(x => x.EMPLOYEE_ID == param.EmployeeId && (x.EXPIRE_DATE >= param.StartDate || x.START_DATE > param.StartDate) && x.STATUS_ID == OtherConfig.STATUS_APPROVE).CountAsync();
-                if (r > 0 && latest_contract!.LIQUIDATION_DATE == null)
+                if (r > 0 && latest_contract.LIQUIDATION_DATE == null)
                 {
                     return new FormatedResponse
                     {
@@ -403,10 +369,10 @@ namespace ProfileDAL.Repositories
                 var result = await _appContext.Contracts.AddAsync(data);
                 await _appContext.SaveChangesAsync();
                 param.Id = data.ID;
-
-                // when user choose "Đã phê duyệt"
-                var getStatusApproveId = _appContext.OtherLists.FirstOrDefault(x => x.CODE == "DD")?.ID;
-                if (data.STATUS_ID == getStatusApproveId && data.START_DATE!.Value.Date <= DateTime.Now.Date) await ApproveContract(param);
+                if (data.STATUS_ID == OtherConfig.STATUS_APPROVE)
+                {
+                    await ApproveContract(param);
+                }
 
                 await _appContext.SaveChangesAsync();
                 _appContext.Database.CommitTransaction();
@@ -498,11 +464,10 @@ namespace ProfileDAL.Repositories
                     data.POSITION_ID = _emp.POSITION_ID;
                 }
                 var result = _appContext.Contracts.Update(data);
-
-                // when user choose "Đã phê duyệt"
-                var getStatusApproveId = _appContext.OtherLists.FirstOrDefault(x => x.CODE == "DD")?.ID;
-                if (data.STATUS_ID == getStatusApproveId && data.START_DATE!.Value.Date <= DateTime.Now.Date) await ApproveContract(param);
-
+                if (data.STATUS_ID == OtherConfig.STATUS_APPROVE)
+                {
+                    await ApproveContract(param);
+                }
                 await _appContext.SaveChangesAsync();
                 return new FormatedResponse
                 {
@@ -933,7 +898,7 @@ namespace ProfileDAL.Repositories
 
                                            join sal in _appContext.Workings on f.WORKING_ID equals sal.ID into tmp4
                                            from sa in tmp4.DefaultIfEmpty()
-                                           join wa in _appContext.WorkingAllowances on sa.ID equals wa.WORKING_ID  into tmp5
+                                           join wa in _appContext.WorkingAllowances on sa.ID equals wa.WORKING_ID into tmp5
                                            from wl in tmp5.DefaultIfEmpty()
                                            join al in _appContext.Allowances on wl.ALLOWANCE_ID equals al.ID into tmp6
                                            from all in tmp6.DefaultIfEmpty()
@@ -989,10 +954,10 @@ namespace ProfileDAL.Repositories
 
                                            join sal in _appContext.Workings on f.WORKING_ID equals sal.ID into tmp4
                                            from sa in tmp4.DefaultIfEmpty()
-                                           //join wa in _appContext.WorkingAllowances on sa.ID equals wa.WORKING_ID into tmp5
-                                           //from wl in tmp5.DefaultIfEmpty()
-                                           //join al in _appContext.Allowances on wl.ALLOWANCE_ID equals al.ID into tmp6
-                                           //from all in tmp6.DefaultIfEmpty()
+                                               //join wa in _appContext.WorkingAllowances on sa.ID equals wa.WORKING_ID into tmp5
+                                               //from wl in tmp5.DefaultIfEmpty()
+                                               //join al in _appContext.Allowances on wl.ALLOWANCE_ID equals al.ID into tmp6
+                                               //from all in tmp6.DefaultIfEmpty()
 
                                            where p.ID == f.ID_CONTRACT
                                            select new
@@ -1008,7 +973,7 @@ namespace ProfileDAL.Repositories
                                                AllowanceList = (from wa in _appContext.WorkingAllowances
                                                                 from n in _appContext.Allowances.Where(x => x.ID == wa.ALLOWANCE_ID)
                                                                 from a in _appContext.HuFileContracts.Where(x => x.WORKING_ID == wa.WORKING_ID)
-                                                                where  wa.WORKING_ID == p.ID
+                                                                where wa.WORKING_ID == p.ID
                                                                 select new
                                                                 {
                                                                     Id = wa.ID,
@@ -1062,7 +1027,6 @@ namespace ProfileDAL.Repositories
         {
             try
             {
-
                 var r = await (from p in _appContext.Workings
                                from e in _appContext.Employees.Where(c => c.ID == p.EMPLOYEE_ID)
                                from t in _appContext.Positions.Where(c => c.ID == p.POSITION_ID)
@@ -1081,10 +1045,9 @@ namespace ProfileDAL.Repositories
                                from sldcv in _appContext.SalaryLevels.Where(c => c.ID == p.SALARY_LEVEL_DCV_ID).DefaultIfEmpty()
                                from com in _appContext.CompanyInfos.Where(c => c.ID == o.COMPANY_ID).DefaultIfEmpty()
                                from re in _appContext.OtherLists.Where(x => x.ID == com.REGION_ID).DefaultIfEmpty()
-                               //from m in _appContext.InsRegions.Where(x => x.)
                                where p.EMPLOYEE_ID == empId && p.EFFECT_DATE!.Value.Date <= Convert.ToDateTime(date.Replace("_", "/")).Date && (p.IS_WAGE == -1 || p.IS_WAGE == 1) && p.STATUS_ID == 994
                                orderby p.EFFECT_DATE descending
-                               select new HuWorkingDTO
+                               select new
                                {
                                    Id = p.ID,
                                    OrgId = p.ORG_ID,
@@ -1121,36 +1084,8 @@ namespace ProfileDAL.Repositories
                                    EmpWorkStatus = e.WORK_STATUS_ID,
                                    EffectUpsalDate = p.EFFECT_UPSAL_DATE,
                                    ReasonUpsal = p.REASON_UPSAL,
-                                   StatusId = p.STATUS_ID,
-                                   SalInsu = p.SAL_INSU,
+                                   StatusId = p.STATUS_ID
                                }).FirstOrDefaultAsync();
-                if (r != null)
-                {
-
-                    var getAreaId = (from item in _appContext.Workings.Where(x => x.ID == r.Id)
-                                     from he in _appContext.Employees.Where(x => x.ID == item.EMPLOYEE_ID).DefaultIfEmpty()
-                                     from ho in _appContext.Organizations.Where(x => x.ID == he.ORG_ID).DefaultIfEmpty()
-                                     from hc in _appContext.CompanyInfos.Where(x => x.ID == ho.COMPANY_ID).DefaultIfEmpty()
-                                     select hc.REGION_ID).FirstOrDefault();
-
-                    var listInsRegions = (from item in _appContext.InsRegions
-                                          where item.AREA_ID == getAreaId
-                                                && item.IS_ACTIVE == true
-                                          orderby item.EFFECT_DATE descending
-                                          select item).ToList();
-
-                    var list = listInsRegions.Select(x => new
-                    {
-                        EffectDate = new DateTime(x.EFFECT_DATE!.Value.Year, x.EFFECT_DATE.Value.Month, x.EFFECT_DATE.Value.Day, 0, 0, 0),
-                        Money = x.MONEY
-                    });
-
-                    var regionMinimumWage = (from item in list
-                                             where item.EffectDate <= r.EffectDate
-                                             select item.Money).FirstOrDefault();
-
-                    r.RegionMinimumWage = (long?)regionMinimumWage;
-                }
                 return new FormatedResponse() { InnerBody = r, StatusCode = EnumStatusCode.StatusCode200 };
             }
             catch (Exception ex)
@@ -1188,69 +1123,68 @@ namespace ProfileDAL.Repositories
         {
             try
             {
-                var r = _appContext.Contracts.Where(x => x.ID == param.Id).FirstOrDefault();
-
-                if (r != null)
+                if (param.StartDate.Value.Date == DateTime.Now.Date && param.StatusId == OtherConfig.STATUS_APPROVE)
                 {
-                    var e = _appContext.Employees.Where(x => x.ID == r.EMPLOYEE_ID).FirstOrDefault();
-                    var eprofile = (from p in _appContext.Employees.Where(x => x.ID == r.EMPLOYEE_ID) select p.Profile).FirstOrDefault();
-                    if (param.StatusId == OtherConfig.STATUS_APPROVE)
+                    var r = _appContext.Contracts.Where(x => x.ID == param.Id).FirstOrDefault();
+
+                    if (r != null)
                     {
-                        //InsertDecision
-                        if (IsFirstContract(e.ID, r.ID) && r.IS_RECEIVE != false)
+                        var e = _appContext.Employees.Where(x => x.ID == r.EMPLOYEE_ID).FirstOrDefault();
+                        var terminate = _appContext.Terminates.Where(x => x.EMPLOYEE_ID == r.EMPLOYEE_ID).OrderByDescending(x => x.EFFECT_DATE).FirstOrDefault();
+                        var eprofile = (from p in _appContext.Employees.Where(x => x.ID == r.EMPLOYEE_ID) select p.Profile).FirstOrDefault();
+                        if (param.StatusId == OtherConfig.STATUS_APPROVE)
                         {
-                            //get DecisionNo
-                            //decimal num;
-                            //string formatCode = "/QĐ-VNS";
-                            //string formatDecisionNo = "xxxx" + formatCode;
-                            //int numOfDecisionNo = 4;
-                            //var queryCode = (from x in _appContext.Workings where x.DECISION_NO.Length == 11 && x.IS_WAGE != -1 select x.DECISION_NO).ToList();
-                            //var existingCode = (from p in queryCode where Decimal.TryParse(p.Substring(0, numOfDecisionNo), out num) orderby p descending select p).ToList();
-                            //string newcode = StringCodeGenerator.CreateNewCode(formatCode, numOfDecisionNo, existingCode, "RIGHT");
-                            var _typeId = (from p in _appContext.OtherLists.Where(p => p.IS_ACTIVE == true)
-                                           join ot in _appContext.OtherListTypes on p.TYPE_ID equals ot.ID
-                                           where ot.CODE == "TYPE_DECISION" && p.CODE == "CT"
-                                           select p.ID).FirstOrDefault();
-                            //------insert-----------------------------------------------------------
-                            WorkingInputDTO paramW = new WorkingInputDTO();
-                            paramW.EmployeeId = r.EMPLOYEE_ID;
-                            paramW.TypeId = _typeId;
-                            paramW.DecisionNo = " ";
-                            paramW.EffectDate = r.START_DATE;
-                            paramW.OrgId = r.ORG_ID;
-                            paramW.PositionId = r.POSITION_ID;
-                            paramW.EmployeeObjId = eprofile.EMPLOYEE_OBJECT_ID;
-                            paramW.WageId = r.WORKING_ID;
-                            paramW.StatusId = OtherConfig.STATUS_WAITING;
-                            var dataWorking = Map(paramW, new HU_WORKING());
-                            var resultW = await _appContext.Workings.AddAsync(dataWorking);
-                            e.JOIN_DATE = r.START_DATE;
-                        }
-                        //-------------------------------------------------------------------------------------------
-
-                        var _TypeEmpStatus = (from p in _appContext.OtherLists.Where(p => p.IS_ACTIVE == true)
-                                              join ot in _appContext.OtherListTypes on p.TYPE_ID equals ot.ID
-                                              where ot.CODE == "EMP_STATUS" && p.CODE == "ESW"
-                                              select p.ID).FirstOrDefault();
-                        var _TypeEmpStatusDetail = (from p in _appContext.OtherLists.Where(p => p.IS_ACTIVE == true)
-                                                    join ot in _appContext.OtherListTypes on p.TYPE_ID equals ot.ID
-                                                    where ot.CODE == "STATUS_DETAIL" && ot.IS_ACTIVE == true && p.IS_ACTIVE == true
-                                                    select p).ToArray();
-
-                        var contractType = (from p in _appContext.ContractTypes.Where(p => p.IS_ACTIVE == true)
-                                            join ot in _appContext.ContractTypeSyses on p.TYPE_ID equals ot.ID
-                                            where p.ID == r.CONTRACT_TYPE_ID
-                                            select p).FirstOrDefault();
-                                            //select ot).FirstOrDefault(); code cu
-                        
-                        if (e != null)
-                        {
-                            e.CONTRACT_ID = param.Id;
-                            e.CONTRACT_TYPE_ID = r.CONTRACT_TYPE_ID;
-                            if (e.WORK_STATUS_ID == OtherConfig.EMP_STATUS_TERMINATE){}
-                            else
+                            //InsertDecision
+                            if (IsFirstContract(e.ID, r.ID) && r.IS_RECEIVE != false)
                             {
-                                if (_TypeEmpStatus != null)
+                                //get DecisionNo
+                                //decimal num;
+                                //string formatCode = "/QĐ-VNS";
+                                //string formatDecisionNo = "xxxx" + formatCode;
+                                //int numOfDecisionNo = 4;
+                                //var queryCode = (from x in _appContext.Workings where x.DECISION_NO.Length == 11 && x.IS_WAGE != -1 select x.DECISION_NO).ToList();
+                                //var existingCode = (from p in queryCode where Decimal.TryParse(p.Substring(0, numOfDecisionNo), out num) orderby p descending select p).ToList();
+                                //string newcode = StringCodeGenerator.CreateNewCode(formatCode, numOfDecisionNo, existingCode, "RIGHT");
+                                var _typeId = (from p in _appContext.OtherLists.Where(p => p.IS_ACTIVE == true)
+                                               join ot in _appContext.OtherListTypes on p.TYPE_ID equals ot.ID
+                                               where ot.CODE == "TYPE_DECISION" && p.CODE == "CT"
+                                               select p.ID).FirstOrDefault();
+                                //------insert-----------------------------------------------------------
+                                WorkingInputDTO paramW = new WorkingInputDTO();
+                                paramW.EmployeeId = r.EMPLOYEE_ID;
+                                paramW.TypeId = _typeId;
+                                paramW.DecisionNo = " ";
+                                paramW.EffectDate = r.START_DATE;
+                                paramW.OrgId = r.ORG_ID;
+                                paramW.PositionId = r.POSITION_ID;
+                                paramW.EmployeeObjId = eprofile.EMPLOYEE_OBJECT_ID;
+                                paramW.WageId = r.WORKING_ID;
+                                paramW.StatusId = OtherConfig.STATUS_WAITING;
+                                var dataWorking = Map(paramW, new HU_WORKING());
+                                var resultW = await _appContext.Workings.AddAsync(dataWorking);
+                                e.JOIN_DATE = r.START_DATE;
+                            }
+                            //-------------------------------------------------------------------------------------------
+
+                            var _TypeEmpStatus = (from p in _appContext.OtherLists.Where(p => p.IS_ACTIVE == true)
+                                                  join ot in _appContext.OtherListTypes on p.TYPE_ID equals ot.ID
+                                                  where ot.CODE == "EMP_STATUS" && p.CODE == "ESW"
+                                                  select p.ID).FirstOrDefault();
+                            var _TypeEmpStatusDetail = (from p in _appContext.OtherLists.Where(p => p.IS_ACTIVE == true)
+                                                        join ot in _appContext.OtherListTypes on p.TYPE_ID equals ot.ID
+                                                        where ot.CODE == "STATUS_DETAIL" && ot.IS_ACTIVE == true && p.IS_ACTIVE == true
+                                                        select p).ToArray();
+
+                            var contractType = (from p in _appContext.ContractTypes.Where(p => p.IS_ACTIVE == true)
+                                                join ot in _appContext.ContractTypeSyses on p.TYPE_ID equals ot.ID
+                                                where p.ID == r.CONTRACT_TYPE_ID
+                                                select ot).FirstOrDefault();
+
+                            if (e != null)
+                            {
+                                e.CONTRACT_ID = param.Id;
+                                e.CONTRACT_TYPE_ID = r.CONTRACT_TYPE_ID;
+                                if (_TypeEmpStatus != null && (terminate == null ? true : r.START_DATE > terminate?.EFFECT_DATE))
                                 {
                                     e.WORK_STATUS_ID = _TypeEmpStatus;
                                 }
@@ -1259,59 +1193,44 @@ namespace ProfileDAL.Repositories
                                     //cap nhat trang thai chi tiet
                                     switch (contractType.CODE.ToUpper())
                                     {
-                                        case "HDTV"://thu viec
+                                        case "HDTV":
                                             var _IDHDTV = (from p in _TypeEmpStatusDetail where p.CODE == "00003" select p.ID).FirstOrDefault();
                                             if (_IDHDTV != null)
                                             {
                                                 e.STATUS_DETAIL_ID = _IDHDTV;
                                             }
                                             break;
-                                        case "HDNH"://ngan han
-                                            var _IDHDNH = (from p in _TypeEmpStatusDetail where p.CODE == "00359" select p.ID).FirstOrDefault();
-                                            if (_IDHDNH != null)
+                                        case "HDLD001" or "HDLD002" or "HDLD003":
+                                            var _IDXDTH = (from p in _TypeEmpStatusDetail where p.CODE == "00004" select p.ID).FirstOrDefault();
+                                            if (_IDXDTH != null)
                                             {
-                                                e.STATUS_DETAIL_ID = _IDHDNH;
-                                            }
-
-                                            break;
-                                        case "HDKXDTH"://khong xd thoi han
-                                            var _IDHDKXDTH = (from p in _TypeEmpStatusDetail where p.CODE == "00005" select p.ID).FirstOrDefault();
-                                            if (_IDHDKXDTH != null)
-                                            {
-                                                e.STATUS_DETAIL_ID = _IDHDKXDTH;
+                                                e.STATUS_DETAIL_ID = _IDXDTH;
                                             }
                                             if (IsFirstOficialContract(r.EMPLOYEE_ID, r.ID))
                                             {
                                                 e.JOIN_DATE_STATE = r.START_DATE;
                                             }
                                             break;
-                                        case "HXDTH"://xac dinh thoi han
-                                            var _IDHXDTH = (from p in _TypeEmpStatusDetail where p.CODE == "00004" select p.ID).FirstOrDefault();
-                                            if (_IDHXDTH != null)
+                                        case "HDLD004":
+                                            var _IDKXDTH = (from p in _TypeEmpStatusDetail where p.CODE == "00005" select p.ID).FirstOrDefault();
+                                            if (_IDKXDTH != null)
                                             {
-                                                e.STATUS_DETAIL_ID = _IDHXDTH;
+                                                e.STATUS_DETAIL_ID = _IDKXDTH;
                                             }
                                             if (IsFirstOficialContract(r.EMPLOYEE_ID, r.ID))
                                             {
                                                 e.JOIN_DATE_STATE = r.START_DATE;
-                                            }
-                                            break;
-                                        case "KTDTKH" or "TTCTL":
-                                            var _IDTTCTL = (from p in _TypeEmpStatusDetail where p.CODE == "00068" select p.ID).FirstOrDefault();
-                                            if (_IDTTCTL != null)
-                                            {
-                                                e.STATUS_DETAIL_ID = _IDTTCTL;
                                             }
                                             break;
                                         default:
                                             break;
                                     }
                                 }
+                                _appContext.Employees.Update(e);
                             }
-                            _appContext.Employees.Update(e);
                         }
+                        await _appContext.SaveChangesAsync();
                     }
-                    await _appContext.SaveChangesAsync();
                 }
                 return true;
             }
@@ -1324,6 +1243,7 @@ namespace ProfileDAL.Repositories
         {
             try
             {
+                //lay startDate cua ban ghi approve
                 var r = _appContext.Contracts.Where(x => x.ID == param.Id).FirstOrDefault();
                 var e = _appContext.Employees.Where(x => x.ID == r.EMPLOYEE_ID).FirstOrDefault();
                 if (r != null)
@@ -1331,8 +1251,9 @@ namespace ProfileDAL.Repositories
                     r.STATUS_ID = param.ValueToBind == true ? OtherConfig.STATUS_APPROVE : (param.ValueToBind == false ? OtherConfig.STATUS_WAITING : null);
                     _appContext.Contracts.Update(r);
 
-                    if (r.STATUS_ID == OtherConfig.STATUS_APPROVE && r.START_DATE!.Value.Date <= DateTime.Now.Date)
+                    if (r.STATUS_ID == OtherConfig.STATUS_APPROVE)
                     {
+                        param.StartDate = r.START_DATE;
                         param.StatusId = r.STATUS_ID;
                         await ApproveContract(param);
                     }
@@ -1493,7 +1414,7 @@ namespace ProfileDAL.Repositories
         {
             var get_employeeId = await _appContext.Contracts.Where(x => x.ID == request.Id).Select(x => x.EMPLOYEE_ID).FirstAsync();
 
-            var latest_contract = _appContext.Contracts.Where(x => x.EMPLOYEE_ID == get_employeeId && x.STATUS_ID == OtherConfig.STATUS_APPROVE).OrderByDescending(x => x.START_DATE).First();
+            var latest_contract = _appContext.Contracts.Where(x => x.EMPLOYEE_ID == get_employeeId).OrderByDescending(x => x.START_DATE).First();
 
             // check is latest contract
             if (request.Id != latest_contract.ID)
@@ -1564,6 +1485,7 @@ namespace ProfileDAL.Repositories
 
             // set liquidate date
             latest_contract.LIQUIDATION_DATE = request.DateLiquidation;
+
             // set liquidate reason
             latest_contract.LIQUIDATION_REASON = request.ReasonLiquidation;
 
@@ -1578,6 +1500,95 @@ namespace ProfileDAL.Repositories
         }
 
 
+        public async Task<FormatedResponse> GetContractByEmpProfile2(long EmployeeId)
+        {
+            var n = await (from p in _appContext.Contracts
+                           join l in _appContext.ContractTypes on p.CONTRACT_TYPE_ID equals l.ID
+                           join o in _appContext.OtherLists on p.STATUS_ID equals o.ID
+
+                           from reference_1 in _appContext.Workings.Where(x => x.ID == p.WORKING_ID).DefaultIfEmpty()
+
+                           where p.EMPLOYEE_ID == EmployeeId && p.STATUS_ID == OtherConfig.STATUS_APPROVE
+                           orderby p.ID descending, p.START_DATE descending
+                           select new ModelIndex1
+                           {
+                               Id = p.ID,
+                               EmployeeId = EmployeeId,
+                               ContractNo = p.CONTRACT_NO,
+                               StartDate = p.START_DATE,
+                               ExpireDate = p.EXPIRE_DATE,
+                               SignerName = p.SIGNER_NAME,
+                               SignPos = p.SIGNER_POSITION,
+                               SignDate = p.SIGN_DATE,
+                               StatusName = o.NAME,
+                               Note = p.NOTE,
+                               ContractType = l.NAME,
+                               SalInsu = reference_1.SAL_INSU,
+                               Appendix = (from f in _appContext.HuFileContracts.Where(x => x.ID_CONTRACT == p.ID)
+
+                                           join ct in _appContext.ContractTypes on f.APPEND_TYPEID equals ct.ID into tmp3
+                                           from ct2 in tmp3.DefaultIfEmpty()
+
+                                           from sa in _appContext.Workings.Where(x => x.ID == f.WORKING_ID).DefaultIfEmpty()
+
+                                           select new ModelIndex2
+                                           {
+                                               Id = f.ID,
+                                               StartDate = f.START_DATE,
+                                               ExpireDate = f.EXPIRE_DATE,
+                                               ContractAppendixNo = f.CONTRACT_NO,
+                                               SignDate = f.SIGN_DATE,
+                                               WorkingId = f.WORKING_ID,
+                                               SalInsu = sa.SAL_INSU
+                                           }).ToList(),
+                           }).ToListAsync();
+
+            foreach (var item_1 in n)
+            {
+                if (item_1.Appendix != null && item_1.Appendix.Count() > 0)
+                {
+                    List<ModelIndex2> tempList = new List<ModelIndex2>();
+
+                    foreach (var item_2 in item_1.Appendix)
+                    {
+                        var query = _appContext.WorkingAllowances.Where(x => x.WORKING_ID == item_2.WorkingId).ToList();
+
+                        foreach (var item_3 in query)
+                        {
+                            ModelIndex2 temp = new ModelIndex2()
+                            {
+                                Id = item_2.Id,
+                                StartDate = item_2.StartDate,
+                                ExpireDate = item_2.ExpireDate,
+                                ContractAppendixNo = item_2.ContractAppendixNo,
+                                SignDate = item_2.SignDate,
+                                Coefficient = item_2.Coefficient,
+                                SalInsu = item_2.SalInsu,
+                                AllowanceName = item_2.AllowanceName,
+                                WorkingId = item_2.WorkingId
+                            };
+
+                            temp.Coefficient = item_3.COEFFICIENT;
+
+                            var allowanceName = _appContext.Allowances
+                                                .Where(x => x.ID == item_3.ALLOWANCE_ID)
+                                                .Select(x => x.NAME)
+                                                .FirstOrDefault();
+
+                            temp.AllowanceName = allowanceName ?? "";
+
+                            tempList.Add(temp);
+                        }
+                    }
+
+                    item_1.Appendix.Clear();
+                    item_1.Appendix.AddRange(tempList);
+                }
+            }
+
+            return new() { InnerBody = n };
+        }
+
         public async Task<bool> UpdateStatusEmpDetailOfContract(HU_CONTRACT obj)
         {
             try
@@ -1589,7 +1600,7 @@ namespace ProfileDAL.Repositories
                     if (r != null)
                     {
                         var e = _appContext.Employees.Where(x => x.ID == r.EMPLOYEE_ID).FirstOrDefault();
-                        //var terminate = _appContext.Terminates.Where(x => x.EMPLOYEE_ID == r.EMPLOYEE_ID).OrderByDescending(x => x.EFFECT_DATE).FirstOrDefault();
+                        var terminate = _appContext.Terminates.Where(x => x.EMPLOYEE_ID == r.EMPLOYEE_ID).OrderByDescending(x => x.EFFECT_DATE).FirstOrDefault();
                         var eprofile = (from p in _appContext.Employees.Where(x => x.ID == r.EMPLOYEE_ID) select p.Profile).FirstOrDefault();
                         if (obj.STATUS_ID == OtherConfig.STATUS_APPROVE)
                         {
@@ -1603,26 +1614,23 @@ namespace ProfileDAL.Repositories
                                                         where ot.CODE == "STATUS_DETAIL" && ot.IS_ACTIVE == true && p.IS_ACTIVE == true
                                                         select p).ToArray();
 
-                            //var contractType = (from p in _appContext.ContractTypes.Where(p => p.IS_ACTIVE == true)
-                            //                    join ot in _appContext.ContractTypes on p.TYPE_ID equals ot.ID
-                            //                    where p.ID == r.CONTRACT_TYPE_ID
-                            //                    select ot).FirstOrDefault();
-
-                            var contractType = (from p in _appContext.ContractTypes.Where(p => p.IS_ACTIVE == true && p.ID == r.CONTRACT_TYPE_ID)
-                                                select p).FirstOrDefault();
+                            var contractType = (from p in _appContext.ContractTypes.Where(p => p.IS_ACTIVE == true)
+                                                join ot in _appContext.ContractTypes on p.TYPE_ID equals ot.ID
+                                                where p.ID == r.CONTRACT_TYPE_ID
+                                                select ot).FirstOrDefault();
 
                             if (e != null)
                             {
                                 e.CONTRACT_ID = obj.ID;
                                 e.CONTRACT_TYPE_ID = r.CONTRACT_TYPE_ID;
-                                if (_TypeEmpStatus != null)
+                                if (_TypeEmpStatus != null && (terminate == null ? true : r.START_DATE > terminate?.EFFECT_DATE))
                                 {
                                     e.WORK_STATUS_ID = _TypeEmpStatus;
                                 }
                                 if (contractType != null && _TypeEmpStatusDetail.Length > 0)
                                 {
                                     //cap nhat trang thai chi tiet
-                                    switch (contractType.CODE.ToUpper())
+                                    switch (contractType.CODE!.ToUpper())
                                     {
                                         case "HDTV":
                                             var _IDHDTV = (from p in _TypeEmpStatusDetail where p.CODE == "00003" select p.ID).FirstOrDefault();
@@ -1631,45 +1639,23 @@ namespace ProfileDAL.Repositories
                                                 e.STATUS_DETAIL_ID = _IDHDTV;
                                             }
                                             break;
-                                        case "HDNH":
-                                            var _IDHDNH = (from p in _TypeEmpStatusDetail where p.CODE == "00359" select p.ID).FirstOrDefault();
-                                            if (_IDHDNH != null)
+                                        case "HDLD001" or "HDLD002" or "HDLD003":
+                                            var _IDXDTH = (from p in _TypeEmpStatusDetail where p.CODE == "00004" select p.ID).FirstOrDefault();
+                                            if (_IDXDTH != null)
                                             {
-                                                e.STATUS_DETAIL_ID = _IDHDNH;
+                                                e.STATUS_DETAIL_ID = _IDXDTH;
                                             }
                                             break;
-                                        case "HDLDKXD" or "HDKXDTH":
-                                            var _IDHDKXDTH = (from p in _TypeEmpStatusDetail where p.CODE == "00005" select p.ID).FirstOrDefault();
-                                            if (_IDHDKXDTH != null)
+                                        case "HDLD004":
+                                            var _IDKXDTH = (from p in _TypeEmpStatusDetail where p.CODE == "00005" select p.ID).FirstOrDefault();
+                                            if (_IDKXDTH != null)
                                             {
-                                                e.STATUS_DETAIL_ID = _IDHDKXDTH;
-                                            }
-                                            break;
-                                        case "HDLDXD" or "HXDTH":
-                                            var _IDHXDTH = (from p in _TypeEmpStatusDetail where p.CODE == "00004" select p.ID).FirstOrDefault();
-                                            if (_IDHXDTH != null)
-                                            {
-                                                e.STATUS_DETAIL_ID = _IDHXDTH;
-                                            }
-                                            break;
-                                        case "KTDTKH" or "TTCTL" or "KTDTKHDLD":
-                                            var _IDTTCTL = (from p in _TypeEmpStatusDetail where p.CODE == "00068" select p.ID).FirstOrDefault();
-                                            if (_IDTTCTL != null)
-                                            {
-                                                e.STATUS_DETAIL_ID = _IDTTCTL;
+                                                e.STATUS_DETAIL_ID = _IDKXDTH;
                                             }
                                             break;
                                         default:
-                                            var _IDHDK = (from p in _TypeEmpStatusDetail where p.CODE == "00009" select p.ID).FirstOrDefault();
-                                            if (_IDHDK != null)
-                                            {
-                                                e.STATUS_DETAIL_ID = _IDHDK;
-                                            }
                                             break;
                                     }
-                                }else
-                                {
-
                                 }
                                 _appContext.Employees.Update(e);
                             }
@@ -1712,5 +1698,6 @@ namespace ProfileDAL.Repositories
             }
             return true;
         }
+
     }
 }

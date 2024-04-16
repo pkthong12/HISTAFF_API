@@ -5,8 +5,6 @@ using InsuranceDAL.Repositories;
 using ProfileDAL.Repositories;
 using Microsoft.Extensions.Options;
 using RegisterServicesWithReflection.Services.Base;
-using API.Controllers.HuContract;
-using DocumentFormat.OpenXml.InkML;
 
 namespace API.All.Services
 {
@@ -40,11 +38,11 @@ namespace API.All.Services
         public async Task ApproveTerminate()
         {
             var r = await _terminateRepository.ApproveList("9aad23c2-2a73-4344-b534-e5dd6d2e1132");
-        }
-
+        }   
+        
         public async Task UpdateStatusEmpDetail()
         {
             var r = await _contractRepository.ApproveList("9aad23c2-2a73-4344-b534-e5dd6d2e1132");
-        }
+        }        
     }
 }

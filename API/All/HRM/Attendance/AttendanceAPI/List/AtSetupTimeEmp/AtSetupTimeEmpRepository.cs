@@ -29,23 +29,25 @@ namespace API.Controllers.AtSetupTimeEmp
         {
             var joined = from s in _dbContext.AtSetupTimeEmps.AsNoTracking()
                          from e in _dbContext.HuEmployees.AsNoTracking().Where(emp => emp.ID == s.EMPLOYEE_ID).DefaultIfEmpty()
+                         from o in _dbContext.HuOrganizations.AsNoTracking().Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
                          from p in _dbContext.HuPositions.AsNoTracking().Where(pos => pos.ID == e.POSITION_ID).DefaultIfEmpty()
                          from j in _dbContext.HuJobs.AsNoTracking().Where(j => j.ID == p.JOB_ID).DefaultIfEmpty()
                              // JOIN OTHER ENTITIES BASED ON THE BUSINESS
-                         orderby j.ORDERNUM
                          select new AtSetupTimeEmpDTO
                          {
                              Id = s.ID,
-                             OrgId = e.ORG_ID,
                              EmployeeId = s.EMPLOYEE_ID,
                              EmployeeName = e.Profile!.FULL_NAME,
                              EmployeeCode = e.CODE,
                              PositionName = p.NAME,
+                             OrgName = o.NAME,
                              NumberSwipecard = s.NUMBER_SWIPECARD,
                              IsActive = s.IS_ACTIVE,
                              Status = s.IS_ACTIVE == true ? "Áp dụng" : "Ngừng áp dụng",
                              Note = s.NOTE,
                              JobOrderNum = (int)(j.ORDERNUM ?? 999),
+                             StartDateHl = s.START_DATE_HL,
+                             EndDateHl = s.END_DATE_HL
                          };
 
             var singlePhaseResult = await _genericReducer.SinglePhaseReduce(joined, request);
@@ -74,6 +76,7 @@ namespace API.Controllers.AtSetupTimeEmp
         {
             var joined = (from l in _dbContext.AtSetupTimeEmps.Where(l => l.ID == id)
                           from e in _dbContext.HuEmployees.Where(e => e.ID == l.EMPLOYEE_ID).DefaultIfEmpty()
+                          from o in _dbContext.HuOrganizations.AsNoTracking().Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
                           from cv in _dbContext.HuEmployeeCvs.Where(cv => cv.ID == e.PROFILE_ID).DefaultIfEmpty()
                           from p in _dbContext.HuPositions.Where(p => p.ID == e.POSITION_ID).DefaultIfEmpty()
                           from c in _dbContext.SysUsers.AsNoTracking().Where(c => l.CREATED_BY == null ? false : c.ID == l.CREATED_BY).DefaultIfEmpty()
@@ -85,6 +88,7 @@ namespace API.Controllers.AtSetupTimeEmp
                               EmployeeName = cv.FULL_NAME,
                               EmployeeCode = e.CODE,
                               PositionName = p.NAME,
+                              OrgName = o.NAME,
                               NumberSwipecard = l.NUMBER_SWIPECARD,
                               IsActive = l.IS_ACTIVE,
                               Status = l.IS_ACTIVE.HasValue ? "Áp dụng" : "Ngừng áp dụng",
@@ -92,8 +96,9 @@ namespace API.Controllers.AtSetupTimeEmp
                               CreatedDate = l.CREATED_DATE,
                               UpdatedDate = l.UPDATED_DATE,
                               CreatedByUsername = c.USERNAME,
-                              UpdatedByUsername = u.USERNAME
-
+                              UpdatedByUsername = u.USERNAME,
+                              StartDateHl = l.START_DATE_HL,
+                              EndDateHl = l.END_DATE_HL
                           }).FirstOrDefault();
 
             if (joined != null)

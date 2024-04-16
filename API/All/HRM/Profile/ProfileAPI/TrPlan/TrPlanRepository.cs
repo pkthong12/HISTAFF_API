@@ -5,9 +5,6 @@ using CORE.Enum;
 using CORE.StaticConstant;
 using API.All.DbContexts;
 using CORE.AutoMapper;
-using Common.Extensions;
-using CORE.Services.File;
-using Microsoft.Extensions.Options;
 
 namespace API.Controllers.TrPlan
 {
@@ -17,21 +14,13 @@ namespace API.Controllers.TrPlan
         private readonly FullDbContext _dbContext;
         private IGenericRepository<TR_PLAN, TrPlanDTO> _genericRepository;
         private readonly GenericReducer<TR_PLAN, TrPlanDTO> _genericReducer;
-        private readonly IWebHostEnvironment _env;
-        private readonly IFileService _fileService;
-        private readonly AppSettings _appSettings;
 
-        public TrPlanRepository(FullDbContext context, GenericUnitOfWork uow,
-            IWebHostEnvironment env,
-            IOptions<AppSettings> options,
-            IFileService fileService)
+        public TrPlanRepository(FullDbContext context, GenericUnitOfWork uow)
         {
             _dbContext = context;
             _uow = uow;
             _genericRepository = _uow.GenericRepository<TR_PLAN, TrPlanDTO>();
             _genericReducer = new();
-            _appSettings = options.Value;
-            _fileService = fileService;
         }
 
         public async Task<GenericPhaseTwoListResponse<TrPlanDTO>> SinglePhaseQueryList(GenericQueryListDTO<TrPlanDTO> request)
@@ -41,9 +30,7 @@ namespace API.Controllers.TrPlan
                          from o in _dbContext.HuOrganizations.AsNoTracking().Where(x => x.ID == p.ORG_ID).DefaultIfEmpty()
                          from ce in _dbContext.TrCenters.AsNoTracking().Where(x => x.ID == p.CENTER_ID).DefaultIfEmpty()
                          from co in _dbContext.TrCourses.AsNoTracking().Where(x => x.ID == p.COURSE_ID).DefaultIfEmpty()
-                         from f in _dbContext.SysOtherLists.AsNoTracking().Where(x => x.ID == p.FORM_TRAINING_ID).DefaultIfEmpty()
-                         from m in _dbContext.SysOtherLists.AsNoTracking().Where(x => x.ID == p.UNIT_MONEY_ID).DefaultIfEmpty()
-                         select new TrPlanDTO
+                         select new TrPlanDTO()
                          {
                              Id = p.ID,
                              Code = p.CODE,
@@ -64,16 +51,12 @@ namespace API.Controllers.TrPlan
                              CenterId = p.CENTER_ID,
                              CenterName = ce.NAME_CENTER,
                              Content = p.CONTENT,
-                             FormTrainingId = p.FORM_TRAINING_ID,
-                             FormTrainingName = f.NAME,
+                             FormTraining = p.FORM_TRAINING,
                              AddressTraining = p.ADDRESS_TRAINING,
                              Note = p.NOTE,
                              Attachment = p.FILENAME,
-                             IsCertificate = p.IS_CERTIFICATE,
-                             IsCommitTrain = p.IS_COMMIT_TRAIN,
-                             IsPostTrain = p.IS_POST_TRAIN,
-                             UnitMoneyId = p.UNIT_MONEY_ID,
-                             UnitMoneyName = p.NAME,
+                            
+                             
                          };
 
             var singlePhaseResult = await _genericReducer.SinglePhaseReduce(joined, request);
@@ -100,100 +83,54 @@ namespace API.Controllers.TrPlan
 
         public async Task<FormatedResponse> GetById(long id)
         {
-            var joined = await (from l in _dbContext.TrPlans.AsNoTracking().Where(x => x.ID == id)
-                                    // JOIN OTHER ENTITIES BASED ON THE BUSINESS
-                                from o in _dbContext.HuOrganizations.AsNoTracking().DefaultIfEmpty()
-                                from ce in _dbContext.TrCenters.AsNoTracking().Where(x => x.ID == l.CENTER_ID).DefaultIfEmpty()
-                                from co in _dbContext.TrCourses.AsNoTracking().Where(x => x.ID == l.COURSE_ID).DefaultIfEmpty()
-                                    //from po in _dbContext.HuPositions.AsNoTracking().Where(x => x.ID == l.POSITION_ID).DefaultIfEmpty()
-                                from s in _dbContext.SysOtherLists.AsNoTracking().Where(x => x.ID == l.FORM_TRAINING_ID).DefaultIfEmpty()
-                                from prop in _dbContext.SysOtherLists.AsNoTracking().Where(x => x.ID == l.PROPERTIES_NEED_ID).DefaultIfEmpty()
-                                from tt in _dbContext.SysOtherLists.AsNoTracking().Where(x => x.ID == l.TYPE_TRAINING_ID).DefaultIfEmpty()
-                                from m in _dbContext.SysOtherLists.AsNoTracking().Where(x => x.ID == l.UNIT_MONEY_ID).DefaultIfEmpty()
-                                from t in _dbContext.SysOtherLists.AsNoTracking().Where(s => s.ID == co.TR_TRAIN_FIELD).DefaultIfEmpty()
-                                select new TrPlanDTO
-                                {
-                                    Id = l.ID,
-                                    Code = l.CODE,
-                                    Name = l.NAME,
-                                    OrgId = l.ORG_ID,
-                                    Year = l.YEAR,
-                                    StartDatePlan = l.START_DATE_PLAN,
-                                    EndDatePlan = l.END_DATE_PLAN,
-                                    StartDateReal = l.START_DATE_REAL,
-                                    EndDateReal = l.END_DATE_REAL,
-                                    PersonNumReal = l.PERSON_NUM_REAL,
-                                    PersonNumPlan = l.PERSON_NUM_PLAN,
-                                    ExpectedCost = l.EXPECTED_COST,
-
-                                    ActualCost = l.ACTUAL_COST,
-                                    CourseId = l.COURSE_ID,
-                                    CenterId = l.CENTER_ID,
-                                    Content = l.CONTENT,
-                                    FormTrainingId = l.FORM_TRAINING_ID,
-                                    FormTrainingName = s.NAME,
-                                    AddressTraining = l.ADDRESS_TRAINING,
-                                    Note = l.NOTE,
-                                    Attachment = l.FILENAME,
-                                    CreatedDate = l.CREATED_DATE,
-                                    UpdatedDate = l.UPDATED_DATE,
-                                    ExpectClass = l.EXPECT_CLASS,
-                                    IsCertificate = l.IS_CERTIFICATE,
-                                    IsPostTrain = l.IS_COMMIT_TRAIN,
-                                    IsCommitTrain = l.IS_COMMIT_TRAIN,
-                                    PropertiesNeedId = l.PROPERTIES_NEED_ID,
-                                    PropertiesNeedName = prop.NAME,
-                                    TypeTrainingId = l.TYPE_TRAINING_ID,
-                                    TypeTrainingName = tt.NAME,
-                                    CertificateName = l.CERTIFICATE_NAME,
-                                    //JobName =  
-                                    JobFamilyIds = l.JOB_FAMILY_IDS,
-                                    //JobFamilyName = po.NAME,
-                                    JobIds = l.JOB_IDS,
-                                    EvaluationDueDate1 = l.EVALUATION_DUE_DATE1,
-                                    EvaluationDueDate2 = l.EVALUATION_DUE_DATE3,
-                                    EvaluationDueDate3 = l.EVALUATION_DUE_DATE3,
-                                    UnitMoneyId = l.UNIT_MONEY_ID,
-                                    UnitMoneyName = m.NAME,
-                                    //TrTrainFeildName = (from t in _dbContext.TrCourses
-                                    //                    from q in _dbContext.SysOtherLists.Where(x => x.ID == t.TR_TRAIN_FIELD)
-                                    //                    where t.ID == l.COURSE_ID
-                                    //                    select q.NAME),
-                                    //PositionName = f.NAME
-                                    /*CreatedByUsername = uc.USERNAME,
-                                    UpdatedByUsername = uu.USERNAME,*/
-                                }).FirstOrDefaultAsync();
-
-            if (joined != null)
+            var res = await _genericRepository.GetById(id);
+            if (res.InnerBody != null)
             {
-                if (joined.JobFamilyIds != null)
-                {
-                    List<long?> JobF = new List<long?>();
-                    var jf = joined!.JobFamilyIds!.Split(",").ToList();
-                    jf.ForEach(f =>
+                var response = res.InnerBody;
+                var list = new List<TR_PLAN>
                     {
-                        if (long.TryParse(f, out long n)) { JobF.Add(n); }
-                    });
-                    joined.ListJobFamilyIds = JobF;
-                }
-                if (joined.JobIds != null)
-                {
-                    List<long?> Job = new List<long?>();
-                    var j = joined.JobIds!.Split(",").ToList();
-                    j.ForEach(j =>
-                    {
-                        if (long.TryParse(j, out long n)) { Job.Add(n); }
-                    });
-                    joined.ListJobIds = Job;
-                }
-                if (joined.CourseId != null)
-                {
-                    var a = (from t in _dbContext.TrCourses
-                                               from q in _dbContext.SysOtherLists.Where(x => x.ID == t.TR_TRAIN_FIELD)
-                                               where t.ID == joined.CourseId
-                                               select q.NAME).FirstOrDefault();
-                    joined.TrTrainFeildName = a;
-                }
+                        (TR_PLAN)response
+                    };
+                var joined = (from l in list
+                                  // JOIN OTHER ENTITIES BASED ON THE BUSINESS
+                                  /* from o in _dbContext.HuOrganizations.AsNoTracking().DefaultIfEmpty()
+                                   from ce in _dbContext.TrCenters.AsNoTracking().DefaultIfEmpty()
+                                   from co in _dbContext.TrCourses.AsNoTracking().DefaultIfEmpty()
+                                   where l.CENTER_ID == ce.ID && l.COURSE_ID == co.ID && l.ORG_ID == o.ID*/
+                                  /*from uc in _dbContext.SysUsers.AsNoTracking().Where(x => x.ID == l.CREATED_BY).DefaultIfEmpty()
+                                  from uu in _dbContext.SysUsers.AsNoTracking().Where(x => x.ID == l.UPDATED_BY).DefaultIfEmpty()*/
+                              select new TrPlanDTO
+                              {
+                                  Id = l.ID,
+                                  Code =l.CODE,
+                                  Name = l.NAME,
+                                  OrgId = l.ORG_ID,
+                                  Year = l.YEAR,
+                                  StartDatePlan = l.START_DATE_PLAN,
+                                  EndDatePlan = l.END_DATE_PLAN,
+                                  StartDateReal = l.START_DATE_REAL,
+                                  EndDateReal = l.END_DATE_REAL,
+                                  PersonNumReal = l.PERSON_NUM_REAL,
+                                  PersonNumPlan = l.PERSON_NUM_PLAN,
+                                  ExpectedCost = l.EXPECTED_COST,
+
+                                  ActualCost = l.ACTUAL_COST,
+                                  CourseId = l.COURSE_ID,
+                                  CenterId = l.CENTER_ID,
+                                  Content = l.CONTENT,
+                                  FormTraining = l.FORM_TRAINING,
+                                  AddressTraining = l.ADDRESS_TRAINING,
+                                  Note = l.NOTE,
+                                  Attachment = l.FILENAME,
+                                  CreatedDate = l.CREATED_DATE,
+                                  UpdatedDate = l.UPDATED_DATE,
+
+                                  /*CreatedByUsername = uc.USERNAME,
+                                  UpdatedByUsername = uu.USERNAME,*/
+
+
+                              }).FirstOrDefault();
+
                 return new FormatedResponse() { InnerBody = joined };
             }
             else
@@ -262,12 +199,12 @@ namespace API.Controllers.TrPlan
         {
             var result = await (from co in _dbContext.TrCourses.AsNoTracking().DefaultIfEmpty()
                                 where co.IS_ACTIVE == true
-                                select new
-                                {
-                                    Id = co.ID,
-                                    CourseName = co.COURSE_NAME,
-                                }).ToListAsync();
-            return new FormatedResponse() { InnerBody = result };
+                         select new
+                         {
+                             Id = co.ID,
+                             CourseName = co.COURSE_NAME,
+                         }).ToListAsync();
+            return new FormatedResponse() { InnerBody = result};
         }
 
         public async Task<FormatedResponse> GetAllCenter()
@@ -289,31 +226,6 @@ namespace API.Controllers.TrPlan
         {
             await Task.Run(() => null);
             throw new NotImplementedException();
-        }
-
-        public async Task<FormatedResponse> GetTrainingForm()
-        {
-            var r = (from t in _dbContext.SysOtherListTypes where t.CODE == "TRAINING_FORM" select t.ID).FirstOrDefault();
-            var query = await (from p in _dbContext.SysOtherLists.AsNoTracking().DefaultIfEmpty()
-                               where p.TYPE_ID == r
-                               select new
-                               {
-                                   Id = p.ID,
-                                   NAME = p.NAME,
-                               }).ToListAsync();
-            return new FormatedResponse() { InnerBody = query };
-        }
-
-        public async Task<FormatedResponse> GetJobByJobFamId(List<long>? ids)
-        {
-            var result = await (from o in _dbContext.HuJobs.AsNoTracking()
-                                where ids!.Contains(o.JOB_FAMILY_ID!.Value) && o.ACTFLG == "A"
-                                select new
-                                {
-                                    Id = o.ID,
-                                    Name = o.NAME_VN
-                                }).ToListAsync();
-            return new FormatedResponse() { InnerBody = result };
         }
     }
 }

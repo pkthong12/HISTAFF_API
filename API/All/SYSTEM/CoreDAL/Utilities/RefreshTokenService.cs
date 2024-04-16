@@ -1,6 +1,5 @@
 ﻿using API;
 using API.All.DbContexts;
-using API.All.SYSTEM.Common;
 using API.Entities;
 using Microsoft.Extensions.Options;
 using RegisterServicesWithReflection.Services.Base;
@@ -75,7 +74,7 @@ namespace CoreDAL.Utilities
 
             if (user == null)
             {
-                return new CheckRefreshTokenResponse() { Success = false, Message = CommonMessageCodes.NO_USER_MATCHS_PROVIDED_REFRESHTOKEN, NewRefreshToken = null };
+                return new CheckRefreshTokenResponse() { Success = false, Message = "User not found", NewRefreshToken = null };
             }
 
             var list = await (from p in _refreshTokenContext.SysRefreshTokens where p.USER == refreshToken.USER select p).ToListAsync();
@@ -86,12 +85,12 @@ namespace CoreDAL.Utilities
                 RevokeDescendantRefreshTokens(refreshToken, list, ipAddress, $"Attempted reuse of revoked ancestor token: {tokenString}");
                 _refreshTokenContext.UpdateRange(list);
                 _refreshTokenContext.SaveChanges();
-                return new CheckRefreshTokenResponse() { Success = false, Message = CommonMessageCodes.REVOKED_REFRESHTOKEN };
+                return new CheckRefreshTokenResponse() { Success = false, Message = "The Token Revoked!" };
             }
 
             if (!refreshToken.IS_ACTIVE)
             {
-                return new CheckRefreshTokenResponse() { Success = false, Message = CommonMessageCodes.INACTIVATED_REFRESHTOKEN };
+                return new CheckRefreshTokenResponse() { Success = false, Message = "The Token Inactivated!" };
             }
 
             // replace old refresh token with a new one (rotate token)

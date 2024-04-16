@@ -19,14 +19,14 @@ using System.Drawing;
 
 namespace InsuranceDAL.Repositories
 {
-    public class InsArisingRepository : IInsArisingRepository
+    public class InsArisingRepository : RepositoryBase<INS_ARISING>, IInsArisingRepository
     {
         private readonly GenericUnitOfWork _uow;
         private readonly CoreDbContext _dbContext;
         private IGenericRepository<INS_ARISING, InsArisingDTO> _genericRepository;
         private readonly GenericReducer<INS_ARISING, InsArisingDTO> _genericReducer;
 
-        public InsArisingRepository(CoreDbContext context, GenericUnitOfWork uow)
+        public InsArisingRepository(CoreDbContext context, GenericUnitOfWork uow) : base(context)
         {
             _dbContext = context;
             _uow = uow;
@@ -53,7 +53,7 @@ namespace InsuranceDAL.Repositories
                 await InsertArising(_uow, new InsArisingDTO() { PkeyRef = t.ID, EmployeeId = t.EMPLOYEE_ID, EffectDate = t.EFFECT_DATE, TableRef = "WORKING" }, sid);
             }
             var wage = (from p in _dbContext.Workings
-                        where p.STATUS_ID == OtherConfig.STATUS_APPROVE && p.EFFECT_DATE.Value.Date <= DateTime.Now.Date
+                        where p.STATUS_ID == OtherConfig.STATUS_APPROVE && p.EFFECT_DATE!.Value.Date <= DateTime.Now.Date
                                                          && p.EFFECT_DATE >= DateTime.Now.Date.AddMonths(-1) && (p.IS_WAGE == 1 || p.IS_WAGE == -1)
                         select p).ToList();
             foreach (var t in wage)
@@ -61,7 +61,7 @@ namespace InsuranceDAL.Repositories
                 await InsertArising(_uow, new InsArisingDTO() { PkeyRef = t.ID, EmployeeId = t.EMPLOYEE_ID, EffectDate = t.EFFECT_DATE, TableRef = "WAGE" }, sid);
             }
             var contracts = (from p in _dbContext.Contracts
-                             where p.STATUS_ID == OtherConfig.STATUS_APPROVE && p.START_DATE.Value.Date <= DateTime.Now.Date
+                             where p.STATUS_ID == OtherConfig.STATUS_APPROVE && p.START_DATE!.Value.Date <= DateTime.Now.Date
                                                              && p.START_DATE >= DateTime.Now.Date.AddMonths(-1)
                              select p).ToList();
             foreach (var t in contracts)
@@ -107,7 +107,7 @@ namespace InsuranceDAL.Repositories
                         }
                     }
 
-                    string[] strArrT = { "TD", "TM", "ON" };
+                    string[] strArrT = { "TD", "TM","ON" };
                     string[] strArrG = { "GH", "GC", "TS", "OM", "OP", "OF", "KL" };
                     var insChangeCheck = (from p in _dbContext.Changes.Where(p => p.EMPLOYEE_ID == arising.EMPLOYEE_ID) select p).FirstOrDefault();
                     var insTypeCheck = (from p in _dbContext.Types.Where(p => p.ID == dto.InsTypeChooseId && p.CODE == "TM") select p).FirstOrDefault();
@@ -187,27 +187,26 @@ namespace InsuranceDAL.Repositories
 
                         }
                     }
-                    DateTime? fromDate = new DateTime(insEffectDate.Value.Year, insEffectDate.Value.Month, 1);
+                    DateTime? fromDate = new DateTime(insEffectDate.Value.Year,insEffectDate.Value.Month, 1);
                     DateTime? toDate = new DateTime(dto.DeclaredMonth!.Value.AddMonths(-1).Year, dto.DeclaredMonth!.Value.AddMonths(-1).Month, 3);
 
                     //AI: BHTNLD-BNN
                     //UI: BHTN
                     //SI: BHXH
                     //HI: BHYT
-                    decimal? aSi = 0, aHi = 0, aUi = 0, aAi = 0, rSi = 0, rHi = 0, rUi = 0, rAi = 0, si = 0, hi = 0, ui = 0, ai = 0;
-                    long? unit = 0;
-                    if (fromDate < toDate)
+                    decimal? aSi = 0, aHi = 0, aUi = 0, aAi = 0, rSi = 0, rHi = 0, rUi = 0, rAi = 0, si =0, hi =0, ui=0, ai=0;
+                    if(fromDate < toDate)
                     {
-                        si = specifiedObject.SI_EMP + specifiedObject.SI_COM;// 
-                        hi = specifiedObject.HI_EMP + specifiedObject.HI_COM;//
-                        ui = specifiedObject.UI_EMP + specifiedObject.UI_COM;//
-                        ai = specifiedObject.AI_OAI_EMP + specifiedObject.AI_OAI_COM;//
+                       si = specifiedObject.SI_EMP + specifiedObject.SI_COM;// 
+                       hi = specifiedObject.HI_EMP + specifiedObject.HI_COM;//
+                       ui = specifiedObject.UI_EMP + specifiedObject.UI_COM;//
+                       ai = specifiedObject.AI_OAI_EMP + specifiedObject.AI_OAI_COM;//
                     }
                     var oldSal = arising.OLD_SAL == null ? 0 : arising.OLD_SAL;
                     var newSal = arising.NEW_SAL == null ? 0 : arising.NEW_SAL;
                     decimal? siSal = specifiedObject.SI_HI == null ? 0 : ((decimal)newSal < specifiedObject.SI_HI) ? (decimal)newSal : specifiedObject.SI_HI, uiSal = 0;
 
-                    decimal? siSalOld = specifiedObject.SI_HI == null ? 0 : ((decimal)oldSal < specifiedObject.SI_HI) ? (decimal)oldSal : specifiedObject.SI_HI, uiSalOld = 0, regionMoney = 0;
+                    decimal? siSalOld = specifiedObject.SI_HI == null ? 0 : ((decimal)oldSal < specifiedObject.SI_HI) ? (decimal)oldSal : specifiedObject.SI_HI, uiSalOld = 0, regionMoney=0;
 
 
                     if (company != null)
@@ -229,17 +228,9 @@ namespace InsuranceDAL.Repositories
                                        select r).FirstOrDefault();
 
                         if (region1 != null) uiSalOld = (decimal)oldSal < region1.CEILING_UI ? (decimal)oldSal : region1.CEILING_UI;
-
-                        unit = await (from e in _dbContext.Employees.AsNoTracking().Where(emp => emp.ID == arising.EMPLOYEE_ID)
-                                      from o in _dbContext.Organizations.AsNoTracking().Where(o => o.ID == e.ORG_ID).DefaultIfEmpty()
-                                      from c in _dbContext.Companies.AsNoTracking().Where(c => c.ID == o.COMPANY_ID).DefaultIfEmpty()
-                                      from s in _dbContext.SysOtherLists.AsNoTracking().Where(s => s.ID == c.INS_UNIT).DefaultIfEmpty()
-                                      select s).Select(p => p.ID).FirstOrDefaultAsync();
                     }
-
-                    
                     var monthTT = (decimal)Math.Ceiling(toDate.Value.Subtract(fromDate.Value).Days / (365.25 / 12) + 1);
-                    if (toDate.Value.Date > fromDate.Value.Date)
+                    if(toDate.Value.Date > fromDate.Value.Date)
                     {
                         if (strArrT.Contains(insType!.CODE))
                         {
@@ -269,19 +260,10 @@ namespace InsuranceDAL.Repositories
                     insChange.IS_BHYT = arising.HI;
                     insChange.IS_BNN = arising.AI;
                     insChange.IS_BHTN = arising.UI;
-                    insChange.UNIT_INSURANCE_TYPE_ID = unit??0;
                     insChange.SALARY_BHXH_BHYT_OLD = siSalOld;
                     insChange.SALARY_BHXH_BHYT_NEW = siSal;
-                    //muc dong moi
-                    insChange.SALARY_BHXH_NEW = (long)siSal!;
-                    insChange.SALARY_BHYT_NEW = (long)siSal!;
-                    insChange.SALARY_BHBNN_NEW = (long)siSal!;
-                    insChange.SALARY_BHTN_NEW = uiSal;
-                    //muc dong cu
-                    insChange.SALARY_BHXH_OLD = (long)siSalOld!;
-                    insChange.SALARY_BHYT_OLD = (long)siSalOld!;
-                    insChange.SALARY_BHBNN_OLD = (long)siSalOld!;
                     insChange.SALARY_BHTN_OLD = uiSalOld;
+                    insChange.SALARY_BHTN_NEW = uiSal;
                     if (strArrT.Contains(insType!.CODE) && toDate!.Value.Date > fromDate!.Value.Date)
                     {
                         insChange.ARREARS_FROM_MONTH = fromDate;
@@ -355,7 +337,7 @@ namespace InsuranceDAL.Repositories
             var specifiedObject = (from p in _dbContext.SpecifiedObjects.Where(p => p.EFFECTIVE_DATE.Value.Date <= obj.EffectDate.Value.Date).OrderByDescending(p => p.EFFECTIVE_DATE) select p).FirstOrDefault();
             var employee = (from p in _dbContext.Employees.Where(p => p.ID == obj.EmployeeId) select p).FirstOrDefault();
             var contract = (from p in _dbContext.Contracts.Where(p => p.EMPLOYEE_ID == obj.EmployeeId && p.STATUS_ID == OtherConfig.STATUS_APPROVE && p.START_DATE.Value.Date <= obj.EffectDate.Value.Date).OrderByDescending(p => p.START_DATE) select p).FirstOrDefault();
-            var wage = (from p in _dbContext.Workings.Where(p => p.EMPLOYEE_ID == obj.EmployeeId && p.STATUS_ID == OtherConfig.STATUS_APPROVE && p.IS_WAGE == -1 && p.EFFECT_DATE.Value.Date <= obj.EffectDate!.Value.Date).OrderByDescending(p => p.EFFECT_DATE) select p).FirstOrDefault(); //&& p.IS_RESPONSIBLE == true
+            var wage = (from p in _dbContext.Workings.Where(p => p.EMPLOYEE_ID == obj.EmployeeId && p.STATUS_ID == OtherConfig.STATUS_APPROVE && p.IS_WAGE == -1 && p.EFFECT_DATE.Value.Date <= obj.EffectDate.Value.Date).OrderByDescending(p => p.EFFECT_DATE) select p).FirstOrDefault();//&& p.IS_RESPONSIBLE == true TẠI SAO CẦN CHUYÊN TRÁCH Ở ĐÂY?
             var organization = (from p in _dbContext.Organizations.Where(p => p.ID == employee.ORG_ID) select p).FirstOrDefault();
             var company = (from p in _dbContext.Companies.Where(p => p.ID == organization.COMPANY_ID) select p).FirstOrDefault();
             if (company != null) obj.InsOrgId = company.INS_UNIT == null ? null : company.INS_UNIT;
@@ -385,10 +367,7 @@ namespace InsuranceDAL.Repositories
 
                 var terminate = (from p in _dbContext.Terminates.Where(p => p.ID == obj.PkeyRef) select p).FirstOrDefault();
                 if (terminate!.STATUS_ID != OtherConfig.STATUS_APPROVE) return true;
-                var changeObject = await (from p in _dbContext.Changes.AsNoTracking().Where(p => p.EMPLOYEE_ID == obj.EmployeeId)
-                                          from c in _dbContext.Types.Where(c => c.ID == p.CHANGE_TYPE_ID && c.CODE == "GH")
-                                          select p).AnyAsync();
-                if (changeObject) return true;
+
                 obj.EffectDate = terminate.EFFECT_DATE;
                 obj.InsGroupType = 2;
                 obj.InsTypeId = 88;
@@ -424,17 +403,16 @@ namespace InsuranceDAL.Repositories
                 var working = (from p in _dbContext.Workings.Where(p => p.ID == obj.PkeyRef) select p).FirstOrDefault();//quyet dinh moi
                 if (working!.STATUS_ID != OtherConfig.STATUS_APPROVE) return true;
 
-                var oldWage = (from p in _dbContext.Workings where p.EMPLOYEE_ID == obj.EmployeeId &&  p.ID != obj.PkeyRef && p.STATUS_ID == OtherConfig.STATUS_APPROVE && p.IS_WAGE == -1  orderby p.EFFECT_DATE descending select p).FirstOrDefault();// tim kiem ho so luong gan nhat && p.IS_RESPONSIBLE == true
+                var oldWage = (from p in _dbContext.Workings where p.EMPLOYEE_ID == obj.EmployeeId &&  p.ID != obj.PkeyRef && p.STATUS_ID == OtherConfig.STATUS_APPROVE && p.IS_WAGE == -1 orderby p.EFFECT_DATE descending select p).FirstOrDefault();// tim kiem ho so luong gan nhat //&& p.IS_RESPONSIBLE == true TẠI SAO CẦN CHUYÊN TRÁCH Ở ĐÂY?
                 if (oldWage == null)
                 {
                     return false; // chưa có hồ sơ lương
                 }
-                var oldWorking = (from p in _dbContext.Workings where p.EMPLOYEE_ID == obj.EmployeeId && p.ID != obj.PkeyRef && p.STATUS_ID == OtherConfig.STATUS_APPROVE && p.IS_WAGE != -1 orderby p.EFFECT_DATE descending select p).FirstOrDefault();//Find the most recent decision 
+                var oldWorking = (from p in _dbContext.Workings where p.EMPLOYEE_ID == obj.EmployeeId && p.ID != obj.PkeyRef && p.STATUS_ID == OtherConfig.STATUS_APPROVE && p.IS_WAGE != -1 orderby p.EFFECT_DATE descending select p).FirstOrDefault();//Find the most recent decision //&& p.IS_RESPONSIBLE == true TẠI SAO CẦN CHUYÊN TRÁCH Ở ĐÂY?
                 //Phát sinh biến động cho quyết định thay đổi chức danh
-                //ban ghi qtct dau tien khong sinh bien dong
                 if (oldWorking != null && oldWage.POSITION_ID != working.POSITION_ID)
                 {
-                    var oldWageOfDecision = (from p in _dbContext.Workings where  p.ID == oldWorking.WAGE_ID && p.STATUS_ID == OtherConfig.STATUS_APPROVE  select p).FirstOrDefault();// get wage of the most recent decision  && p.IS_RESPONSIBLE == true
+                    var oldWageOfDecision = (from p in _dbContext.Workings where  p.ID == oldWorking.WAGE_ID && p.STATUS_ID == OtherConfig.STATUS_APPROVE select p).FirstOrDefault();// get wage of the most recent decision  //&& p.IS_RESPONSIBLE == true TẠI SAO CẦN CHUYÊN TRÁCH Ở ĐÂY?
                     obj.EffectDate = working.EFFECT_DATE;
                     obj.InsGroupType = 3;
                     var typeId = _dbContext.Types.AsNoTracking().Where(p => p.CODE == "CD").FirstOrDefault();
@@ -448,7 +426,7 @@ namespace InsuranceDAL.Repositories
                     obj.NewPositionId = working.POSITION_ID;
                     if (wage != null)
                     {
-                        if (oldWageOfDecision != null)
+                        if(oldWageOfDecision != null)
                         {
                             if (working.WAGE_ID == oldWorking.WAGE_ID)
                             {
@@ -458,20 +436,14 @@ namespace InsuranceDAL.Repositories
                             else
                             {
                                 var newWageOfDecision = (from p in _dbContext.Workings where p.ID == working.WAGE_ID && p.STATUS_ID == OtherConfig.STATUS_APPROVE select p).FirstOrDefault();// get wage of the most recent decision   && p.IS_RESPONSIBLE == true
-                                if(newWageOfDecision != null)
-                                {
-                                    obj.OldSal = oldWageOfDecision.SAL_INSU == null ? null : (float)oldWageOfDecision.SAL_INSU;
-                                    obj.NewSal = newWageOfDecision.SAL_INSU == null ? null : (float)newWageOfDecision.SAL_INSU;
-                                }else
-                                {
-                                    obj.OldSal = oldWageOfDecision.SAL_INSU == null ? null : (float)oldWageOfDecision.SAL_INSU;
-                                    obj.NewInsSal = 0;
-                                }
+                                obj.OldSal = oldWageOfDecision.SAL_INSU == null ? null : (float)oldWageOfDecision.SAL_INSU;
+                                obj.NewSal = newWageOfDecision.SAL_INSU == null ? null : (float)newWageOfDecision.SAL_INSU;
                             }
+
                         }
                         else
                         {
-                            obj.OldSal = (float)wage.SAL_INSU == null ? null : (float)wage.SAL_INSU;
+                            obj.OldSal = 0;
                             obj.NewSal = 0;
                         }
 
@@ -558,11 +530,7 @@ namespace InsuranceDAL.Repositories
             }
             if (obj.TableRef == "CONTRACT")
             {
-                //ktrllong nay da co bien dong chua
-                //co thi khong sinh -> moi hd chi sinh 1 bien dong
-                // chi co 1 bien dong doi voi 1 nv + hd
-                //var arising = (from p in _dbContext.Arisings.Where(p => p.PKEY_REF == obj.PkeyRef && p.TABLE_REF == "CONTRACT") select p).FirstOrDefault();
-                var arising = (from p in _dbContext.Arisings.Where(p => p.EMPLOYEE_ID == obj.EmployeeId && p.TABLE_REF == "CONTRACT") select p).FirstOrDefault();
+                var arising = (from p in _dbContext.Arisings.Where(p => p.PKEY_REF == obj.PkeyRef && p.TABLE_REF == "CONTRACT") select p).FirstOrDefault();
 
                 if (arising != null) return true;
 
@@ -570,21 +538,19 @@ namespace InsuranceDAL.Repositories
                 //Phát sinh biến động 
                 if (_contract != null)
                 {
-                    //var checkContact = await (from c in _dbContext.Contracts.AsNoTracking().Where(p => p.EMPLOYEE_ID == obj.EmployeeId).DefaultIfEmpty()
-                    //                          from t in _dbContext.Contracttypes.AsNoTracking().Where(p => p.ID == c.CONTRACT_TYPE_ID).DefaultIfEmpty()
-                    //                          from ct in _dbContext.SysContracttypes.AsNoTracking().Where(p => p.ID == t.TYPE_ID).DefaultIfEmpty()
-                    //                          where ct.CODE == "HDLDKXD" || ct.CODE == "HDLDXD"  //where ct.CODE == "HDKXDTH" || ct.CODE == "HXDTH001" -> code old
-                    //                          select c).ToListAsync();
-                    ////check ton tai hop dong chinh thuc
-                    //if (checkContact.Count > 1) return true;
+                    var checkContact = await (from c in _dbContext.Contracts.AsNoTracking().Where(p => p.EMPLOYEE_ID == obj.EmployeeId).DefaultIfEmpty()
+                                              from t in _dbContext.Contracttypes.AsNoTracking().Where(p => p.ID == c.CONTRACT_TYPE_ID).DefaultIfEmpty()
+                                              from ct in _dbContext.SysContracttypes.AsNoTracking().Where(p => p.ID == t.TYPE_ID).DefaultIfEmpty()
+                                              where ct.CODE == "HDLD001" || ct.CODE == "HDLD003" || ct.CODE == "HDLD002" || ct.CODE == "HDLD004" || ct.CODE == "HDCNSDLD" || ct.CODE == "HDCT"
+                                              select c).ToListAsync();
+                    //check ton tai hop dong chinh thuc
+                    if (checkContact.Count > 1) return true;
 
-                    if (_contract.STATUS_ID != OtherConfig.STATUS_APPROVE) return true;//hd phe duyet hay chua
-
+                    if (_contract.STATUS_ID != OtherConfig.STATUS_APPROVE) return true;
                     //kiem tra hop dong nay can phat sinh bien dong khong
-                    //sinh bien dong: HĐ -> 1.HĐKXĐTH-hợp đồng ko xác định thời hạn 2.HXDTH-Hợp đồng xác định thời hạn
                     var _contractType = (from p in _dbContext.Contracttypes
                                          from ct in _dbContext.SysContracttypes.Where(c => c.ID == p.TYPE_ID)
-                                         where p.ID == _contract.CONTRACT_TYPE_ID && (ct.CODE == "HDKXDTH" || ct.CODE == "HXDTH")
+                                         where p.ID == _contract.CONTRACT_TYPE_ID && (ct.CODE == "HDLD001" || ct.CODE == "HDLD003" || ct.CODE == "HDLD002" || ct.CODE == "HDLD004" || ct.CODE == "HDCNSDLD" || ct.CODE == "HDCT")
                                          select p).FirstOrDefault();
                     if (_contractType == null)
                     {
@@ -628,7 +594,7 @@ namespace InsuranceDAL.Repositories
                     }
                     if (specifiedObject != null)
                     {
-                        if (obj.EffectDate!.Value.Day <= specifiedObject.CHANGE_DAY)
+                        if (obj.EffectDate.Value.Day <= specifiedObject.CHANGE_DAY)
                         {
                             obj.DeclaredDate = obj.EffectDate;
                         }
@@ -648,15 +614,17 @@ namespace InsuranceDAL.Repositories
             try
             {
                 var response = await _genericRepository.Create(_uow, obj, sid);
-                //_dbContext.Database.CommitTransactionAsync();
-                //_dbContext.Database.CommitTransaction();
-                _dbContext.SaveChanges();
+                //var res = Map(obj, new INS_ARISING());
+                //await _dbContext.Arisings.AddAsync(res);
+                //await _dbContext.SaveChangesAsync();
+                await _dbContext.Database.CommitTransactionAsync();
                 return true;
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
                 return false;
             }
+            
         }
 
         public async Task<GenericPhaseTwoListResponse<InsArisingDTO>> SinglePhaseQueryList(GenericQueryListDTO<InsArisingDTO> request)

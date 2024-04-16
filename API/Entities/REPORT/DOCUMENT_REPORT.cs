@@ -2,7 +2,7 @@
 {
     public class DOCUMENT_REPORT
     {
-        //public long STT { get; set; }
+        public long STT { get; set; }
         public string? CODE { get; set; }
         public string? FULL_NAME { get; set; }
         public string? POSITION { get; set; }

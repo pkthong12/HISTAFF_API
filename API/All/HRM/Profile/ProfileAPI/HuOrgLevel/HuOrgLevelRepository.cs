@@ -6,6 +6,7 @@ using CORE.StaticConstant;
 using API.All.DbContexts;
 using CORE.AutoMapper;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Common.Extensions;
 
 namespace API.Controllers.HuOrgLevel
 {
@@ -141,8 +142,34 @@ namespace API.Controllers.HuOrgLevel
 
         public async Task<FormatedResponse> DeleteIds(GenericUnitOfWork _uow, List<long> ids)
         {
-            var response = await _genericRepository.DeleteIds(_uow, ids);
-            return response;
+            try
+            {
+                bool checkDataBeforeDelete = false;
+                ids.ForEach(item =>
+                {
+                    var getDataToCheck = _dbContext.HuOrganizations.Where(x => x.ORG_LEVEL_ID == item).ToList();
+                    if (getDataToCheck.Count > 0 )
+                    {
+                        checkDataBeforeDelete = true;
+                        return;
+                    }
+                });
+                if (checkDataBeforeDelete == true)
+                {
+                    return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCodes.CAN_NOT_DELETE_RECORD_WHEN_HAVE_USED };
+                }
+                else
+                {
+                    var response = await _genericRepository.DeleteIds(_uow, ids);
+                    return response;
+                }
+            }
+            catch (Exception ex)
+            {
+
+                return new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message };
+            }
+            
         }
 
         public async Task<FormatedResponse> DeleteIds(GenericUnitOfWork _uow, List<string> ids)

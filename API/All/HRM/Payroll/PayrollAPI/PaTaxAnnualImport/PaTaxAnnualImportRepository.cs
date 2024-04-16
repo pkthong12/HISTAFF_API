@@ -55,7 +55,6 @@ namespace API.Controllers.PaTaxAnnualImport
                            from o in _dbContext.HuOrganizations.Where(x => x.ID == e.ORG_ID)
                            from p in _dbContext.PaTaxAnnualImports.Where(x => x.EMPLOYEE_ID == e.ID && x.YEAR == year && x.OBJ_SALARY_ID == objSalaryId).DefaultIfEmpty()
                            from ob in _dbContext.HuSalaryTypes.Where(x => x.ID == p.OBJ_SALARY_ID).DefaultIfEmpty()
-                           orderby j.ORDERNUM
                            select new PaTaxAnnualImportDTO
                            {
                                Id = e.ID,
@@ -74,8 +73,6 @@ namespace API.Controllers.PaTaxAnnualImport
                                UpdatedDate = p.UPDATED_DATE,
                                Tax18=p.TAX18,
                                Tax26=p.TAX26,
-                               Tax23=p.TAX23,
-                               Tax44=p.TAX44,
                                Note= p.NOTE,
                                JobOrderNum = (int)(j.ORDERNUM ?? 999),
                            };

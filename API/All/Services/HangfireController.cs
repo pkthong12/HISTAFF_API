@@ -1,15 +1,12 @@
-﻿using API.All.DbContexts;
+using API.All.DbContexts;
 using API.Controllers.HuConcurrently;
 using API.Controllers.HuContract;
 using API.Controllers.HuOrganization;
-using API.Controllers.SysUser;
-using Common.Middleware;
-using CORE.CustomAttributes;
+using API.Controllers.SeMail;
 using CORE.GenericUOW;
 using CORE.Services.File;
 using Hangfire;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using ProfileDAL.Repositories;
 
@@ -32,9 +29,10 @@ namespace API.All.Services
         private HuOrganizationRepository _huOrganizationRepository;
         private ContractRepository _contractRepository;
         //private IHuOrganizationRepository _huOrganizationRepository;
+        //private SysUserRepository _sysUserRepository;
 
         public HangfireController(FullDbContext fullDbContext, ProfileDbContext profileDbContext, IEmailService emailService, IWorkingRepository workingRepository, ISchedureService schedureService, IBackgroundJobClient backgroundJobClient,
-            IRecurringJobManager recurringJobManager, IBackgroundService backgroundService,
+            IRecurringJobManager recurringJobManager, IBackgroundService backgroundService, 
             IWebHostEnvironment env,
             IOptions<AppSettings> options,
             IFileService fileService)
@@ -46,10 +44,11 @@ namespace API.All.Services
             _backgroundService = backgroundService;
             _backgroundJobClient = backgroundJobClient;
             _recurringJobManager = recurringJobManager;
+            //_sysUserRepository = new(fullDbContext, uow, backgroundService, schedureService);
             _huConcurrentlyRepository = new HuConcurrentlyRepository(fullDbContext, uow);
             _terminateRepository = new TerminateRepository(profileDbContext);
-            _huOrganizationRepository = new HuOrganizationRepository(fullDbContext, env, options, fileService, emailService);
             _contractRepository = new ContractRepository(profileDbContext);
+            _huOrganizationRepository = new HuOrganizationRepository(fullDbContext, env, options, fileService, emailService);
             //_huOrganizationRepository = huOrganizationRepository;
         }
 
@@ -152,10 +151,28 @@ namespace API.All.Services
             return Ok();
         }
 
+        /*[HttpGet]
+        public IActionResult TurnOffAcount()
+        {
+            _recurringJobManager.AddOrUpdate("Lock account", () => _sysUserRepository.TurnOffAccountUser(), "0 22 * * *");
+            return Ok();
+        }*/
+
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult ChangePositionPoliticalByDate()
         {
-            _recurringJobManager.AddOrUpdate("Update position political in HuEmployeeCv", () => _huConcurrentlyRepository.ChangePositionPoliticalByDate(), "0 22 * * *");
+            _backgroundJobClient.Enqueue(() => _schedureService.ChangePositionPoliticalByDate());
+            //_recurringJobManager.AddOrUpdate("Update position political in HuEmployeeCv", () => _huConcurrentlyRepository.ChangePositionPoliticalByDate(), "0 22 * * *");
+            return Ok();
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult CalculateTimesheetDailyByDate()
+        {
+            //_backgroundJobClient.Enqueue(() => _schedureService.CalculateTimesheetDailyByDate());
+            _recurringJobManager.AddOrUpdate("CaculateTimesheetDaily", () => _schedureService.CalculateTimesheetDailyByDate(), "0 22 * * *");
             return Ok();
         }
 
@@ -168,14 +185,6 @@ namespace API.All.Services
             return Ok();
         }
 
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult ChangeIsActivePosition()
-        {
-            _backgroundJobClient.Enqueue(() => _schedureService.ChangeIsActivePosition());
-            //_recurringJobManager.AddOrUpdate("ChangeIsActivePosition", () => _schedureService.ChangeIsActivePosition(), "0 22 * * *");
-            return Ok();
-        }
 
         [HttpGet]
         [AllowAnonymous]
@@ -197,10 +206,14 @@ namespace API.All.Services
 
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult TheSystemChecksTheTerminate()
+        public ActionResult SendEmailPortal()
         {
-            _recurringJobManager.AddOrUpdate("KIEM_TRA_NGHI_VIEC", () => _schedureService.TheSystemChecksTheTerminate(), "0 22 * * *");
+            //_backgroundJobClient.Enqueue(() => _schedureService.SendEmailPortal());
+            _recurringJobManager.AddOrUpdate("Send email from portal", () => _schedureService.SendEmailPortal(), "* * * * * *");
             return Ok();
         }
+
+
+
     }
 }

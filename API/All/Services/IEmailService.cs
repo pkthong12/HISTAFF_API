@@ -1,8 +1,10 @@
-﻿namespace API.All.Services
+﻿using API.DTO;
+
+namespace API.All.Services
 {
     public interface IEmailService
     {
         Task SendEmail(string backGroundJobType);
-        Task SendEmailAfterResetPassword(string mailTo, string mailFrom, string password);
+        Task SendEmailAfterResetPassword(string mailTo, SeConfigDTO seConfigDto, string password);
     }
 }

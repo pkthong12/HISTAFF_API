@@ -14,4 +14,6 @@ public class AT_SETUP_TIME_EMP : BASE_ENTITY
     public string? NOTE { get; set; }
 
     public string? ACTFLG { get; set; }
+    public DateTime? START_DATE_HL { get; set; }
+    public DateTime? END_DATE_HL { get; set; }
 }

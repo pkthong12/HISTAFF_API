@@ -33,6 +33,10 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalAtEntitlement
 
                     if (ets.Count() == 1)
                     {
+                        var x = (from o in _fullDbContext.PortalRegisterOffs.AsNoTracking().Where(p => p.EMPLOYEE_ID == employeeId && p.STATUS_ID == null && p.TYPE_CODE == "OFF").DefaultIfEmpty()
+                                 from tt in _fullDbContext.AtTimeTypes.AsNoTracking().Where(p => p.ID == o.TIME_TYPE_ID && (p.CODE == "P" || p.CODE == "X/P" || p.CODE == "P/X")).DefaultIfEmpty()
+                                 select o.ID).ToList();
+                        var y = _fullDbContext.PortalRegisterOffDetails.AsNoTracking().Where(p => x.Contains(p.REGISTER_ID!.Value)).Sum(p => p.NUMBER_DAY);
 
                         var r = from et in ets
                                 from e in _fullDbContext.HuEmployees.AsNoTracking().Where(e => e.ID == et.EMPLOYEE_ID).DefaultIfEmpty()
@@ -44,10 +48,10 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalAtEntitlement
 
                                 select new PortalAtEntitlementOutputDTO()
                                 {
-                                    PrevHave = et.PREV_HAVE,
-                                    PrevUsed = et.PREV_USED,
-                                    CurHave = et.CUR_HAVE,
-                                    CurUsed = et.CUR_USED,
+                                    PrevHave = et.PREV_USED,
+                                    PrevUsed = (double)y!,
+                                    CurHave = et.TOTAL_HAVE,
+                                    CurUsed = et.QP_YEARX_USED,
                                 };
 
                         return new() { InnerBody = r };

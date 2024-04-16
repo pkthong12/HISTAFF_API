@@ -134,8 +134,6 @@ namespace API.DTO
         public string? PositionNameSearch { get; set; }
 
         public string? SalPeriodObjSearch { get; set; }
-
-        public int? OrgStatus { get; set; }
     }
 
     public class AtTimesheetDailyImportDTO

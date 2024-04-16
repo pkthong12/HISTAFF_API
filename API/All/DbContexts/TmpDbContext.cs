@@ -25,7 +25,7 @@ namespace API.All.DbContexts
                 }
                 else
                 {
-                    optionsBuilder.UseSqlServer(_appSettings.ConnectionStrings.CoreDb, o => o.UseCompatibilityLevel(120));
+                    optionsBuilder.UseSqlServer(_appSettings.ConnectionStrings.CoreDb);
 
                 }
             }

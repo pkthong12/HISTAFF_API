@@ -104,10 +104,5 @@ namespace ProfileDAL.Repositories
         Task<ResultWithError> EditInfomationBy(int id);
         Task<ResultWithError> ApproveProfileEdit(int id, int type);
         Task<GenericPhaseTwoListResponse<HuEmployeeDTO>> QueryListEmp(GenericQueryListDTO<HuEmployeeDTO> request);
-
-        #region Danh ba nhan su
-        Task<GenericPhaseTwoListResponse<HuEmployeeDTO>> QueryListPersonnelDirectory(GenericQueryListDTO<HuEmployeeDTO> request);
-        Task<FormatedResponse> GetPersonnelDirectoryById(long Id);
-        #endregion
     }
 }

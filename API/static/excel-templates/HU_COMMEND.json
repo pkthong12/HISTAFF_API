@@ -7,7 +7,7 @@
       "RenderOtherListReferences": true,
       "RenderAdministrativePlaces": false,
       "BuildOrgTree": false,
-      "BuildPositions": false,
+      "BuildPositions": true,
       "ExDirectReferences": [
         {
           "Table": "HU_EMPLOYEE_CV",
@@ -58,8 +58,7 @@
             "EMPLOYEE_ID"
           ],
           "RequiredColumns": [
-            "PROFILE_ID",
-            "EMPLOYEE_ID"
+            "PROFILE_ID"
           ],
           "UniqueIndexes": [],
           "Rules": [
@@ -111,10 +110,14 @@
             "PAYMENT_NOTE"
           ],
           "RequiredColumns": [
-            "STATUS_PAYMENT_ID",
             "COMMEND_OBJ_ID",
+            "YEAR",
             "NO",
-            "SIGN_DATE"
+            "REWARD_ID",
+            "ORG_LEVEL_ID",
+            "EFFECT_DATE",
+            "PAYMENT_NO",
+            "LIST_REWARD_LEVEL_ID"
           ],
           "UniqueIndexes": [],
           "Rules": [

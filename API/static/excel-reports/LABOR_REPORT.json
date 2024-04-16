@@ -50,15 +50,15 @@
         "Cell": "B7:B7"
       },
       {
-        "Text": "ER_GENDER",
+        "Text": "ER_POSITION",
         "Cell": "C7:C7"
       },
       {
-        "Text": "ER_POSITION",
+        "Text": "ER_ORG_UNIT",
         "Cell": "D7:D7"
       },
       {
-        "Text": "ER_ORG_UNIT",
+        "Text": "ER_GENDER",
         "Cell": "E7:E7"
       },
       {
@@ -78,12 +78,12 @@
     ],
     "HorizontalAlignmentCenter": [
       "B3:G3",
+      "B4:G4",
+      "B5:G5",
       "A7:G7"
     ],
     "HorizontalAlignmentLeft": [
-      "A1:G1",
-      "B4:G4",
-      "B5:G5"
+      "A1:G1"
     ],
     "VerticalAlignmentCenter": [
       "A7:G7"

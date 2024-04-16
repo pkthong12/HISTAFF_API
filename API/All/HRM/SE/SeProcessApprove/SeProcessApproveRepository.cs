@@ -1,4 +1,4 @@
-using CORE.GenericUOW;
+﻿using CORE.GenericUOW;
 using CORE.DTO;
 using API.DTO;
 using CORE.Enum;
@@ -8,6 +8,7 @@ using CORE.AutoMapper;
 using Microsoft.AspNetCore.Http.HttpResults;
 using ProfileDAL.ViewModels;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace API.Controllers.SeProcessApprove
 {
@@ -107,12 +108,12 @@ namespace API.Controllers.SeProcessApprove
                               }).FirstOrDefault();
 
                 var posList = (from pa in processApprove
-                               from pap in processApprovePos.Where(x => x.PROCESS_APPROVE_ID == pa.ID)
-                               from p in position.Where(x => x.ID == pap.POS_ID)
+                               from pap in processApprovePos.Where(x => x.PROCESS_APPROVE_ID == pa.ID).DefaultIfEmpty()
+                               from p in position.Where(x => x.ID == pap.POS_ID).DefaultIfEmpty()
                                from o in _dbContext.HuOrganizations.Where(x => x.ID == p.ORG_ID).DefaultIfEmpty()
                                from g in _dbContext.HuCompanys.Where(x => x.ID == o.COMPANY_ID).DefaultIfEmpty()
                                from v in _dbContext.SysOtherLists.Where(x => x.ID == g.REGION_ID).DefaultIfEmpty()
-                               from e in _dbContext.HuEmployees.Where(x => x.POSITION_ID == p.ID).DefaultIfEmpty()
+                               //from e in _dbContext.HuEmployees.Where(x => x.POSITION_ID == p.ID).DefaultIfEmpty()
                                from m in _dbContext.HuEmployees.Where(x => x.ID == p.MASTER).DefaultIfEmpty()
                                from i in _dbContext.HuEmployees.Where(x => x.ID == p.INTERIM).DefaultIfEmpty()
                                from tt in _dbContext.HuPositions.Where(x => x.ID == p.LM).DefaultIfEmpty()
@@ -130,12 +131,12 @@ namespace API.Controllers.SeProcessApprove
                                    Name = p.NAME,
                                    EffectiveDate = p.EFFECTIVE_DATE,
                                    OrgName = o.NAME,
-                                   MasterName = m.CODE + " - " + m.Profile.FULL_NAME,
-                                   InterimName = i.CODE + " - " + i.Profile.FULL_NAME,
-                                   LmName = tte.Profile.FULL_NAME,
-                                   EmpLmName = tte.CODE + " - " + tte.Profile.FULL_NAME,
+                                   MasterName = m.CODE + " - " + m.Profile!.FULL_NAME,
+                                   InterimName = i.CODE + " - " + i.Profile!.FULL_NAME,
+                                   LmName = tte.Profile!.FULL_NAME,
+                                   EmpLmName = tte.CODE + " - " + tte.Profile!.FULL_NAME,
                                    LmJobName = tt.CODE + " - " + ttj.NAME_VN,
-                                   CsmName = gte.Profile.FULL_NAME,
+                                   CsmName = gte.Profile!.FULL_NAME,
                                    CsmJobName = gt.CODE + " - " + gtj.NAME_VN,
                                    JobName = j.CODE + " - " + j.NAME_VN,
                                    JobId = p.JOB_ID,
@@ -147,17 +148,17 @@ namespace API.Controllers.SeProcessApprove
                                    JobDesc = p.JOB_DESC,
                                    IsTdv = p.IS_TDV,
                                    IsNotot = p.IS_NOTOT,
-
+                                   Active = p.IS_ACTIVE == true ? "Áp dụng" : "Ngừng áp dụng"
                                }).ToList();
 
                 joined?.PosList.AddRange(posList);
                 if (joined != null)
                 {
-                    if(joined.ApprovalPosition.HasValue != null && joined.ApprovalPosition == true)
+                    if(joined?.ApprovalPosition.HasValue != null && joined.ApprovalPosition == true)
                     {
                         joined.CheckList.Add(1);
                     }
-                    if(joined.SameApprover.HasValue != null && joined.SameApprover == true)
+                    if(joined?.SameApprover.HasValue != null && joined.SameApprover == true)
                     {
                         joined.CheckList.Add(2);
                     }

@@ -251,7 +251,7 @@ namespace API.Controllers.HuWard
         public async Task<FormatedResponse> CheckActive(List<long> ids)
         {
             var checkActive = (await _dbContext.HuWards.Where(x => ids.Contains(x.ID) && x.IS_ACTIVE == true).CountAsync() > 0) ? true : false;
-            var checkHuEmpCv = (await _dbContext.HuEmployeeCvs.Where(x => ids.Contains(x.WARD_ID != null ? (long)x.WARD_ID : 0)).CountAsync() > 0) ? true : false;
+			var checkHuEmpCv = (await _dbContext.HuEmployeeCvs.Where(x => ids.Contains(x.WARD_ID != null || x.CUR_WARD_ID != null ? (long)x.WARD_ID! : 0)).CountAsync() > 0) ? true : false;
             var checkFamily = (await _dbContext.HuFamilys.Where(x => ids.Contains(x.BIRTH_CER_WARD != null ? (long)x.BIRTH_CER_WARD : 0)).CountAsync() > 0) ? true : false;
 
             if (checkActive)

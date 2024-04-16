@@ -119,7 +119,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalApproveLeave
                          from n in _dbContext.AtNotifications.Where(n => n.REF_ID == p.ID).DefaultIfEmpty()
                          from ap in _dbContext.SeAuthorizeApproves.Where(ap => n.EMP_NOTIFY_ID!.Contains(ap.EMPLOYEE_ID.ToString()!) && ap.EMPLOYEE_AUTH_ID == empId && ap.PROCESS_ID == sp.ID && ((ap.FROM_DATE <= currentDate && currentDate <= ap.TO_DATE) || ap.IS_PER_REPLACE == true)).DefaultIfEmpty()
                          from es in _dbContext.HuEmployees.Where(es => es.ID == ap.EMPLOYEE_AUTH_ID).DefaultIfEmpty()
-                         from s in _dbContext.SysOtherLists.AsNoTracking().Where(s => s.ID == p.EXPLAIN_REASON).DefaultIfEmpty()
+
                              // detail register off
                              /*select new
                              {
@@ -154,7 +154,6 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalApproveLeave
                              TypeCode = m.CODE,
                              TimeTypeName = m.NAME,
                              Note = p.NOTE,
-                             ReasonExplain = s.NAME,
                              DateStart = p.DATE_START == null ? p.DATE_START : p.DATE_START!.Value.AddHours(7),
                              DateEnd = p.DATE_END == null ? p.DATE_END : p.DATE_END!.Value.AddHours(7),
                              AppLevel = a.APP_LEVEL,
@@ -197,6 +196,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalApproveLeave
         {
             var currentDate = DateTime.Now;
             var empId = (from p in _dbContext.SysUsers where p.ID == id select p.EMPLOYEE_ID).FirstOrDefault();             // 34235
+            var posId = (from e in _dbContext.HuEmployees where e.ID == empId select e.POSITION_ID).FirstOrDefault();
             var joined = from p in _dbContext.PortalRegisterOffs
                          from e in _dbContext.HuEmployees.Where(f => f.ID == p.EMPLOYEE_ID)
                          from m in _dbContext.AtTimeTypes.Where(f => f.ID == p.TIME_TYPE_ID).DefaultIfEmpty()
@@ -204,7 +204,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalApproveLeave
                          from o in _dbContext.HuOrganizations.Where(f => f.ID == e.ORG_ID).DefaultIfEmpty()
 
                          from a in _dbContext.ProcessApproveStatuses.Where(f => f.ID_REGGROUP == p.ID_REGGROUP && f.APP_LEVEL == (_dbContext.ProcessApproveStatuses.Where(h => h.ID_REGGROUP == p.ID_REGGROUP && h.APP_STATUS == 0).Min(k => k.APP_LEVEL)))
-                         from c in _dbContext.ProcessApprovePoses.Where(f => f.PROCESS_APPROVE_ID == a.PROCESS_APPROVE_ID).DefaultIfEmpty()
+                         from c in _dbContext.ProcessApprovePoses.Where(f => f.PROCESS_APPROVE_ID == a.PROCESS_APPROVE_ID && f.POS_ID == posId).DefaultIfEmpty()
 
                              /*from pa in _dbContext.ProcessApproves.Where(pa => pa.ID == a.PROCESS_APPROVE_ID).DefaultIfEmpty()
                              from sp in _dbContext.SeProcesss.Where(sp => sp.ID == pa.PROCESS_ID).DefaultIfEmpty()
@@ -213,13 +213,12 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalApproveLeave
 
                          from pa in _dbContext.ProcessApproves.Where(pa => pa.ID == a.PROCESS_APPROVE_ID).DefaultIfEmpty()
                          from sp in _dbContext.SeProcesss.Where(sp => sp.ID == pa.PROCESS_ID).DefaultIfEmpty()
-                         from n in _dbContext.AtNotifications.Where(n => n.REF_ID == p.ID).DefaultIfEmpty()
+                         from n in _dbContext.AtNotifications.Where(n => n.REF_ID == p.ID && n.EMP_NOTIFY_ID.Contains(empId.ToString())).DefaultIfEmpty()
                          from ap in _dbContext.SeAuthorizeApproves.Where(ap => n.EMP_NOTIFY_ID!.Contains(ap.EMPLOYEE_ID.ToString()!) && ap.EMPLOYEE_AUTH_ID == empId && ap.PROCESS_ID == sp.ID && ((ap.FROM_DATE <= currentDate && currentDate <= ap.TO_DATE) || ap.IS_PER_REPLACE == true)).DefaultIfEmpty()
                          from es in _dbContext.HuEmployees.Where(es => es.ID == ap.EMPLOYEE_AUTH_ID).DefaultIfEmpty()
-                         from s in _dbContext.SysOtherLists.AsNoTracking().Where(s => s.ID == p.EXPLAIN_REASON).DefaultIfEmpty()
-
+                         /*
                              // detail register off
-                             /*select new
+                             select new
                              {
                                  Id = p.ID,
                                  IdProcess = a.ID,
@@ -234,9 +233,9 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalApproveLeave
                                  apemp = ap.EMPLOYEE_ID,
                                  nemp = n.EMP_NOTIFY_ID,
                                  code = p.TYPE_CODE,
-                                 status = a.APP_STATUS,
-                                 positionId = positionId
-                             };*/
+                                 status = a.APP_STATUS
+                             };
+                         */
                          where model.Statuses!.Contains(a.APP_STATUS!.Value) && p.TYPE_CODE == model.TypeCode && n.EMP_NOTIFY_ID.Contains(empId.ToString()) && ((model.DateStartSearch!.Value.Date <= p.DATE_START!.Value.Date && p.DATE_START!.Value.Date <= model.DateEndSearch!.Value.Date) || (model.DateStartSearch!.Value.Date <= p.WORKING_DAY!.Value.Date && p.WORKING_DAY!.Value.Date <= model.DateEndSearch!.Value.Date))
                          orderby p.CREATED_DATE descending
                          select new
@@ -251,7 +250,6 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalApproveLeave
                              TypeCode = m.CODE,
                              TimeTypeName = m.NAME,
                              Note = p.NOTE,
-                             ReasonExplain = s.NAME,
                              DateStart = p.DATE_START == null ? p.DATE_START : p.DATE_START!.Value.AddHours(7),
                              DateEnd = p.DATE_END == null ? p.DATE_END : p.DATE_END!.Value.AddHours(7),
                              AppLevel = a.APP_LEVEL,
@@ -279,6 +277,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalApproveLeave
                                                ShiftCode = t.CODE,
                                            }).ToList()
                          };
+                         
             if (joined != null)
             {
                 return new FormatedResponse() { InnerBody = joined };
@@ -300,8 +299,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalApproveLeave
 
                          from a in _dbContext.ProcessApproveStatuses.Where(f => f.ID_REGGROUP == p.ID_REGGROUP && f.APP_LEVEL == (_dbContext.ProcessApproveStatuses.Where(h => h.ID_REGGROUP == p.ID_REGGROUP && h.APP_STATUS == 0).Min(k => k.APP_LEVEL))).DefaultIfEmpty()
                          from c in _dbContext.ProcessApprovePoses.Where(f => f.PROCESS_APPROVE_ID == a.PROCESS_APPROVE_ID).DefaultIfEmpty()
-                         from s in _dbContext.SysOtherLists.AsNoTracking().Where(s => s.ID == p.EXPLAIN_REASON).DefaultIfEmpty()
-                          where p.ID == id
+                         where p.ID == id
                          select new 
                          {
                              Id = p.ID,
@@ -314,7 +312,6 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalApproveLeave
                              TypeCode = m.CODE,
                              TimeTypeName = m.NAME,
                              Note = p.NOTE,
-                             ReasonExplain = s.NAME,
                              DateStart = p.DATE_START == null ? p.DATE_START : p.DATE_START!.Value.AddHours(7),
                              DateEnd = p.DATE_END == null ? p.DATE_END : p.DATE_END!.Value.AddHours(7),
                              AppLevel = a.APP_LEVEL ?? 0,
@@ -488,7 +485,6 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalApproveLeave
                                      from p in _dbContext.HuPositions.AsNoTracking().Where(p => p.ID == e.POSITION_ID).DefaultIfEmpty()
                                      from o in _dbContext.HuOrganizations.AsNoTracking().Where(o => o.ID == e.ORG_ID).DefaultIfEmpty()
                                      from t in _dbContext.AtTimeTypes.AsNoTracking().Where(t => r.TIME_TYPE_ID == t.ID).DefaultIfEmpty()
-                                     from s in _dbContext.SysOtherLists.AsNoTracking().Where(s => s.ID == r.EXPLAIN_REASON).DefaultIfEmpty()
                                      where pas.APP_DATE >= fromDate && pas.APP_DATE <= toDate
                                      orderby pas.ID descending
                                      select new
@@ -518,7 +514,6 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalApproveLeave
                                          DateStart = r.DATE_START == null ? r.DATE_START : r.DATE_START!.Value.AddHours(7),
                                          DateEnd = r.DATE_END == null ? r.DATE_END : r.DATE_END!.Value.AddHours(7),
                                          Reason = r.NOTE,
-                                         ReasonExplain = s.NAME,
                                          IsEachDay = r.IS_EACH_DAY,
                                          SendDate = r.CREATED_DATE == null ? r.CREATED_DATE : r.CREATED_DATE!.Value.AddHours(7),
                                          ListDetail = (from d in _dbContext.PortalRegisterOffDetails.Where(d => d.ID_REGGROUP == pas.ID_REGGROUP).DefaultIfEmpty()

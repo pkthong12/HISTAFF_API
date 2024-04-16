@@ -12,6 +12,7 @@ namespace API.Controllers.HuFamilyEdit
        Task<FormatedResponse> GetHuFamilyEditSaveById(long id);
        Task<FormatedResponse> GetHuFamilyEditByIdCorrect(long id);
        Task<FormatedResponse> GetHuFamilyEditRefuse(long employeeId);
+       Task<FormatedResponse> InsertHuFamilyEdit(HuFamilyEditDTO request); 
     }
 }
 

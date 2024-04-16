@@ -7,6 +7,8 @@ using API.All.DbContexts;
 using CORE.AutoMapper;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
 using System;
+using Common.Extensions;
+using ProfileDAL.ViewModels;
 
 namespace API.Controllers.HuContract
 {
@@ -215,6 +217,100 @@ namespace API.Controllers.HuContract
             // thì tự viết ở đây
             throw new NotImplementedException();
         }
+
+        public async Task<bool> UpdateStatusEmpDetailOfContract(HU_CONTRACT obj)
+        {
+            try
+            {
+                if (obj.START_DATE!.Value.Date == DateTime.Now.Date && obj.STATUS_ID == OtherConfig.STATUS_APPROVE)
+                {
+                    var r = _dbContext.HuContracts.Where(x => x.ID == obj.ID).FirstOrDefault();
+
+                    if (r != null)
+                    {
+                        var e = _dbContext.HuEmployees.Where(x => x.ID == r.EMPLOYEE_ID).FirstOrDefault();
+                        var terminate = _dbContext.HuTerminates.Where(x => x.EMPLOYEE_ID == r.EMPLOYEE_ID).OrderByDescending(x => x.EFFECT_DATE).FirstOrDefault();
+                        var eprofile = (from p in _dbContext.HuEmployees.Where(x => x.ID == r.EMPLOYEE_ID) select p.Profile).FirstOrDefault();
+                        if (obj.STATUS_ID == OtherConfig.STATUS_APPROVE)
+                        {
+
+                            var _TypeEmpStatus = (from p in _dbContext.SysOtherLists.Where(p => p.IS_ACTIVE == true)
+                                                  join ot in _dbContext.SysOtherListTypes on p.TYPE_ID equals ot.ID
+                                                  where ot.CODE == "EMP_STATUS" && p.CODE == "ESW"
+                                                  select p.ID).FirstOrDefault();
+                            var _TypeEmpStatusDetail = (from p in _dbContext.SysOtherLists.Where(p => p.IS_ACTIVE == true)
+                                                        join ot in _dbContext.SysOtherListTypes on p.TYPE_ID equals ot.ID
+                                                        where ot.CODE == "STATUS_DETAIL" && ot.IS_ACTIVE == true && p.IS_ACTIVE == true
+                                                        select p).ToArray();
+
+                            var contractType = (from p in _dbContext.HuContractTypes.Where(p => p.IS_ACTIVE == true)
+                                                join ot in _dbContext.SysContractTypes on p.TYPE_ID equals ot.ID
+                                                where p.ID == r.CONTRACT_TYPE_ID
+                                                select ot).FirstOrDefault();
+
+                            if (e != null)
+                            {
+                                e.CONTRACT_ID = obj.ID;
+                                e.CONTRACT_TYPE_ID = r.CONTRACT_TYPE_ID;
+                                if (_TypeEmpStatus != null && (terminate == null ? true : r.START_DATE > terminate?.EFFECT_DATE))
+                                {
+                                    e.WORK_STATUS_ID = _TypeEmpStatus;
+                                }
+                                if (contractType != null && _TypeEmpStatusDetail.Length > 0)
+                                {
+                                    //cap nhat trang thai chi tiet
+                                    switch (contractType.CODE!.ToUpper())
+                                    {
+                                        case "HDTV":
+                                            var _IDHDTV = (from p in _TypeEmpStatusDetail where p.CODE == "00003" select p.ID).FirstOrDefault();
+                                            if (_IDHDTV != null)
+                                            {
+                                                e.STATUS_DETAIL_ID = _IDHDTV;
+                                            }
+                                            break;
+                                        case "HDLD001" or "HDLD002" or "HDLD003":
+                                            var _IDXDTH = (from p in _TypeEmpStatusDetail where p.CODE == "00004" select p.ID).FirstOrDefault();
+                                            if (_IDXDTH != null)
+                                            {
+                                                e.STATUS_DETAIL_ID = _IDXDTH;
+                                            }
+                                            break;
+                                        case "HDLD004":
+                                            var _IDKXDTH = (from p in _TypeEmpStatusDetail where p.CODE == "00005" select p.ID).FirstOrDefault();
+                                            if (_IDKXDTH != null)
+                                            {
+                                                e.STATUS_DETAIL_ID = _IDKXDTH;
+                                            }
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                }
+                                _dbContext.HuEmployees.Update(e);
+                            }
+                        }
+                        await _dbContext.SaveChangesAsync();
+                    }
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public void ScanUpdateStatusEmpDetail()
+        {
+            var scanList = _dbContext.HuContracts.Where(
+                x => x.STATUS_ID == OtherConfig.STATUS_APPROVE && x.START_DATE!.Value.Date == DateTime.Now.Date).ToList();
+            scanList.ForEach(async data =>
+            {
+                await UpdateStatusEmpDetailOfContract(data);
+            });
+
+        }
+
     }
 }
 

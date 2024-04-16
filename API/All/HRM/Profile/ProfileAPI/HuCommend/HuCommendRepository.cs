@@ -6,7 +6,6 @@ using CORE.StaticConstant;
 using API.All.DbContexts;
 using CORE.AutoMapper;
 using ProfileDAL.ViewModels;
-using Common.Extensions;
 
 namespace API.Controllers.HuCommend
 {
@@ -28,54 +27,54 @@ namespace API.Controllers.HuCommend
         public async Task<GenericPhaseTwoListResponse<HuCommendDTO>> SinglePhaseQueryList(GenericQueryListDTO<HuCommendDTO> request)
         {
             var huCommend = _uow.Context.Set<HU_COMMEND>().AsNoTracking().AsQueryable();
-            var huCommendEmployee = _uow.Context.Set<HU_COMMEND_EMPLOYEE>().AsNoTracking().AsQueryable();
+            var huCommendEmployee =_uow.Context.Set<HU_COMMEND_EMPLOYEE>().AsNoTracking().AsQueryable();
             var otherList = _uow.Context.Set<SYS_OTHER_LIST>().AsNoTracking().AsQueryable();
             var position = _uow.Context.Set<HU_POSITION>().AsNoTracking().AsQueryable();
             var employee = _uow.Context.Set<HU_EMPLOYEE>().AsNoTracking().AsQueryable();
             var organization = _uow.Context.Set<HU_ORGANIZATION>().AsNoTracking().AsQueryable();
             var orgLevel = _uow.Context.Set<HU_ORG_LEVEL>().AsNoTracking().AsQueryable();
-            var job = _uow.Context.Set<HU_JOB>().AsNoTracking().AsQueryable();
+            var job = _uow.Context.Set<HU_JOB>().AsNoTracking().AsQueryable();  
 
             var joined = (from ce in huCommendEmployee
-                          from c in huCommend.Where(x => x.ID == ce.COMMEND_ID)
-                          from e in employee.Where(x => x.ID == ce.EMPLOYEE_ID).DefaultIfEmpty()
-                          from cObj in otherList.Where(x => x.ID == c.COMMEND_OBJ_ID).DefaultIfEmpty()
-                          from rLevel in otherList.Where(x => x.ID == c.REWARD_LEVEL_ID).DefaultIfEmpty()
-                          from oLevel in otherList.Where(x => x.ID == c.ORG_LEVEL_ID).DefaultIfEmpty()
-                          from s in otherList.Where(x => x.ID == c.STATUS_PAYMENT_ID).DefaultIfEmpty()
-                          from p in position.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
-                          from o in organization.Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
-                          from ol in orgLevel.Where(x => x.ID == c.ORG_LEVEL_ID).DefaultIfEmpty()
-                          from j in job.Where(x => x.ID == p.JOB_ID).DefaultIfEmpty()
-                          orderby c.CREATED_DATE descending
-                          // JOIN OTHER ENTITIES BASED ON THE BUSINESS
-                          select new HuCommendDTO
-                          {
-                              Id = ce.ID,
-                              CommendId = ce.COMMEND_ID,
-                              EffectDate = c.EFFECT_DATE,
-                              CommendObjName = cObj.NAME,
-                              EmployeeId = c.EMPLOYEE_ID,
-                              EmployeeCode = e.CODE,
-                              EmployeeName = e.Profile.FULL_NAME,
-                              PositionName = p.NAME,
-                              OrgId = e.ORG_ID,
-                              OrgName = o.NAME,
-                              No = c.NO,
-                              PaymentNo = c.PAYMENT_NO,
-                              SignDate = c.SIGN_DATE,
-                              SignPaymentDate = c.SIGN_PAYMENT_DATE,
-                              Reason = c.REASON,
-                              StatusName = s.NAME,
-                              OrgLevelName = ol.NAME,
-                              StatusPaymentId = c.STATUS_PAYMENT_ID,
-                              RewardLevelName = ol.NAME,
-                              CreatedDate = c.CREATED_DATE,
-                              UpdatedDate = c.UPDATED_DATE,
-                              StatusId = e.WORK_STATUS_ID,
-                              PaymentNote = c.PAYMENT_NOTE,
-                              JobOrderNum = (int)(j.ORDERNUM ?? 999)
-                          }).ToList();
+                         from c in huCommend.Where(x => x.ID == ce.COMMEND_ID)
+                         from e in employee.Where(x => x.ID == ce.EMPLOYEE_ID).DefaultIfEmpty()
+                         from cObj in otherList.Where(x => x.ID == c.COMMEND_OBJ_ID).DefaultIfEmpty()
+                         from rLevel in otherList.Where(x => x.ID == c.REWARD_LEVEL_ID).DefaultIfEmpty()
+                         from oLevel in otherList.Where(x => x.ID == c.ORG_LEVEL_ID).DefaultIfEmpty()
+                         from s in otherList.Where(x => x.ID == c.STATUS_PAYMENT_ID).DefaultIfEmpty()
+                         from p in position.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
+                         from o in organization.Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
+                         from ol in orgLevel.Where(x => x.ID == c.ORG_LEVEL_ID).DefaultIfEmpty()
+                         from j in job.Where(x => x.ID == p.JOB_ID).DefaultIfEmpty()
+                         orderby c.CREATED_DATE descending
+                         // JOIN OTHER ENTITIES BASED ON THE BUSINESS
+                         select new HuCommendDTO
+                         {
+                             Id = ce.ID,
+                             CommendId = ce.COMMEND_ID,
+                             EffectDate = c.EFFECT_DATE,
+                             CommendObjName = cObj.NAME,
+                             EmployeeId = c.EMPLOYEE_ID,
+                             EmployeeCode = e.CODE,
+                             EmployeeName = e.Profile.FULL_NAME,
+                             PositionName = p.NAME,
+                             OrgId = e.ORG_ID,
+                             OrgName = o.NAME,
+                             No = c.NO,
+                             PaymentNo = c.PAYMENT_NO,
+                             SignDate = c.SIGN_DATE,
+                             SignPaymentDate = c.SIGN_PAYMENT_DATE,
+                             Reason = c.REASON,
+                             StatusName = s.NAME,
+                             OrgLevelName = ol.NAME,
+                             StatusPaymentId = c.STATUS_PAYMENT_ID,
+                             RewardLevelName = ol.NAME,
+                             CreatedDate = c.CREATED_DATE,
+                             UpdatedDate = c.UPDATED_DATE,
+                             StatusId = e.WORK_STATUS_ID,
+                             PaymentNote = c.PAYMENT_NOTE,
+                             JobOrderNum = (int)(j.ORDERNUM ?? 999)
+                         }).ToList();
 
 
             // checkbox to string
@@ -174,7 +173,7 @@ namespace API.Controllers.HuCommend
                                   No = l.NO,
                                   SignDate = l.SIGN_DATE,
                                   SignPaymentDate = l.SIGN_PAYMENT_DATE,
-                                  SignerName = l.SIGNER_NAME,
+                                  SignerName = (from e in employee.Where(e => e.ID == l.SIGN_ID) select e.Profile!.FULL_NAME).FirstOrDefault(),
                                   SignerPosition = l.SIGNER_POSITION,
                                   OrgId = l.ORG_ID,
                                   CommendObjId = l.COMMEND_OBJ_ID,
@@ -185,7 +184,9 @@ namespace API.Controllers.HuCommend
                                   Content = l.CONTENT,
                                   EmployeeName = l.EMPLOYEE_NAME,
                                   EmployeeCode = l.EMPLOYEE_CODE,
-                                  PositionName = l.POSITION_NAME,
+                                  PositionName = (from e in employee.Where(e => e.ID == l.SIGN_ID) 
+                                                  from p in position.Where(p => p.ID == e.POSITION_ID) 
+                                                  select p.NAME).FirstOrDefault(),
                                   OrgName = l.ORG_NAME,
                                   OrgLevelId = l.ORG_LEVEL_ID,
                                   RewardId = l.REWARD_ID,
@@ -218,7 +219,7 @@ namespace API.Controllers.HuCommend
                                     from o in organization.Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
                                     from po in position.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
                                     from g in otherList.Where(x => x.ID == e.Profile.GENDER_ID).DefaultIfEmpty()
-                                    from w in otherList.Where(x => x.ID == e.WORK_STATUS_ID).DefaultIfEmpty()
+                                    from st in otherList.Where(x => x.ID == e.WORK_STATUS_ID).DefaultIfEmpty()
                                     where ce.COMMEND_ID == id
                                     select new EmployeeDTO()
                                     {
@@ -235,9 +236,8 @@ namespace API.Controllers.HuCommend
                                         MobilePhone = e.Profile.MOBILE_PHONE,
                                         Email = e.Profile.EMAIL,
                                         IdNo = e.Profile.ID_NO,
-                                        IdDate = e.Profile.ID_DATE,
-                                        WorkStatusId = e.WORK_STATUS_ID,
-                                        WorkStatusName = w.NAME
+                                        IdDate = e.Profile.ID_DATE, 
+                                        WorkStatusName = st.NAME,
                                     }).ToList();
                 joined?.EmployeeList.AddRange(employeeList);
 
@@ -271,31 +271,6 @@ namespace API.Controllers.HuCommend
 
         public async Task<FormatedResponse> Update(GenericUnitOfWork _uow, HuCommendDTO dto, string sid, bool patchMode = true)
         {
-            if (dto.EmployeeIds != null)
-            {
-                foreach (var item in dto.EmployeeIds)
-                {
-                    var ckDate = await _dbContext.HuContracts.AsNoTracking().Where(x => x.EMPLOYEE_ID == item).OrderByDescending(c => c.START_DATE).FirstOrDefaultAsync();
-                    if (ckDate != null)
-                    {
-                        if (dto.EffectDate!.Value.Date < ckDate.START_DATE!.Value.Date)
-                        {
-                            return new FormatedResponse()
-                            {
-                                MessageCode = "EFFECTIVE_DATE_MUST_BE_GREATER_THAN_CONTRACT_EFFECTIVE_DATE",
-                                ErrorType = EnumErrorType.CATCHABLE,
-                                StatusCode = EnumStatusCode.StatusCode400
-                            };
-                        }
-                    }
-
-                    var checkCon = await _dbContext.HuContracts.AsNoTracking().Where(x => x.EMPLOYEE_ID == item && x.STATUS_ID != OtherConfig.STATUS_APPROVE).AnyAsync();
-                    if (checkCon)
-                    {
-                        return new FormatedResponse() { MessageCode = "EMPLOYEE_DO_NOT_HAVE_A_CONTRACT", ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
-                    }
-                }
-            }
             var response = await _genericRepository.Update(_uow, dto, sid, patchMode);
             return response;
         }

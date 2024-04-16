@@ -56,7 +56,7 @@
           "RequiredColumns": [
             "EMPLOYEE_ID",
             "ALLOWANCE_ID",
-            "CREATED_DATE"
+            "DATE_START"
           ],
           "UniqueIndexes": [
             [ "ALLOWANCE_ID", "EMPLOYEE_ID" ]

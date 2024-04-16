@@ -142,12 +142,6 @@ namespace API.Controllers.TrCenter
             var response = await _TrCenterRepository.CreateNewCode();
             return Ok(response);
         }
-        [HttpGet]
-        public async Task<IActionResult> GetListTrainingCenter()
-        {
-            var response = await _TrCenterRepository.GetListTrainingCenter();
-            return Ok(response);
-        }
 
         [HttpPost]
         public async Task<IActionResult> ToggleActiveIds(GenericToggleIsActiveDTO model)

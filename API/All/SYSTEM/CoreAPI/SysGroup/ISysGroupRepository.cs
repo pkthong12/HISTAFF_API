@@ -10,6 +10,7 @@ namespace API.Controllers.SysGroup
         Task<FormatedResponse> QueryOrgPermissionList(long groupId); // user is param
         Task<FormatedResponse> QueryFunctionActionPermissionList(long groupId); // user is param
         Task<FormatedResponse> Clone(GenericUnitOfWork _uow, SysGroupDTO dto, string sid);
+        Task<FormatedResponse> DeleteAllFunctionActionPermissionByGroupId(long groupId);
     }
 }
 

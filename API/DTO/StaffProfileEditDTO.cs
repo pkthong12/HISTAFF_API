@@ -164,6 +164,5 @@ namespace API.DTO
         public string? YouthGroupAddress { get; set; }
         public string? YouthGroupPosition { get; set; }
         public bool? IsJoinYouthGroup { get; set; }
-        public long? DefenseSecurityTraining { get; set; }
     }
 }

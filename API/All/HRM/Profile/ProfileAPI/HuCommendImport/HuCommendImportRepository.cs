@@ -98,7 +98,7 @@ namespace API.All.HRM.Profile.ProfileAPI.HuCommendImport
             {
                 var now = DateTime.UtcNow;
                 string currentNo = "";
-                long newCommendId = 0;
+                long newCommendId = 0 ;
                 long newStatus = 0;
                 // lay ra du lieu o bang tam
                 var tmp1 = await _dbContext.HuCommendImports.Where(x => x.XLSX_USER_ID == request.XlsxSid && x.XLSX_EX_CODE == request.XlsxExCode && x.XLSX_SESSION == request.XlsxSession).ToListAsync();
@@ -122,12 +122,8 @@ namespace API.All.HRM.Profile.ProfileAPI.HuCommendImport
                 // cha: HU_COMMEND, con: HU_COMMEND_EMPLOYEE
                 tmp1.ForEach(item =>
                 {
-                    if (item.NO == null || item.NO == "") throw new Exception("REQUIRED_DECISION_COMMEND");
-
-                    if (item.SIGN_DATE == null) throw new Exception("REQUIRED_SIGN_DATE");
-
                     // trung so quyet dinh => bo qua
-                    if (currentNo != item.NO)
+                    if(currentNo != item.NO)
                     {
                         var obj1 = Activator.CreateInstance(typeof(HU_COMMEND)) ?? throw new Exception(CommonMessageCode.ACTIVATOR_CREATE_INSTANCE_RETURNS_NULL);
                         var commend = (HU_COMMEND)obj1;
@@ -156,14 +152,34 @@ namespace API.All.HRM.Profile.ProfileAPI.HuCommendImport
                             }
                         });
 
-                        if (commend.COMMEND_OBJ_ID == null)
+                        if(commend.COMMEND_OBJ_ID == null)
                         {
                             throw new Exception("COMMEND_OBJ_ID_CANNOT_NULL_IN_ROW_IN_ROW" + " " + item.XLSX_ROW);
                         }
 
-                        if (commend.NO == null || commend.NO == "")
+                        if (commend.YEAR == null)
+                        {
+                            throw new Exception("YEAR_CANNOT_NULL_IN_ROW_IN_ROW" + " " + item.XLSX_ROW);
+                        }
+
+                        if (commend.NO == null)
                         {
                             throw new Exception("NO_CANNOT_NULL_IN_ROW_IN_ROW" + " " + item.XLSX_ROW);
+                        }
+
+                        if (commend.REWARD_ID == null)
+                        {
+                            throw new Exception("REWARD_ID_CANNOT_NULL_IN_ROW" + " " + item.XLSX_ROW);
+                        }
+
+                        if (commend.ORG_LEVEL_ID == null)
+                        {
+                            throw new Exception("ORG_LEVEL_ID_CANNOT_NULL_IN_ROW" + " " + item.XLSX_ROW);
+                        }
+
+                        if (commend.EFFECT_DATE == null)
+                        {
+                            throw new Exception("EFFECT_DATE_CANNOT_NULL_IN_ROW" + " " + item.XLSX_ROW);
                         }
 
                         if (commend.PAYMENT_NO == null)

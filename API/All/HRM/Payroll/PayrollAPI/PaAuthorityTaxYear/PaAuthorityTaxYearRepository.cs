@@ -31,7 +31,6 @@ namespace API.Controllers.PaAuthorityTaxYear
                          from pos in _dbContext.HuPositions.AsNoTracking().Where(pos => pos.ID == e.POSITION_ID).DefaultIfEmpty()
                          from j in _dbContext.HuJobs.AsNoTracking().Where(j => j.ID == pos.JOB_ID).DefaultIfEmpty()
                          from o in _dbContext.HuOrganizations.AsNoTracking().Where(o => o.ID == e.ORG_ID).DefaultIfEmpty()
-                         orderby j.ORDERNUM
                          select new PaAuthorityTaxYearDTO
                          {
                              Id = p.ID,

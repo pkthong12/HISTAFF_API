@@ -188,14 +188,13 @@ namespace API.All.HRM.Profile.ProfileAPI.Insurance
                 //check ban ghi phat sinh tai cac man #
                 foreach (var item in model.Ids)
                 {
-                    var check1 = _dbContext.InsArisings.Where(x => x.INS_TYPE_ID == item).AsNoTracking().Count();
-                    var check2 = _dbContext.InsChanges.Where(x => x.UNIT_INSURANCE_TYPE_ID == item).AsNoTracking().Count();
-                    if (check1 > 0)
+                    var check1 = await _dbContext.InsArisings.Where(x => x.INS_TYPE_ID == item).AsNoTracking().AnyAsync();
+                    var check2 = await _dbContext.InsChanges.Where(x => x.CHANGE_TYPE_ID == item).AsNoTracking().AnyAsync();
+                    var check3 = await _dbContext.HuWorkings.Where(x => x.TAXTABLE_ID == item).AsNoTracking().AnyAsync();
+                    var check4 = await _dbContext.InsArisings.Where(x => x.INS_TYPE_ID == item).AsNoTracking().AnyAsync();
+                    if (check1 == true || check2 == true || check3 == true || check4 == true)
                     {
-                        return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.DO_NOT_DELETE_DATA_RECORD_ARISING, StatusCode = EnumStatusCode.StatusCode400 });
-                    }else if (check2 > 0)
-                    {
-                        return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.DO_NOT_DELETE_DATA_RECORD_CHANGE, StatusCode = EnumStatusCode.StatusCode400 });
+                        return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.CAN_NOT_DELETE_RECORDS_HAVE_USE, StatusCode = EnumStatusCode.StatusCode400 });
                     }
                 }
 

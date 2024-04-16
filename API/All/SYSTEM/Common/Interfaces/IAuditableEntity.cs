@@ -2,8 +2,8 @@
 {
     public interface IAuditableEntity
     {
-        string? CREATED_BY { get; set; }
-        string? UPDATED_BY { get; set; }
+        string CREATED_BY { get; set; }
+        string UPDATED_BY { get; set; }
         DateTime? CREATED_DATE { get; set; }
         DateTime? UPDATED_DATE { get; set; }
     }

@@ -3,9 +3,9 @@ using CORE.Services.File;
 
 namespace API.DTO
 {
-    public class HuFamilyDTO : BaseDTO
+    public class HuFamilyDTO:BaseDTO
     {
-
+        
         public long? EmployeeId { get; set; }
         public string? EmployeeCode { get; set; }
         public string? EmployeeName { get; set; }

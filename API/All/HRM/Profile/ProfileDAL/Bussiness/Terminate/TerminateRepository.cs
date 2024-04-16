@@ -231,8 +231,7 @@ namespace ProfileDAL.Repositories
                                    Attachment = p.ATTACHMENT,
                                    JoinDate = e.JOIN_DATE,
                                    Seniority = "",
-                                   FileName = p.FILE_NAME,
-                                   IsBlackList = p.IS_BLACK_LIST
+                                   FileName = p.FILE_NAME
                                }).FirstOrDefaultAsync();
                 if (Information.IsDate(r.JoinDate))
                 {
@@ -345,38 +344,47 @@ namespace ProfileDAL.Repositories
         /// </summary>
         /// <param name="param"></param>
         /// <returns></returns>
-        public async Task<ResultWithError> CreateAsync(TerminateInputDTO param, string sid)
+        public async Task<ResultWithError> CreateAsync(TerminateInputDTO param)
         {
             try
             {
                 // Gencode
                 //var No = "";
 
-                var appStatusId = _appContext.OtherLists.FirstOrDefault(x => x.CODE == "DD");
+                var appStatusId = _appContext.OtherLists.Where(f => f.CODE == "DD").FirstOrDefault();
 
-                var status = await _appContext.OtherLists.CountAsync(x => x.ID == param.StatusId);
-                if (status == 0) return new ResultWithError(Message.STATUS_NOT_EXIST);
+                var status = await _appContext.OtherLists.Where(c => c.ID == param.StatusId).CountAsync();
+                if (status == 0)
+                {
+                    return new ResultWithError(Message.STATUS_NOT_EXIST);
+                }
 
-                var emp = await _appContext.Employees.CountAsync(x => x.ID == param.EmployeeId);
-                if (emp == 0) return new ResultWithError(Message.EMP_NOT_EXIST);
+                var emp = await _appContext.Employees.Where(c => c.ID == param.EmployeeId).CountAsync();
+                if (emp == 0)
+                {
+                    return new ResultWithError(Message.EMP_NOT_EXIST);
+                }
 
-                var signer = await _appContext.Employees.CountAsync(x => x.ID == param.SignId);
-                if (param.SignId != null && signer == 0) return new ResultWithError(Message.SIGNER_NOT_EXIST);
+                var signer = await _appContext.Employees.Where(c => c.ID == param.SignId).CountAsync();
+                if (param.SignId != null && signer == 0)
+                {
+                    return new ResultWithError(Message.SIGNER_NOT_EXIST);
+                }
 
-                var checkApprove = await _appContext.Terminates.CountAsync(x => x.EMPLOYEE_ID == param.EmployeeId && x.STATUS_ID == appStatusId!.ID);
-                if (checkApprove > 0) return new ResultWithError(Message.RECORD_EXIST_APPROVED);
-
+                var checkApprove = await _appContext.Terminates.Where(f => f.EMPLOYEE_ID == param.EmployeeId && f.STATUS_ID == appStatusId!.ID).CountAsync();
+                if (checkApprove > 0)
+                {
+                    return new ResultWithError(Message.RECORD_EXIST_APPROVED);
+                }
                 var data = Map(param, new HU_TERMINATE());
                 //data.NO = No;
-                data.CREATED_DATE = DateTime.UtcNow;
-                data.CREATED_BY = sid;
                 var result = await _appContext.Terminates.AddAsync(data);
 
-
-                // call Approve2()
-                bool condition1 = data.STATUS_ID == appStatusId!.ID;
-                if (condition1) await Approve2(data);
-
+                var e = _appContext.Employees.Where(c => c.ID == data.EMPLOYEE_ID).FirstOrDefault();
+                if (data.STATUS_ID == appStatusId!.ID)
+                {
+                    await Approve(data);
+                }
 
                 await _appContext.SaveChangesAsync();
                 param.Id = data.ID;
@@ -392,32 +400,45 @@ namespace ProfileDAL.Repositories
         /// </summary>
         /// <param name="param"></param>
         /// <returns></returns>
-        public async Task<ResultWithError> UpdateAsync(TerminateInputDTO param, string sid)
+        public async Task<ResultWithError> UpdateAsync(TerminateInputDTO param)
         {
             try
             {
-                var r = _appContext.Terminates.FirstOrDefault(x => x.ID == param.Id);
-                if (r == null) return new ResultWithError(404);
+                var r = _appContext.Terminates.Where(x => x.ID == param.Id).FirstOrDefault();
 
-                var appStatusId = _appContext.OtherLists.FirstOrDefault(x => x.CODE == "DD");
-                if (r.STATUS_ID == appStatusId!.ID) return new ResultWithError(Message.RECORD_IS_APPROVED);
+                if (r == null)
+                {
+                    return new ResultWithError(404);
+                }
+                var appStatusId = _appContext.OtherLists.Where(f => f.CODE == "DD").FirstOrDefault();
+                //if (r.STATUS_ID == appStatusId.ID)
+                //{
+                //    return new ResultWithError(Message.RECORD_IS_APPROVED);
+                //}
+                if(r.STATUS_ID == OtherConfig.STATUS_APPROVE)
+                {
+                    return new ResultWithError(Message.RECORD_IS_APPROVED);
+                }
 
-                var emp = await _appContext.Employees.CountAsync(x => x.ID == param.EmployeeId);
-                if (emp == 0) return new ResultWithError(Message.EMP_NOT_EXIST);
+                var emp = await _appContext.Employees.Where(c => c.ID == param.EmployeeId).CountAsync();
+                if (emp == 0)
+                {
+                    return new ResultWithError(Message.EMP_NOT_EXIST);
+                }
 
-                var signer = await _appContext.Employees.CountAsync(x => x.ID == param.SignId);
-                if (param.SignId != null && signer == 0) return new ResultWithError(Message.SIGNER_NOT_EXIST);
-
+                var signer = await _appContext.Employees.Where(c => c.ID == param.SignId).CountAsync();
+                if (param.SignId != null && signer == 0)
+                {
+                    return new ResultWithError(Message.SIGNER_NOT_EXIST);
+                }
                 var data = Map(param, r);
-                data.UPDATED_DATE = DateTime.UtcNow;
-                data.UPDATED_BY = sid;
                 var result = _appContext.Terminates.Update(data);
-
-
-                // call Approve2()
-                bool condition1 = data.STATUS_ID == appStatusId!.ID;
-                if (condition1) await Approve2(data);
-
+                var e = await _appContext.Employees.Where(c => c.ID == data.EMPLOYEE_ID).FirstOrDefaultAsync();
+                if (data.STATUS_ID == appStatusId!.ID)
+                {
+                    await Approve(data);
+                }
+                //ApproveList("");
 
                 await _appContext.SaveChangesAsync();
                 return new ResultWithError(param);
@@ -449,9 +470,17 @@ namespace ProfileDAL.Repositories
         {
             try
             {
-                var e = await _appContext.Employees.FirstOrDefaultAsync(x => x.ID == obj.EMPLOYEE_ID);
+                //if (obj.EFFECT_DATE.Value.Date > DateTime.Now.Date || obj.STATUS_ID != OtherConfig.STATUS_APPROVE)
+                //{
+                //    return true;
+                //}
+                var e = (from p in _appContext.Employees
+                         where p.ID == obj.EMPLOYEE_ID
+                         select p).FirstOrDefault();
 
-                var reasonInfor = _appContext.OtherLists.FirstOrDefault(x => x.ID == obj.REASON_ID);
+                var reasonInfor = (from p in _appContext.OtherLists
+                                   where p.ID == obj.REASON_ID
+                                   select p).FirstOrDefault();
 
                 var workStatusEmp = (from p in _appContext.OtherLists
                                      from dt in _appContext.OtherListTypes.Where(f => f.ID == p.TYPE_ID)
@@ -463,9 +492,9 @@ namespace ProfileDAL.Repositories
                                            where dt.CODE == "STATUS_DETAIL"
                                            select p).ToList();
 
-                var positionInfor = (from p in _appContext.Positions where p.MASTER == obj.EMPLOYEE_ID || p.INTERIM == obj.EMPLOYEE_ID && obj.EFFECT_DATE!.Value.Date == DateTime.UtcNow.Date select p ).ToList();
+                var positionInfor = (from p in _appContext.Positions where p.MASTER == obj.EMPLOYEE_ID || p.INTERIM == obj.EMPLOYEE_ID select p).ToList();
 
-                e!.TER_EFFECT_DATE = obj.EFFECT_DATE;
+                e.TER_EFFECT_DATE = obj.EFFECT_DATE;
                 e.TER_LAST_DATE = obj.LAST_DATE;
 
                 // khi tới ngày hiệu lực thì nhân viên tạo nghỉ việc là MASTER hoặc INTERIM sẽ bị đá ra khỏi ghế
@@ -506,7 +535,6 @@ namespace ProfileDAL.Repositories
                         var workStatusEmpDetail_resault = new SYS_OTHER_LIST();
                         switch (reasonInfor.CODE!.Trim().ToUpper())
                         {
-
                             case "976": // Đơn phương chấm dứt hợp đồng lao động
                                 //Đã nghỉ việc
                                 workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
@@ -643,6 +671,241 @@ namespace ProfileDAL.Repositories
                                 }
 
                                 break;
+
+                            case "953": //Chế độ lương, phúc lợi không phù hợp
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES953" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "954": //Không có cơ hội phát triển, thăng tiến
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES954" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "955": //Môi trường làm việc không phù hợp
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES955" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "956": //Văn hóa công ty không phù hợp
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES956" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "957": //Công việc không đúng chuyên môn, năng lực
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES957" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "958": //Công việc nhàm chán không còn thử thách
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES958" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "959": //Không hài lòng với cấp trên
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES959" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "960": //Không hài lòng với đông nghiệp
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES960" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "961": //Chuyển công việc mới tốt hơn
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES961" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "962": //Không đủ năng lực để hoàn thành công việc
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES962" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "963": //Đi học
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES963" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "964": //Sức khỏe không đảm bảo
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES964" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "965": //Việc gia đình
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES965" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "966": //Thai sản, con nhỏ
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES966" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "967": //Gia đình di chuyển chỗ ở
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES967" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "969": //Kết quả làm việc không đạt yêu cầu
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES969" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "970": //Kết thúc HĐLĐ
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES970" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
+                            case "971": //Tái cấu trúc Phòng ban, Công ty
+                                workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "ESQ" select p).FirstOrDefault();
+                                workStatusEmpDetail_resault = (from p in workStatusEmpDetail where p.CODE == "DES971" select p).FirstOrDefault();
+                                if (workStatusEmp_resault != null)
+                                {
+                                    e.WORK_STATUS_ID = workStatusEmp_resault.ID;
+                                }
+
+                                if (workStatusEmpDetail_resault != null)
+                                {
+                                    e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
+                                }
+                                break;
                             case "00028":
                                 // TRƯỜNG HỢP KHÁC
                                 workStatusEmp_resault = (from p in workStatusEmp where p.CODE == "00023" select p).FirstOrDefault();
@@ -657,7 +920,6 @@ namespace ProfileDAL.Repositories
                                 {
                                     e.STATUS_DETAIL_ID = workStatusEmpDetail_resault.ID;
                                 }
-
                                 break;
                             default:
                                 // Đã nghỉ việc
@@ -933,78 +1195,5 @@ namespace ProfileDAL.Repositories
         //    }
         //    return Ok(new FormatedResponse() { InnerBody = clchinh9 });
         //}
-
-        public async Task<bool> Approve2(HU_TERMINATE obj)
-        {
-            try
-            {
-                var employee = await _appContext.Employees.FirstOrDefaultAsync(x => x.ID == obj.EMPLOYEE_ID);
-
-                // get id of type "employee has quit"
-                var employeeHasQuitId = _appContext.OtherLists.FirstOrDefault(x => x.CODE == "ESQ")!.ID;
-
-                // get id of type "other case"
-                var otherCaseId = _appContext.OtherLists.FirstOrDefault(x => x.CODE == "00023")!.ID;
-
-                // get approve id
-                var approveId = _appContext.OtherLists.FirstOrDefault(x => x.CODE == "DD")!.ID;
-
-                // get id of type "about to quit"
-                var aboutToQuitId = _appContext.OtherLists.FirstOrDefault(x => x.CODE == "00289")!.ID;
-
-
-                // when you approve record
-                // web app sets value for "TER_EFFECT_DATE" and "TER_LAST_DATE"
-                employee!.TER_EFFECT_DATE = obj.EFFECT_DATE;
-                employee.TER_LAST_DATE = obj.LAST_DATE;
-
-
-                var positionInfor = (from p in _appContext.Positions
-                                     where (p.MASTER == obj.EMPLOYEE_ID
-                                            || p.INTERIM == obj.EMPLOYEE_ID)
-                                            && obj.EFFECT_DATE!.Value.Date <= DateTime.UtcNow.Date
-                                     select p)
-                                     .ToList();
-
-                
-                // khi tới ngày hiệu lực thì nhân viên tạo nghỉ việc là MASTER hoặc INTERIM sẽ bị đá ra khỏi ghế
-                foreach (var item in positionInfor)
-                {
-                    if (item.MASTER == obj.EMPLOYEE_ID)
-                    {
-                        item.MASTER = null;
-                    }
-                    else if (item.INTERIM == obj.EMPLOYEE_ID)
-                    {
-                        item.INTERIM = null;
-                    }
-                    var resultPosition = _appContext.Positions.Update(item);
-                }
-
-                //QĐ đã phê duyệt chưa đến thời hạn
-                if (obj.EFFECT_DATE!.Value.Date > DateTime.Now.Date && obj.STATUS_ID == approveId)
-                {
-                    // before the deadline
-                    // then "WORK_STATUS_ID" is unchanged
-                    // but "STATUS_DETAIL_ID" is changed
-                    employee.STATUS_DETAIL_ID = aboutToQuitId;
-                }
-                else if (obj.EFFECT_DATE!.Value.Date <= DateTime.Now.Date && obj.STATUS_ID == approveId) //QĐ phê duyệt đến tg
-                {
-                    employee.WORK_STATUS_ID = employeeHasQuitId;
-                    employee.STATUS_DETAIL_ID = obj.TYPE_ID;
-                }
-                
-                var result = _appContext.Employees.Update(employee);
-                
-                var rs = _appContext.SaveChanges();
-                
-                return true;
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
-        }
     }
 }

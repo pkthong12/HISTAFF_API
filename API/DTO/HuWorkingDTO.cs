@@ -73,11 +73,7 @@
         public string? WorkPlaceName { get; set; }
         public long? CurPositionId { get; set; }
         public bool? IsResponsible { get; set; }
-        public bool? IsResponsibleSalary { get; set; }
         public long? EmployeeObjId { get; set; }
         public int? JobOrderNum { get; set; }
-
-        public long? RegionMinimumWage { get; set; }
-        public decimal? SalInsu { get; set; }
     }
 }

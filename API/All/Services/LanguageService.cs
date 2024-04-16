@@ -5,9 +5,14 @@ using System.Reflection;
 namespace API.All.Services
 {
     [ScopedRegistration]
-    public class LanguageService(FullDbContext fullDbContext): ILanguageService
+    public class LanguageService: ILanguageService
     {
-        private readonly FullDbContext _fullDbContext = fullDbContext;
+        private readonly FullDbContext _fullDbContext;
+        public LanguageService(FullDbContext fullDbContext)
+        {
+            _fullDbContext = fullDbContext;
+        }
+        
         public async Task<string?> Translate(string key, string lang)
         {
             SYS_LANGUAGE? record = await _fullDbContext.SysLanguages.SingleOrDefaultAsync(x => x.KEY == key);

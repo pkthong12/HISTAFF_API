@@ -146,7 +146,8 @@ namespace ProfileDAL.Repositories
                          from com in _appContext.CompanyInfos.Where(c => c.ID == o.COMPANY_ID).DefaultIfEmpty()
                          from re in _appContext.OtherLists.Where(x => x.ID == com.REGION_ID).DefaultIfEmpty()
                          from j in _appContext.HUJobs.Where(x => x.ID == t.JOB_ID).DefaultIfEmpty()
-                         orderby j.ORDERNUM
+                         from u in _appContext.SysUers.Where(x => x.EMPLOYEE_ID == p.ID).DefaultIfEmpty()
+
                          select new HuEmployeeDTO
                          {
                              Id = p.ID,
@@ -158,7 +159,7 @@ namespace ProfileDAL.Repositories
                              OrgId = p.ORG_ID,
                              OrgName = o.NAME,
                              PositionName = t.NAME,
-                             JobOrderNum = Convert.ToInt32(j.ORDERNUM ?? 999),
+                             JobOrderNum = (int)(j.ORDERNUM ?? 999),
                              PositionNameOnConcurrently = t.NAME,
                              GenderName = g.NAME,
                              BirthDate = p.Profile!.BIRTH_DATE,
@@ -204,6 +205,7 @@ namespace ProfileDAL.Repositories
                              Company = request.Lang == "vi" ? com.NAME_VN : (request.Lang == "en" ? com.NAME_EN : "Unsupported language yet"),
                              NameOnProfileEmployee = j.NAME_VN,
                              AddressIdentity = idp.NAME,
+                             UserId = u.ID,
                              IsMember = p.Profile!.IS_MEMBER, // lấy ra "là Đảng viên"
                              AddressReffererEmployee = p.Profile!.ADDRESS, // lấy thông tin người giới thiệu phải là thường trú
                              IsLeaveWork = v.CODE == "ESQ" ? true : false,  // lọc nhân viên có trạng thái nghỉ việc
@@ -236,13 +238,14 @@ namespace ProfileDAL.Repositories
                     ErrorPhase = 0
                 };
             }
-            var _document = _appContext.SeDocuments.Where(x => x.IS_PERMISSVE_UPLOAD == true).Count();//sl tl phai upload
+            var _document = _appContext.SeDocuments.Where(x=>x.IS_PERMISSVE_UPLOAD == true && x.IS_ACTIVE == true).Count();//sl tl phai upload
             var joined = from p in _appContext.Employees.AsNoTracking()
                          from t in _appContext.Positions.AsNoTracking().Where(c => c.ID == p.POSITION_ID).DefaultIfEmpty()
                          from o in _appContext.Organizations.AsNoTracking().Where(c => c.ID == t.ORG_ID).DefaultIfEmpty()
-                         from sysOff in _appContext.OtherLists.AsNoTracking().Where(c => c.CODE == "ESQ").DefaultIfEmpty()
+                         from sysOff in _appContext.OtherLists.AsNoTracking().Where(c => c.NAME == "ESQ").DefaultIfEmpty()
                          from v in _appContext.OtherLists.AsNoTracking().Where(c => c.ID == p.WORK_STATUS_ID).DefaultIfEmpty()
                          from s in _appContext.OtherListFixs.AsNoTracking().Where(c => c.ID == p.WORK_STATUS_ID && c.TYPE == SystemConfig.STATUS_EMPLOYEE).DefaultIfEmpty()
+                         from j in _appContext.HUJobs.Where(x => x.ID == t.JOB_ID).DefaultIfEmpty()
                          select new HuEmployeeDTO
                          {
                              Id = p.ID,
@@ -255,6 +258,7 @@ namespace ProfileDAL.Repositories
                              IsLeaveWork = v.CODE == "ESQ" ? true : false,  // lọc nhân viên có trạng thái nghỉ việc
                              WorkStatusId = v.ID,
                              WorkStatusName = v.NAME,
+                             JobOrderNum = (int)(j.ORDERNUM ?? 999),
                          };
 
             var singlePhaseResult = await genericReducer.SinglePhaseReduce(joined, request);
@@ -3741,108 +3745,6 @@ namespace ProfileDAL.Repositories
                 return new ResultWithError(ex.Message);
             }
         }
-
-
-        #region Danh ba nhan su
-
-        public async Task<GenericPhaseTwoListResponse<HuEmployeeDTO>> QueryListPersonnelDirectory(GenericQueryListDTO<HuEmployeeDTO> request)
-        {
-
-            if (request.InOperators == null)
-            {
-                return new()
-                {
-                    ErrorType = EnumErrorType.CATCHABLE,
-                    MessageCode = CommonMessageCode.THIS_QUERY_REQUIRES_IN_OPERATOR,
-                    ErrorPhase = 0
-                };
-            }
-
-            if (!request.InOperators.Any(x => x.Field.ToLower() == "orgid"))
-            {
-                return new()
-                {
-                    ErrorType = EnumErrorType.CATCHABLE,
-                    MessageCode = CommonMessageCode.THIS_QUERY_REQUIRES_ORG_ID_IN_OPERATOR,
-                    ErrorPhase = 0
-                };
-            }
-
-            var joined = from p in _appContext.Employees.AsNoTracking()
-                         from t in _appContext.Positions.AsNoTracking().Where(c => c.ID == p.POSITION_ID).DefaultIfEmpty()
-                         from sysOff in _appContext.OtherLists.AsNoTracking().Where(c => c.NAME == "ESQ").DefaultIfEmpty()
-                         //from nddv in _appContext.Positions.AsNoTracking().Where(c => c.ID == t.ID && t.NAME == "Người đại diện vốn" && p.WORK_STATUS_ID != sysOff.ID).DefaultIfEmpty()
-                         from o in _appContext.Organizations.AsNoTracking().Where(c => c.ID == t.ORG_ID).DefaultIfEmpty()
-                         from g in _appContext.OtherLists.AsNoTracking().Where(c => c.ID == p.Profile!.GENDER_ID).DefaultIfEmpty()
-                         from v in _appContext.OtherLists.AsNoTracking().Where(c => c.ID == p.WORK_STATUS_ID).DefaultIfEmpty()
-                         from c in _appContext.Contracts.Where(c => c.ID == p.CONTRACT_ID).DefaultIfEmpty()
-                         from j in _appContext.HUJobs.Where(x => x.ID == t.JOB_ID).DefaultIfEmpty()
-                         orderby j.ORDERNUM
-                         select new HuEmployeeDTO
-                         {
-                             Id = p.ID,
-                             Code = p.CODE,
-                             Fullname = p.Profile!.FULL_NAME,
-                             OrgId = p.ORG_ID,
-                             OrgName = o.NAME,
-                             PositionName = t.NAME,
-                             JobOrderNum = Convert.ToInt32(j.ORDERNUM ?? 999),
-                             GenderName = g.NAME,
-                             BirthDate = p.Profile!.BIRTH_DATE,
-                             WorkStatusId = v.ID,
-                             WorkStatusName = v.NAME,
-                             MobilePhone = p.Profile!.MOBILE_PHONE,
-                             PresenterPhoneNumber = p.Profile!.PRESENTER_PHONE_NUMBER,
-                             ContractExpired = p.CONTRACT_EXPIRED,
-                             WorkEmail = p.Profile!.WORK_EMAIL,
-                             Email = p.Profile!.EMAIL,
-                             IsLeaveWork = v.CODE == "ESQ" ? true : false,  // lọc nhân viên có trạng thái nghỉ việc
-                             DateStart = c.START_DATE,
-                             JoinDate = p.JOIN_DATE,
-                         };
-
-            var singlePhaseResult = await genericReducer.SinglePhaseReduce(joined, request);
-            return singlePhaseResult;
-        }
-
-        public async Task<FormatedResponse> GetPersonnelDirectoryById(long Id)
-        {
-            var joined = await (from p in _appContext.Employees.AsNoTracking()
-                                from o in _appContext.Organizations.Where(x => x.ID == p.ORG_ID).DefaultIfEmpty()
-                                from pos in _appContext.Positions.Where(x => x.ID == p.POSITION_ID).DefaultIfEmpty()
-                                from g in _appContext.OtherLists.AsNoTracking().Where(c => c.ID == p.Profile!.GENDER_ID).DefaultIfEmpty()
-
-                                where p.ID == Id
-                                select new
-                                {
-                                    EmployeeId = p.ID,
-                                    EmployeeCode = p.CODE,
-                                    EmployeeName = p.Profile!.FULL_NAME,
-                                    PositionId = p.POSITION_ID,
-                                    PositionName = pos.NAME,
-                                    OrgId = p.ORG_ID,
-                                    OrgName = o.NAME,
-                                    GenderName = g.NAME,
-                                    BirthDate = p.Profile!.BIRTH_DATE,
-                                    WorkEmail = p.Profile!.WORK_EMAIL,
-                                    Email = p.Profile!.EMAIL,
-                                    MobilePhone = p.Profile!.MOBILE_PHONE,
-                                }).FirstAsync();
-
-            if (joined != null)
-            {
-                return new FormatedResponse() { InnerBody = joined };
-            }
-            else
-            {
-                return new FormatedResponse() { MessageCode = CommonMessageCode.ENTITY_NOT_FOUND, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
-            }
-
-        }
-
-        #endregion
-
-
 
     }
 }

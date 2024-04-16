@@ -1,5 +1,5 @@
 ﻿//First
-Scaffold-DbContext 'Password=MatKhau@123;User ID=sa;Initial Catalog=VEAM_SQL_DEV;Data Source=192.168.60.22,1433;TrustServerCertificate=True;MultipleActiveResultSets=true' Microsoft.EntityFrameworkCore.SqlServer -o Entities -UseDatabaseNames -Force -Tables <YOUR_TABLE>
+Scaffold-DbContext 'Password=MatKhau@123;User ID=sa;Initial Catalog=HISTAFF_SQL_DEV;Data Source=192.168.60.22,1433;TrustServerCertificate=True;MultipleActiveResultSets=true' Microsoft.EntityFrameworkCore.SqlServer -o Entities -UseDatabaseNames -Force -Tables AT_SWIPE_DATA_IMPORT
 
 //Update: add -Force
 

@@ -23,7 +23,6 @@ namespace ProfileDAL.ViewModels
         public string? UpdatedBy { get; set; }
         public DateTime? CreateDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
-        public int? JobOrderNum { get; set; }
 
     }
 

@@ -37,6 +37,10 @@ namespace API.Controllers.AtTerminal
                              TerminalPort = p.TERMINAL_PORT,
                              TerminalIp = p.TERMINAL_IP,
                              Pass = p.PASS,
+                             LastTimeStatus = p.LAST_TIME_STATUS,
+                             TerminalStatus = p.TERMINAL_STATUS,
+                             TerminalRow = p.TERMINAL_ROW,
+                             LastTimeUpdate = p.LAST_TIME_UPDATE,
                              Note = p.NOTE,
                              Status = p.IS_ACTIVE == true ? "Áp dụng" : "Ngừng áp dụng"
 

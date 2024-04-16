@@ -26,6 +26,11 @@
 		<None Remove="Data\**" />
 		<None Remove="static\csv\**" />
 	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Program.bak_20230801_1120" />
+	  <None Remove="Program.bak_20240111_1614" />
+	  <None Remove="Program.bak_20240223_1016" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<Protobuf Include="Protos\sys_function.proto" GrpcServices="Server" />
@@ -45,30 +50,30 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Hangfire" Version="1.8.7" />
+		<PackageReference Include="Hangfire" Version="1.8.5" />
 		<PackageReference Include="Hangfire.Oracle.Core" Version="1.2.17" />
-		<PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="6.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Grpc.JsonTranscoding" Version="8.0.3" />
-		<PackageReference Include="Microsoft.AspNetCore.Grpc.Swagger" Version="0.8.3" />
-		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.1" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0-preview3.23201.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.1">
+		<PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.9" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.WsFederation" Version="7.0.14" />
+		<PackageReference Include="Microsoft.AspNetCore.Grpc.JsonTranscoding" Version="7.0.17" />
+		<PackageReference Include="Microsoft.AspNetCore.Grpc.Swagger" Version="0.3.17" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.5" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.9" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.9" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.8" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.8">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="MimeKit" Version="4.1.0" />
-		<PackageReference Include="Oracle.EntityFrameworkCore" Version="8.21.121" />
-		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.130" />
+		<PackageReference Include="Oracle.EntityFrameworkCore" Version="7.21.8" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="6.5.0" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.100" />
 		<PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.5.0" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.4.0" />
-		<PackageReference Include="System.Linq.Dynamic.Core" Version="1.3.7" />
+		<PackageReference Include="System.Linq.Dynamic.Core" Version="1.3.3" />
 		<PackageReference Include="TimeZoneConverter" Version="6.1.0" />
 	</ItemGroup>
 

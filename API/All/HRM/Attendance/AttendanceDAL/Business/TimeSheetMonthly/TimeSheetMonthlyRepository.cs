@@ -38,7 +38,6 @@ namespace AttendanceDAL.Repositories
                          from eo in _appContext.OtherLists.Where(f => p.PA_EMPLOYEE_OBJECT_ID == f.ID).DefaultIfEmpty()
                          from s in _appContext.SalaryPeriods.Where(f => p.PERIOD_ID == f.ID).DefaultIfEmpty()
                          from op in _appContext.OrgPeriods.Where(op => op.PERIOD_ID == p.PERIOD_ID && op.ORG_ID == p.ORG_ID).DefaultIfEmpty()
-                         orderby j.ORDERNUM
                          select new TimeSheetMonthlyDTO
                          {
                              PositionId = j.ID,
@@ -181,7 +180,7 @@ namespace AttendanceDAL.Repositories
                     var check = lstLockOrg.Where(f => f.ORG_ID == item);
                     if (check.Count() > 0)
                     {
-                        if (check.Count() > 1)
+                        if(check.Count() > 1)
                         {
                             foreach (var item1 in check)
                             {
@@ -189,13 +188,13 @@ namespace AttendanceDAL.Repositories
                                 var rs = _appContext.OrgPeriods.Update(item1);
                             }
                         }
-                        if (check.Count() == 1)
+                        if(check.Count() ==1)
                         {
                             var itemUpdate = check.FirstOrDefault();
-                            itemUpdate!.STATUSCOLEX = request.StatusColex;
+                            itemUpdate.STATUSCOLEX = request.StatusColex;
                             var rs = _appContext.OrgPeriods.Update(itemUpdate);
                         }
-
+                        
                     }
                     else
                     {
@@ -288,10 +287,10 @@ namespace AttendanceDAL.Repositories
                                         }).ToListAsync();
                 var lockUnlock = true;
                 var lockLock = true;
-                if (lstLockOrg.Count > 0)
+                if(lstLockOrg.Count > 0) 
                 {
                     var group = lstLockOrg.GroupBy(x => x.Status).ToList();
-                    if (group.Count() > 1)
+                    if(group.Count() > 1)
                     {
                         lockUnlock = false;
                         lockLock = false;

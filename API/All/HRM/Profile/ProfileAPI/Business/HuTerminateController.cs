@@ -24,7 +24,6 @@ using API.All.SYSTEM.CoreAPI.Word;
 using Common.DataAccess;
 using System.Data;
 using static System.Runtime.InteropServices.JavaScript.JSType;
-using API.All.SYSTEM.Common;
 
 namespace ProfileAPI.List
 {
@@ -169,7 +168,7 @@ namespace ProfileAPI.List
 
             }
 
-            var r = await _unitOfWork.TerminateRepository.CreateAsync(param, sid);
+            var r = await _unitOfWork.TerminateRepository.CreateAsync(param);
             if (r.StatusCode == "200" && r.InnerBody != null)
             {
                 var rsObjData = (TerminateInputDTO)r.InnerBody;
@@ -260,7 +259,7 @@ namespace ProfileAPI.List
                     param.FileName = query;
                 }
 
-                var r = await _unitOfWork.TerminateRepository.UpdateAsync(param, sid);
+                var r = await _unitOfWork.TerminateRepository.UpdateAsync(param);
                 if (r.StatusCode == "200" && r.InnerBody != null)
                 {
                     var rsObjData = (TerminateInputDTO)r.InnerBody;
@@ -290,7 +289,7 @@ namespace ProfileAPI.List
                 _uow.Rollback();
                 return Ok(new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message });
             }
-
+            
         }
 
         [HttpPost]
@@ -306,7 +305,7 @@ namespace ProfileAPI.List
                 r.STATUS_ID = request.ValueToBind == true ? OtherConfig.STATUS_APPROVE : (request.ValueToBind == false ? OtherConfig.STATUS_WAITING : null);
                 if (statusIdCur != OtherConfig.STATUS_APPROVE && request.ValueToBind == true)
                 {
-                    var rsApprove = await _unitOfWork.TerminateRepository.Approve2(r);
+                    var rsApprove = await _unitOfWork.TerminateRepository.Approve(r);
                     var arisingObj = new InsArisingDTO()
                     {
                         PkeyRef = r.ID,
@@ -458,7 +457,7 @@ namespace ProfileAPI.List
                 var query = (from p in _fullDbContext.PaPayrollsheetSums.AsNoTracking()
                                    .Where(x => x.EMPLOYEE_ID == emp && x.FROM_DATE <= date && x.TO_DATE >= date)
                              select p.CLCHINH9).FirstOrDefault();
-                if (query != null)
+                if(query != null)
                 {
                     data = (decimal)query;
                 }
@@ -475,147 +474,6 @@ namespace ProfileAPI.List
         {
             _unitOfWork.TerminateRepository.ScanApproveTerminate();
             return Ok();
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetFileName(long id)
-        {
-            try
-            {
-                var fileType = await (from t in _fullDbContext.HuTerminates
-                                      join o in _fullDbContext.SysOtherLists on t.TYPE_ID equals o.ID
-                                      join e in _fullDbContext.HuEmployees on t.EMPLOYEE_ID equals e.ID
-                                      join cv in _fullDbContext.HuEmployeeCvs on e.PROFILE_ID equals cv.ID
-                                      where t.ID == id
-                                      select new
-                                      {
-                                          CODE = o.CODE,
-                                          EMPLOYEE_NAME = cv.FULL_NAME,
-                                          EMPLOYEE_CODE = e.CODE
-                                      }).FirstOrDefaultAsync();
-
-                string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.WordTemplates);
-
-                string relativePath = "";
-                if (fileType != null)
-                {
-                    if (fileType.CODE == "CDHDLD")
-                    {
-                        relativePath = "Quyet_dinh_cham_dut_HDLD";
-                    }
-                    else if (fileType.CODE == "NH")
-                    {
-                        relativePath = "QĐ Nghỉ hưu" + "_" + fileType.EMPLOYEE_NAME + "_" + fileType.EMPLOYEE_CODE;
-                    }
-                    else if (fileType.CODE == "00345")
-                    {
-                        relativePath = "Thông báo nghỉ hưu" + "_" + fileType.EMPLOYEE_NAME + "_" + fileType.EMPLOYEE_CODE;
-                    }
-                    else if (fileType.CODE == "00346")
-                    {
-                        relativePath = "Thoa_thuan_cham_dut_HDLD";
-                    }
-                    else
-                    {
-                        return Ok(new FormatedResponse()
-                        {
-                            ErrorType = EnumErrorType.CATCHABLE,
-                            MessageCode = CommonMessageCodes.NO_EXISIT_DECISION_PRINT_TEMPLATE,
-                            StatusCode = EnumStatusCode.StatusCode400
-                        });
-                    }
-
-                    return Ok(new FormatedResponse()
-                    {
-                        InnerBody = relativePath
-                    });
-                }
-                return null;
-            }
-            catch (Exception ex)
-            {
-                return Ok(new FormatedResponse()
-                {
-                    ErrorType = EnumErrorType.UNCATCHABLE,
-                    MessageCode = ex.Message,
-                    StatusCode = EnumStatusCode.StatusCode400
-                });
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> PrintDecision(long id)
-        {
-            try
-            {
-                var QueryData = new SqlQueryDataTemplate(_fullDbContext);
-
-                var fileType = (from w in _fullDbContext.HuTerminates
-                                join o in _fullDbContext.SysOtherLists on w.TYPE_ID equals o.ID into oGroup
-                                from o in oGroup.DefaultIfEmpty()
-                                where w.ID == id
-                                select new
-                                {
-                                    CODE = o.CODE,
-                                }).FirstOrDefault();
-                string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.WordTemplates);
-                string relativePath = "";
-                int type = 0;
-                if (fileType != null)
-                {
-                    if (fileType.CODE == "CDHDLD")
-                    {
-                        relativePath = "Quyet dinh cham dut HDLD.docx";
-                        type = 0;
-                    }
-                    else if (fileType.CODE == "NH")
-                    {
-                        relativePath = "QĐ Nghỉ hưu.doc";
-                        type = 1;
-                    }
-                    else if (fileType.CODE == "00345")
-                    {
-                        relativePath = "Thông báo nghỉ hưu.doc";
-                        type = 2;
-                    }
-                    else if (fileType.CODE == "00346")
-                    {
-                        relativePath = "Thoa thuan cham dut HDLD.docx";
-                        type = 3;
-                    }
-                    else
-                    {
-                        return Ok(new FormatedResponse()
-                        {
-                            ErrorType = EnumErrorType.UNCATCHABLE,
-                            MessageCode = "Loại quyết định không tồn tại mẫu in !",
-                            StatusCode = EnumStatusCode.StatusCode400,
-                        });
-                    }
-                    var absolutePath = Path.Combine(location, relativePath);
-                    DataSet dataSet = new DataSet("MyDataSet");
-                    dataSet = QueryData.ExecuteStoreToTable(type == 0 ? "PKG_PRINT_TERMINATION_CONTRACT" : (type == 1 ? "PKG_PRINT_DECISION_RETIREMENT" : (type == 2 ? "PKG_PRINT_NOTI_RETIREMENT" : (type == 3 ? "PKG_PRINT_AGREEMENT_TERMINATE_CONTRACT" : "..."))), new
-                    {
-                        P_ID = id
-                    }, false);
-                    var file = await _wordRespsitory.ExportWordNoImage(dataSet, absolutePath);
-                    return File(file, "application/octet-stream", relativePath);
-                }
-
-                return null;
-
-
-            }
-            catch (Exception ex)
-            {
-                return Ok(new FormatedResponse()
-                {
-                    ErrorType = EnumErrorType.UNCATCHABLE,
-                    MessageCode = ex.Message,
-                    StatusCode = EnumStatusCode.StatusCode400,
-                });
-            }
-
         }
     }
 }

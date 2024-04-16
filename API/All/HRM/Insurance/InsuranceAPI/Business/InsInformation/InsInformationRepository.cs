@@ -30,95 +30,101 @@ namespace API.Controllers.InsInformation
 
         public async Task<GenericPhaseTwoListResponse<InsInformationDTO>> SinglePhaseQueryList(GenericQueryListDTO<InsInformationDTO> request)
         {
-            var sysContractType = _dbContext.SysContractTypes.AsNoTracking().Where(p => p.CODE == "HDKXDTH" || p.CODE == "HXDTH").Select(p => p.ID).ToList();
+            var sysContractType = _dbContext.SysContractTypes.AsNoTracking().Where(p => p.CODE == "HDCNSDLD" || p.CODE == "HDLD001" || p.CODE == "HDLD003" || p.CODE == "HDLD002" || p.CODE == "HDLD004" || p.CODE == "HDCT").Select(p => p.ID).ToList();
             var contractType = _dbContext.HuContractTypes.AsNoTracking().Where(p => sysContractType.Contains((long)p.TYPE_ID!)).Select(p => p.ID).ToList();
 
+            var joined = (from l in _dbContext.InsInformations.AsNoTracking()
+                          from e in _dbContext.HuEmployees.AsNoTracking().Where(emp => emp.ID == l.EMPLOYEE_ID).DefaultIfEmpty()
+                          from c in _dbContext.HuContracts.AsNoTracking().Where(cn => cn.ID == e.CONTRACT_ID && cn.STATUS_ID == OtherConfig.STATUS_APPROVE && contractType.Contains((long)cn.CONTRACT_TYPE_ID!)).OrderBy(ic => ic.START_DATE).Take(1).DefaultIfEmpty()
+                          from ct in _dbContext.HuContractTypes.AsNoTracking().Where(ct => ct.ID == c.CONTRACT_TYPE_ID).DefaultIfEmpty()
+                          from wk in _dbContext.HuWorkings.AsNoTracking().Where(p => p.ID == c.WORKING_ID).DefaultIfEmpty()
+                          from tl in _dbContext.InsSpecifiedObjectss.AsNoTracking().Where(p => p.EFFECTIVE_DATE <= c.START_DATE).OrderByDescending(cn => cn.EFFECTIVE_DATE).Take(1).DefaultIfEmpty()
+                          from cv in _dbContext.HuEmployeeCvs.AsNoTracking().Where(cv => cv.ID == e.PROFILE_ID).DefaultIfEmpty()
+                          from pr in _dbContext.HuProvinces.AsNoTracking().Where(c => c.ID == cv.ID_PLACE).DefaultIfEmpty()
+                          from t in _dbContext.HuPositions.AsNoTracking().Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
+                          from j in _dbContext.HuJobs.AsNoTracking().Where(x => x.ID == t.JOB_ID).DefaultIfEmpty()
+                          from o in _dbContext.HuOrganizations.AsNoTracking().Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
+                          from cmp in _dbContext.HuCompanys.AsNoTracking().Where(cmp => cmp.ID == o.COMPANY_ID).DefaultIfEmpty()
+                          from dv in _dbContext.SysOtherLists.AsNoTracking().Where(c => c.ID == cmp.INS_UNIT).DefaultIfEmpty()
 
-            var joined = from l in _dbContext.InsInformations.AsNoTracking()
-                         from e in _dbContext.HuEmployees.AsNoTracking().Where(emp => emp.ID == l.EMPLOYEE_ID).DefaultIfEmpty()
-                         from c in _dbContext.HuContracts.AsNoTracking().Where(cn => cn.ID == e.CONTRACT_ID && cn.STATUS_ID == OtherConfig.STATUS_APPROVE && contractType.Contains((long)cn.CONTRACT_TYPE_ID!)).OrderBy(ic => ic.START_DATE).Take(1).DefaultIfEmpty()
-                         from ct in _dbContext.HuContractTypes.AsNoTracking().Where(ct => ct.ID == c.CONTRACT_TYPE_ID).DefaultIfEmpty()
-                         from wk in _dbContext.HuWorkings.AsNoTracking().Where(p => p.ID == c.WORKING_ID).DefaultIfEmpty()
-                         from tl in _dbContext.InsSpecifiedObjectss.AsNoTracking().Where(p => p.EFFECTIVE_DATE <= c.START_DATE).OrderByDescending(cn => cn.EFFECTIVE_DATE).Take(1).DefaultIfEmpty()
-                         from cv in _dbContext.HuEmployeeCvs.AsNoTracking().Where(cv => cv.ID == e.PROFILE_ID).DefaultIfEmpty()
-                         from pr in _dbContext.HuProvinces.AsNoTracking().Where(c => c.ID == cv.ID_PLACE).DefaultIfEmpty()
-                         from t in _dbContext.HuPositions.AsNoTracking().Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
-                         from j in _dbContext.HuJobs.AsNoTracking().Where(x => x.ID == t.JOB_ID).DefaultIfEmpty()
-                         from o in _dbContext.HuOrganizations.AsNoTracking().Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
-                         from cmp in _dbContext.HuCompanys.AsNoTracking().Where(cmp => cmp.ID == o.COMPANY_ID).DefaultIfEmpty()
-                         from dv in _dbContext.SysOtherLists.AsNoTracking().Where(c => c.ID == cmp.INS_UNIT).DefaultIfEmpty()
-                         from ch in _dbContext.InsChanges.AsNoTracking().Where(x => x.EMPLOYEE_ID == l.EMPLOYEE_ID).Take(1).DefaultIfEmpty()
+                              // JOIN OTHER ENTITIES BASED ON THE BUSINESS
+                          select new InsInformationDTO
+                          {
+                              Id = l.ID,
+                              EmployeeCode = e.CODE,
+                              EmployeeId = l.EMPLOYEE_ID,
+                              JobOrderNum = (int)(j.ORDERNUM ?? 999),
+                              EmployeeName = cv.FULL_NAME,
+                              PositionName = t.NAME,
+                              OrgName = o.NAME,
+                              OrgId = e.ORG_ID,
+                              IdNo = cv.ID_NO,
+                              IdDate = cv.ID_DATE,
+                              AddressIdentity = pr.NAME,
+                              BirthDate = cv.BIRTH_DATE,
+                              BirthPlace = cv.BIRTH_PLACE,
+                              Contact = cv.MOBILE_PHONE,//
+                              SeniorityInsurance = l.SENIORITY_INSURANCE,
+                              SeniorityInsuranceString = l.SENIORITY_INSURANCE.ToString() == null ? "0 tháng" : l.SENIORITY_INSURANCE.ToString() + " tháng",
+                              SeniorityInsuranceInCompany = e.JOIN_DATE_STATE!.Value == null ? 0 : (int)Math.Round((decimal)((DateTime.Now - e.JOIN_DATE_STATE!.Value).Days / 30)),
+                              SeniorityInsuranceInCompanyString = e.JOIN_DATE_STATE!.Value == null ? "0 tháng" : ((int)Math.Round((decimal)((DateTime.Now - e.JOIN_DATE_STATE!.Value).Days / 30))).ToString() + " tháng",
+                              Company = dv.NAME,
+                              IsBhxh = ct.IS_BHXH,
+                              IsBhtn = ct.IS_BHTN,
+                              IsBhtnldBnn = ct.IS_BHTNLD_BNN,
+                              IsBhyt = ct.IS_BHYT,
+                              BhxhNo = cv.INSURENCE_NUMBER,
+                              SalaryBhTn = wk.SAL_INSU == null ? 0 : (tl.UI == null ? 0 : (tl.UI > wk.SAL_INSU ? (double)wk.SAL_INSU : (double)tl.UI)),
+                              SalaryBhxhYt = wk.SAL_INSU == null ? 0 : (tl.UI == null ? 0 : (tl.SI_HI > wk.SAL_INSU ? (double)wk.SAL_INSU : (double)tl.SI_HI)),
+                              BhxhFromDate = l.BHXH_FROM_DATE,
+                              BhxhToDate = l.BHXH_TO_DATE,
+                              BhxhStatusId = l.BHXH_STATUS_ID,
+                              BhxhGrantDate = l.BHXH_GRANT_DATE,
+                              BhxhDeliverer = l.BHXH_DELIVERER,
+                              BhtnFromDate = l.BHTN_FROM_DATE,
+                              BhtnldBnnFromDate = l.BHTNLD_BNN_FROM_DATE,
+                              BhtnldBnnToDate = l.BHTNLD_BNN_TO_DATE,
+                              BhtnToDate = l.BHTN_TO_DATE,
+                              BhxhReceiver = l.BHXH_RECEIVER,
+                              BhxhStorageNumber = l.BHXH_STORAGE_NUMBER,
+                              BhxhReimbursementDate = l.BHXH_REIMBURSEMENT_DATE,
+                              BhxhSuppliedDate = l.BHXH_SUPPLIED_DATE,
+                              BhytEffectDate = l.BHYT_EFFECT_DATE,
+                              BhxhNote = l.BHXH_NOTE,
+                              BhytExpireDate = l.BHYT_EXPIRE_DATE,
+                              BhytFromDate = l.BHYT_FROM_DATE,
+                              BhytNo = cv.INS_CARD_NUMBER,
+                              BhytReceivedDate = l.BHYT_RECEIVED_DATE,
+                              BhytReceiver = l.BHYT_RECEIVER,
+                              BhytReimbursementDate = l.BHYT_REIMBURSEMENT_DATE,
+                              BhytStatusId = l.BHYT_STATUS_ID,
+                              BhytToDate = l.BHYT_TO_DATE,
+                              BhytWherehealthId = l.BHYT_WHEREHEALTH_ID,
+                              BhtnldBnnToDateString = l.BHTNLD_BNN_TO_DATE.Value == null ? null : l.BHTNLD_BNN_TO_DATE.Value.ToString("yyyy-MM"),
+                              BhtnldBnnFromDateString = l.BHTNLD_BNN_FROM_DATE.Value == null ? null : l.BHTNLD_BNN_FROM_DATE.Value.ToString("yyyy-MM"),
+                              BhtnToDateString = l.BHTN_TO_DATE.Value == null ? null : l.BHTN_TO_DATE.Value.ToString("yyyy-MM"),
+                              BhtnFromDateString = l.BHTN_FROM_DATE.Value == null ? null : l.BHTN_FROM_DATE.Value.ToString("yyyy-MM"),
+                              BhxhFromDateString = l.BHXH_FROM_DATE.Value == null ? null : l.BHXH_FROM_DATE.Value.ToString("yyyy-MM"),
+                              BhxhToDateString = l.BHXH_TO_DATE.Value == null ? null : l.BHXH_TO_DATE.Value.ToString("yyyy-MM"),
+                              BhytFromDateString = l.BHYT_FROM_DATE.Value == null ? null : l.BHYT_FROM_DATE.Value.ToString("yyyy-MM"),
+                              RegionId = cmp.REGION_ID,
+                          }).ToList();
+            joined.ForEach(x =>
+            {
+                decimal? siSal = 0;
+                decimal? uiSal = 0;
+                var salary = _dbContext.InsChanges.AsNoTracking().Where(p => p.EMPLOYEE_ID == x.EmployeeId && p.EFFECTIVE_DATE!.Value.Date <= DateTime.Now.Date).OrderByDescending(p => p.EFFECTIVE_DATE).FirstOrDefault();
+                if(salary != null)
+                {
+                    uiSal = salary.SALARY_BHTN_NEW;
+                    siSal = salary.SALARY_BHXH_BHYT_NEW;
+                }
 
-                             // JOIN OTHER ENTITIES BASED ON THE BUSINESS
-                         select new InsInformationDTO
-                         {
-                             Id = l.ID,
-                             EmployeeCode = e.CODE,
-                             EmployeeId = l.EMPLOYEE_ID,
-                             JobOrderNum = (int)(j.ORDERNUM ?? 999),
-                             EmployeeName = cv.FULL_NAME,
-                             PositionName = t.NAME,
-                             OrgName = o.NAME,
-                             OrgId = e.ORG_ID,
-                             IdNo = cv.ID_NO,
-                             IdDate = cv.ID_DATE,
-                             AddressIdentity = pr.NAME,
-                             BirthDate = cv.BIRTH_DATE,
-                             BirthPlace = cv.BIRTH_PLACE,
-                             Contact = cv.MOBILE_PHONE,//
-                             SeniorityInsurance = l.SENIORITY_INSURANCE,
-                             SeniorityInsuranceString = l.SENIORITY_INSURANCE.ToString() == null ? "0 tháng" : l.SENIORITY_INSURANCE.ToString() + " tháng",
-                             SeniorityInsuranceInCompany = e!.JOIN_DATE_STATE!.Value == null ? 0 : 
-                                                                (DateTime.Now.Day < tl.CHANGE_DAY? (int)Math.Floor((decimal)((DateTime.Now.Date - e.JOIN_DATE_STATE!.Value.Date).Days / 30.25)) : 
-                                                                    (int)Math.Floor((decimal)((DateTime.Now.Date - e.JOIN_DATE_STATE!.Value.Date).Days / 30.25)) + 1 ),
-                             SeniorityInsuranceInCompanyString = e.JOIN_DATE_STATE!.Value == null ? "0 tháng" : 
-                                                                    (DateTime.Now.Day < tl.CHANGE_DAY ? (int)Math.Floor((decimal)((DateTime.Now.Date - e.JOIN_DATE_STATE!.Value.Date).Days / 30.25)) :
-                                                                        (int)Math.Floor((decimal)((DateTime.Now.Date - e.JOIN_DATE_STATE!.Value.Date).Days / 30.25)) + 1) + " tháng",
-                             Company = dv.NAME,
-                             IsBhxh = ct.IS_BHXH,
-                             IsBhtn = ct.IS_BHTN,
-                             IsBhtnldBnn = ct.IS_BHTNLD_BNN,
-                             IsBhyt = ct.IS_BHYT,
-                             BhxhNo = cv.INSURENCE_NUMBER,
-                             SalaryBhTn = wk.SAL_INSU == null ? 0 : (tl.UI == null ? 0 : (tl.UI > wk.SAL_INSU ? (double)wk.SAL_INSU : (double)tl.UI)),
-                             SalaryBhxhYt = wk.SAL_INSU == null ? 0 : (tl.UI == null ? 0 : (tl.SI_HI > wk.SAL_INSU ? (double)wk.SAL_INSU : (double)tl.SI_HI)),
-                             BhxhFromDate = l.BHXH_FROM_DATE,
-                             BhxhToDate = l.BHXH_TO_DATE,
-                             BhxhStatusId = l.BHXH_STATUS_ID,
-                             BhxhGrantDate = l.BHXH_GRANT_DATE,
-                             BhxhDeliverer = l.BHXH_DELIVERER,
-                             BhtnFromDate = l.BHTN_FROM_DATE,
-                             BhtnldBnnFromDate = l.BHTNLD_BNN_FROM_DATE,
-                             BhtnldBnnToDate = l.BHTNLD_BNN_TO_DATE,
-                             BhtnToDate = l.BHTN_TO_DATE,
-                             BhxhReceiver = l.BHXH_RECEIVER,
-                             BhxhStorageNumber = l.BHXH_STORAGE_NUMBER,
-                             BhxhReimbursementDate = l.BHXH_REIMBURSEMENT_DATE,
-                             BhxhSuppliedDate = l.BHXH_SUPPLIED_DATE,
-                             BhytEffectDate = l.BHYT_EFFECT_DATE,
-                             BhxhNote = l.BHXH_NOTE,
-                             BhytExpireDate = l.BHYT_EXPIRE_DATE,
-                             BhytFromDate = l.BHYT_FROM_DATE,
-                             BhytNo = cv.INS_CARD_NUMBER,
-                             BhytReceivedDate = l.BHYT_RECEIVED_DATE,
-                             BhytReceiver = l.BHYT_RECEIVER,
-                             BhytReimbursementDate = l.BHYT_REIMBURSEMENT_DATE,
-                             BhytStatusId = l.BHYT_STATUS_ID,
-                             BhytToDate = l.BHYT_TO_DATE,
-                             BhytWherehealthId = l.BHYT_WHEREHEALTH_ID,
-                             BhtnldBnnToDateString = l.BHTNLD_BNN_TO_DATE.Value == null ? null : l.BHTNLD_BNN_TO_DATE.Value.ToString("yyyy-MM"),
-                             BhtnldBnnFromDateString = l.BHTNLD_BNN_FROM_DATE.Value == null ? null : l.BHTNLD_BNN_FROM_DATE.Value.ToString("yyyy-MM"),
-                             BhtnToDateString = l.BHTN_TO_DATE.Value == null ? null : l.BHTN_TO_DATE.Value.ToString("yyyy-MM"),
-                             BhtnFromDateString = l.BHTN_FROM_DATE.Value == null ? null : l.BHTN_FROM_DATE.Value.ToString("yyyy-MM"),
-                             BhxhFromDateString = l.BHXH_FROM_DATE.Value == null ? null : l.BHXH_FROM_DATE.Value.ToString("yyyy-MM"),
-                             BhxhToDateString = l.BHXH_TO_DATE.Value == null ? null : l.BHXH_TO_DATE.Value.ToString("yyyy-MM"),
-                             BhytFromDateString = l.BHYT_FROM_DATE.Value == null ? null : l.BHYT_FROM_DATE.Value.ToString("yyyy-MM"),
-                             SalaryNew = ch.SALARY_NEW
-                         };
-            var joined2 =  from p in joined
-                           select p;
-
-            var singlePhaseResult = await _genericReducer.SinglePhaseReduce(joined, request);
+                x.SalaryBhxhYt = (double)siSal;
+                x.SalaryBhTn = (double)uiSal!;
+            });
+            var result = joined.AsQueryable();
+            var singlePhaseResult = await _genericReducer.SinglePhaseReduce(result, request);
             return singlePhaseResult;
         }
 
@@ -165,7 +171,6 @@ namespace API.Controllers.InsInformation
                                         // JOIN OTHER ENTITIES BASED ON THE BUSINESS
                                     select new InsInformationDTO
                                     {
-                                        IdPos = t.ID,
                                         Id = l.ID,
                                         EmployeeCode = e.CODE,
                                         EmployeeId = l.EMPLOYEE_ID,
@@ -179,7 +184,7 @@ namespace API.Controllers.InsInformation
                                         BirthPlace = cv.BIRTH_PLACE,
                                         Contact = cv.MOBILE_PHONE,
                                         SeniorityInsurance = l.SENIORITY_INSURANCE,
-                                        SeniorityInsuranceInCompany = e.JOIN_DATE_STATE!.Value == null ? 0 : (int)Math.Round((decimal)((DateTime.Now - e.JOIN_DATE_STATE.Value).Days / 30)),
+                                        SeniorityInsuranceInCompany = e!.JOIN_DATE_STATE!.Value! == null ? 0 : (int)Math.Round((decimal)((DateTime.Now - e!.JOIN_DATE_STATE!.Value).Days / 30)),
                                         Company = dv.NAME,
                                         BhxhNo = cv.INSURENCE_NUMBER,
                                         BhxhFromDate = l.BHXH_FROM_DATE,
@@ -192,8 +197,6 @@ namespace API.Controllers.InsInformation
                                         BhtnldBnnFromDate = l.BHTNLD_BNN_FROM_DATE,
                                         BhtnldBnnToDate = l.BHTNLD_BNN_TO_DATE,
                                         BhtnToDate = l.BHTN_TO_DATE,
-                                        SalaryBhTn = wk.SAL_INSU == null ? 0 : (tl.UI == null ? 0 : (tl.UI > wk.SAL_INSU ? (double)wk.SAL_INSU : (double)tl.UI)),
-                                        SalaryBhxhYt = wk.SAL_INSU == null ? 0 : (tl.UI == null ? 0 : (tl.SI_HI > wk.SAL_INSU ? (double)wk.SAL_INSU : (double)tl.SI_HI)),
                                         BhxhReceiver = l.BHXH_RECEIVER,
                                         BhxhStorageNumber = l.BHXH_STORAGE_NUMBER,
                                         BhxhReimbursementDate = l.BHXH_REIMBURSEMENT_DATE,
@@ -218,14 +221,14 @@ namespace API.Controllers.InsInformation
                                         CreatedDate = l.CREATED_DATE,
                                         UpdatedByUsername = u.USERNAME,
                                         UpdatedDate = l.UPDATED_DATE,
-                                        BhtnldBnnToDateString = l.BHTNLD_BNN_TO_DATE.Value == null ? null : l.BHTNLD_BNN_TO_DATE.Value.ToString("yyyy-MM"),
-                                        BhtnldBnnFromDateString = l.BHTNLD_BNN_FROM_DATE.Value == null ? null : l.BHTNLD_BNN_FROM_DATE.Value.ToString("yyyy-MM"),
-                                        BhtnToDateString = l.BHTN_TO_DATE.Value == null ? null : l.BHTN_TO_DATE.Value.ToString("yyyy-MM"),
-                                        BhtnFromDateString = l.BHTN_FROM_DATE.Value == null ? null : l.BHTN_FROM_DATE.Value.ToString("yyyy-MM"),
-                                        BhxhFromDateString = l.BHXH_FROM_DATE.Value == null ? null : l.BHXH_FROM_DATE.Value.ToString("yyyy-MM"),
-                                        BhxhToDateString = l.BHXH_TO_DATE.Value == null ? null : l.BHXH_TO_DATE.Value.ToString("yyyy-MM"),
-                                        BhytFromDateString = l.BHYT_FROM_DATE.Value == null ? null : l.BHYT_FROM_DATE.Value.ToString("yyyy-MM"),
-                                        BhytToDateString = l.BHYT_TO_DATE.Value == null ? null : l.BHYT_TO_DATE.Value.ToString("yyyy-MM"),
+                                        BhtnldBnnToDateString = l!.BHTNLD_BNN_TO_DATE!.Value == null ? null : l!.BHTNLD_BNN_TO_DATE!.Value.ToString("yyyy-MM"),
+                                        BhtnldBnnFromDateString = l!.BHTNLD_BNN_FROM_DATE!.Value == null ? null : l.BHTNLD_BNN_FROM_DATE.Value.ToString("yyyy-MM"),
+                                        BhtnToDateString = l!.BHTN_TO_DATE!.Value == null ? null : l.BHTN_TO_DATE.Value.ToString("yyyy-MM"),
+                                        BhtnFromDateString = l.BHTN_FROM_DATE!.Value == null ? null : l.BHTN_FROM_DATE.Value.ToString("yyyy-MM"),
+                                        BhxhFromDateString = l.BHXH_FROM_DATE!.Value == null ? null : l.BHXH_FROM_DATE.Value.ToString("yyyy-MM"),
+                                        BhxhToDateString = l.BHXH_TO_DATE.Value! == null ? null : l.BHXH_TO_DATE.Value.ToString("yyyy-MM"),
+                                        BhytFromDateString = l.BHYT_FROM_DATE!.Value == null ? null : l.BHYT_FROM_DATE.Value.ToString("yyyy-MM"),
+                                        BhytToDateString = l.BHYT_TO_DATE!.Value == null ? null : l.BHYT_TO_DATE.Value.ToString("yyyy-MM"),
                                     }).FirstOrDefaultAsync();
 
                 if (joined != null)
@@ -452,18 +455,23 @@ namespace API.Controllers.InsInformation
         {
             var empT = new InsInformationDTO();
             var emp = _dbContext.HuEmployees.AsNoTracking().Where(p => p.ID == id).FirstOrDefault();
-            var sysContractType = _dbContext.SysContractTypes.AsNoTracking().Where(p => p.CODE == "HDCNSDLD" || p.CODE == "HDLD001" || p.CODE == "HDLD003" || p.CODE == "HDLD002" || p.CODE == "HDLD004" || p.CODE == "HDCT").Select(p => p.ID).ToList();
-            var contractType = _dbContext.HuContractTypes.AsNoTracking().Where(p => sysContractType.Contains((long)p.TYPE_ID!)).Select(p => p.ID).ToList();
-            var contract = _dbContext.HuContracts.AsNoTracking().Where(p => p.EMPLOYEE_ID == emp!.ID && contractType.Contains((long)p.CONTRACT_TYPE_ID!) && p.STATUS_ID == OtherConfig.STATUS_APPROVE).OrderBy(ic => ic.START_DATE).FirstOrDefault();
-            var working = _dbContext.HuWorkings.AsNoTracking().Where(p => p.ID == contract!.WORKING_ID).FirstOrDefault();
 
+            var sysContractType = await _dbContext.SysContractTypes.AsNoTracking().Where(p => p.CODE == "HDCNSDLD" || p.CODE == "HDLD001" || p.CODE == "HDLD003" || p.CODE == "HDLD002" || p.CODE == "HDLD004" || p.CODE == "HDCT").Select(p => p.ID).ToListAsync();
+            var contract = (from ct in _dbContext.HuContracts.AsNoTracking().Where(p => p.EMPLOYEE_ID == id && p.STATUS_ID == OtherConfig.STATUS_APPROVE).DefaultIfEmpty()
+                            from ctt in _dbContext.HuContractTypes.AsNoTracking().Where(p => p.ID == ct.CONTRACT_TYPE_ID && sysContractType.Contains(p.TYPE_ID!.Value)).DefaultIfEmpty()
+                            select new
+                            {
+                                Id = ct.WORKING_ID,
+                                StartDate = ct.START_DATE,
+                            }).OrderBy(p => p.StartDate).FirstOrDefault();
+            decimal? siSal = 0;
+            var salary = _dbContext.InsChanges.AsNoTracking().Where(p => p.EMPLOYEE_ID == id && p.EFFECTIVE_DATE!.Value.Date <= DateTime.Now.Date).OrderByDescending(p => p.EFFECTIVE_DATE).FirstOrDefault();
+            if (salary != null)
+            {
+                siSal = salary.SALARY_BHXH_BHYT_NEW;
+            }
             var joined = await (from e in _dbContext.HuEmployees.AsNoTracking().Where(emp => emp.ID == id)
                                 from cv in _dbContext.HuEmployeeCvs.AsNoTracking().Where(cv => cv.ID == e.PROFILE_ID).DefaultIfEmpty()
-                                from cn in _dbContext.HuContracts.AsNoTracking().Where(cn => cn.EMPLOYEE_ID == e.ID && cn.STATUS_ID == OtherConfig.STATUS_APPROVE).OrderBy(cn => cn.START_DATE).Take(1).DefaultIfEmpty()
-                                from ct in _dbContext.HuContractTypes.AsNoTracking().Where(ct => ct.ID == cn.CONTRACT_TYPE_ID).DefaultIfEmpty()
-                                from ctt in _dbContext.SysContractTypes.AsNoTracking().Where(p => p.ID == ct.TYPE_ID && (p.CODE == "HDCNSDLD" || p.CODE == "HDLD001" || p.CODE == "HDLD003" || p.CODE == "HDLD004")).DefaultIfEmpty()
-                                from wk in _dbContext.HuWorkings.AsNoTracking().Where(p => p.ID == cn.WORKING_ID).DefaultIfEmpty()
-                                from tl in _dbContext.InsSpecifiedObjectss.AsNoTracking().Where(p => p.EFFECTIVE_DATE <= cn.START_DATE).OrderByDescending(cn => cn.EFFECTIVE_DATE).Take(1).DefaultIfEmpty()
                                 from o in _dbContext.HuOrganizations.AsNoTracking().Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
                                 from cmp in _dbContext.HuCompanys.AsNoTracking().Where(cmp => cmp.ID == o.COMPANY_ID).DefaultIfEmpty()
                                 from dv in _dbContext.SysOtherLists.AsNoTracking().Where(c => c.ID == cmp.INS_UNIT).DefaultIfEmpty()
@@ -475,8 +483,7 @@ namespace API.Controllers.InsInformation
                                     BhytNo = cv.INS_CARD_NUMBER,
                                     BhxhNo = cv.INSURENCE_NUMBER,
                                     SeniorityInsuranceInCompany = e.JOIN_DATE_STATE == null ? 0 : (int)Math.Round((decimal)((DateTime.Now - e.JOIN_DATE_STATE!.Value).Days / 30)),
-                                    SalaryBhTn = working!.SAL_INSU == null ? 0 : (tl.UI == null ? 0 : (tl.UI > working.SAL_INSU ? (double)working.SAL_INSU : (double)tl.UI)),
-                                    SalaryBhxhYt = working.SAL_INSU == null ? 0 : (tl.UI == null ? 0 : (tl.SI_HI > working.SAL_INSU ? (double)working.SAL_INSU : (double)tl.SI_HI!)),
+                                    SalaryBhxhYt = siSal,
                                     Company = dv.NAME,
                                 }).FirstOrDefaultAsync();
             if (joined != null)
@@ -577,7 +584,7 @@ namespace API.Controllers.InsInformation
                     {
                         lstcheckInsItems.Add(1);
                     }
-                    if (joined.IS_BHYT!= null && joined.IS_BHYT == true)
+                    if (joined.IS_BHYT != null && joined.IS_BHYT == true)
                     {
                         lstcheckInsItems.Add(2);
                     }
@@ -599,18 +606,6 @@ namespace API.Controllers.InsInformation
 
             }
             return new FormatedResponse() { InnerBody = empT };
-            //var joined = await (from e in _dbContext.HuEmployees.AsNoTracking().Where(emp => emp.ID == id)
-            //                    from cn in _dbContext.HuContracts.AsNoTracking().Where(cn => cn.ID == e.CONTRACT_ID && cn.STATUS_ID == OtherConfig.STATUS_APPROVE).OrderBy(ic => ic.START_DATE).Take(1).DefaultIfEmpty()
-            //                    from ct in _dbContext.HuContractTypes.AsNoTracking().Where(ct => ct.ID == cn.CONTRACT_TYPE_ID).DefaultIfEmpty()
-            //                    from ctt in _dbContext.SysContractTypes.AsNoTracking().Where(p => p.ID == ct.TYPE_ID && (p.CODE == "HDCNSDLD" || p.CODE == "HDLD001" || p.CODE == "HDLD003" || p.CODE == "HDLD004")).DefaultIfEmpty()
-            //                    select new InsInformationDTO
-            //                    {
-            //                        Id = e.ID,
-            //                        IsBhtn = ct.IS_BHTN,
-            //                        IsBhyt = ct.IS_BHYT,
-            //                        IsBhxh = ct.IS_BHXH,
-            //                        IsBhtnldBnn = ct.IS_BHTNLD_BNN,
-            //                    }).FirstAsync();
 
         }
 

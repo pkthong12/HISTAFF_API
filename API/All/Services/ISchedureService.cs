@@ -5,7 +5,8 @@
         Task<object> AddTestingRecordAt5AmEveryMorning();
         Task<object> TestNhanh();
         string DeveloperRooting();
-        void ChangeIsActivePosition();
-        Task<object> TheSystemChecksTheTerminate();
+        string CalculateTimesheetDailyByDate();
+        void ChangePositionPoliticalByDate();
+        void SendEmailPortal();
     }
 }

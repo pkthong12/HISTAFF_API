@@ -33,7 +33,6 @@ namespace API.Controllers.HuEvaluate
             var otherList = _uow.Context.Set<SYS_OTHER_LIST>().AsNoTracking().AsQueryable();
             var employee = _uow.Context.Set<HU_EMPLOYEE>().AsNoTracking().AsQueryable();
             var organization = _uow.Context.Set<HU_ORGANIZATION>().AsNoTracking().AsQueryable();
-            var concurrent = _uow.Context.Set<HU_CONCURRENTLY>().AsNoTracking().AsQueryable();
             var position = _uow.Context.Set<HU_POSITION>().AsNoTracking().AsQueryable();
             var evaluate = _uow.Context.Set<HU_EVALUATE>().AsNoTracking().AsQueryable();
             var classification = _uow.Context.Set<HU_CLASSIFICATION>().AsNoTracking().AsQueryable();
@@ -41,13 +40,9 @@ namespace API.Controllers.HuEvaluate
                          from et in otherList.Where(x => x.ID == p.EVALUATE_TYPE).DefaultIfEmpty()
                          from cl in otherList.Where(x => x.ID == p.CLASSIFICATION_ID).DefaultIfEmpty()
                          from e in employee.Where(x => x.PROFILE_ID == p.PROFILE_ID).DefaultIfEmpty()
-                         from c in concurrent.Where(x => x.ID == p.EMPLOYEE_CONCURRENT_ID).DefaultIfEmpty()
-                         from ec in employee.Where(x => x.ID == c.EMPLOYEE_ID).DefaultIfEmpty()
                          from o in organization.Where(x => x.ID == p.ORG_ID).DefaultIfEmpty()
                          from po in position.Where(x => x.ID == p.POSITION_ID).DefaultIfEmpty()
                          from se in otherList.Where(x => x.ID == e.WORK_STATUS_ID).DefaultIfEmpty()
-                         from pco in position.Where(x => x.ID == c.POSITION_ID).DefaultIfEmpty()
-                         from oc in organization.Where(x => x.ID == pco.ORG_ID).DefaultIfEmpty()
                              // JOIN OTHER ENTITIES BASED ON THE BUSINESS
                          select new HuEvaluateImportDTO
                          {
@@ -66,12 +61,12 @@ namespace API.Controllers.HuEvaluate
                              ClassificationName = cl.NAME,
                              EmployeeId = p.EMPLOYEE_ID,
                              EmployeeConcurrentId = p.EMPLOYEE_CONCURRENT_ID,
-                             EmployeeCode = e.CODE != null ? e.CODE : ec.CODE,
-                             EmployeeName = e.Profile.FULL_NAME != "" ? e.Profile.FULL_NAME : ec.Profile.FULL_NAME,
-                             OrgId = p.ORG_ID != null ? p.ORG_ID : p.ORG_CONCURRENT_ID,
-                             OrgName = o.NAME != "" ? o.NAME : oc.NAME,
+                             EmployeeCode = e.CODE,
+                             EmployeeName = e.Profile.FULL_NAME,
+                             OrgId = p.ORG_ID,
+                             OrgName = o.NAME,
                              PositionId = p.ID,
-                             PositionName = po.NAME != "" ? po.NAME : pco.NAME,
+                             PositionName = po.NAME,
                              Year = p.YEAR,
                              YearSearch = p.YEAR.ToString(),
                              PointSearch = p.POINT.ToString(),
@@ -145,51 +140,39 @@ namespace API.Controllers.HuEvaluate
                                      OrgName = o.NAME
                                  }).FirstOrDefault();
                     var getClassification = _uow.Context.Set<HU_CLASSIFICATION>().Where(x => x.CLASSIFICATION_LEVEL == item.CLASSIFICATION_ID && x.CLASSIFICATION_TYPE == item.EVALUATE_TYPE).FirstOrDefault();
-                    if (item.POINT > getClassification.POINT_FROM && item.POINT < getClassification.POINT_TO)
+                    var checkBeforeInsert = (from ev in _uow.Context.Set<HU_EVALUATE>()
+                                             where ev.EVALUATE_TYPE == item.EVALUATE_TYPE && ev.EMPLOYEE_ID == item.EMPLOYEE_ID && ev.YEAR == item.YEAR
+                                             select new
+                                             {
+                                                 Id = ev.ID
+                                             }).ToList();
+                    if (checkBeforeInsert.Count > 0)
                     {
-                        var checkBeforeInsert = (from ev in _uow.Context.Set<HU_EVALUATE>()
-                                                 where ev.EVALUATE_TYPE == item.EVALUATE_TYPE && ev.EMPLOYEE_ID == item.EMPLOYEE_ID && ev.YEAR == item.YEAR
-                                                 select new
-                                                 {
-                                                     Id = ev.ID
-                                                 }).ToList();
-                        if (checkBeforeInsert.Count > 0)
-                        {
-                            checkData = true;
-                            return;
-                        }
-                        listAdd.Add(new()
-                        {
-                            EmployeeId = getCv.EmployeeId,
-                            EmployeeCode = getCv.EmployeeCode,
-                            EmployeeName = getCv.EmployeeName,
-                            CreatedBy = request.XlsxSid,
-                            EvaluateType = item.EVALUATE_TYPE,
-                            Year = item.YEAR,
-                            Point = item.POINT,
-                            OrgId = getCv.OrgId,
-                            OrgName = getCv.OrgName,
-                            PositionId = getCv.PositionId,
-                            PositionName = getCv.PositionName,
-                            ClassificationId = getClassification.ID,
-                            Note = item.NOTE
-                        });
-
-                    }
-                    else
-                    {
-                        checkPoint = true;
+                        checkData = true;
                         return;
                     }
+                    listAdd.Add(new()
+                    {
+                        EmployeeId = getCv.EmployeeId,
+                        EmployeeCode = getCv.EmployeeCode,
+                        EmployeeName = getCv.EmployeeName,
+                        CreatedBy = request.XlsxSid,
+                        EvaluateType = item.EVALUATE_TYPE,
+                        Year = item.YEAR,
+                        Point = item.POINT,
+                        OrgId = getCv.OrgId,
+                        OrgName = getCv.OrgName,
+                        PositionId = getCv.PositionId,
+                        PositionName = getCv.PositionName,
+                        ClassificationId = getClassification.ID,
+                        Note = item.NOTE
+                    });
+
 
                 });
                 if (checkData == true)
                 {
                     return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.DUBLICATE_VALUE_EVALUATE_TYPE_YEAR_EMPLOYEE_CONCURRENT_ID };
-                }
-                if (checkPoint == true)
-                {
-                    return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.CREATE_OBJECT_NUMBER_IS_NOT_ALLOWED };
                 }
                 var insertResponse = await _genericRepository.CreateRange(_uow, listAdd, request.XlsxSid);
                 if (insertResponse.InnerBody != null)
@@ -215,33 +198,33 @@ namespace API.Controllers.HuEvaluate
             var position = _uow.Context.Set<HU_POSITION>().AsNoTracking().AsQueryable();
             var classification = _uow.Context.Set<HU_CLASSIFICATION>().AsNoTracking().AsQueryable();
             var joined = from p in _dbContext.HuEvaluateConcurrentImports
-                            from con in concurrent.Where(x => x.ID == p.EMPLOYEE_CONCURRENT_ID).DefaultIfEmpty()
-                            from ee in employee.Where(x => x.ID == con.EMPLOYEE_ID).DefaultIfEmpty()
-                            from cv in employeCv.Where(x => x.ID == ee.PROFILE_ID).DefaultIfEmpty()
-                            from po in position.Where(x => x.ID == p.POSITION_CONCURRENT_ID).DefaultIfEmpty()
-                            from org in organization.Where(x => x.ID == p.ORG_CONCURRENT_ID).DefaultIfEmpty()
-                            from ot in otherList.Where(x => x.ID == p.CLASSIFICATION_ID).DefaultIfEmpty()
-                                // JOIN OTHER ENTITIES BASED ON THE BUSINESS
-                            select new HuEvaluateConcurrentDTO
-                            {
-                                Id = p.XLSX_ROW,
-                                // Phần thông tin có trong tất cả các
-                                XlsxUserId = p.XLSX_USER_ID,
-                                XlsxExCode = p.XLSX_EX_CODE,
-                                XlsxSession = p.XLSX_SESSION,
-                                XlsxInsertOn = p.XLSX_INSERT_ON,
-                                XlsxFileName = p.XLSX_FILE_NAME,
-                                XlsxRow = p.XLSX_ROW,
-                                YearSearch = p.YEAR.ToString(),
-                                EmployeeCode = ee.CODE,
-                                EmployeeName = cv.FULL_NAME,
-                                PositionConcurrentName = po.NAME,
-                                OrgConcurrentName = org.NAME,
-                                ClassificationName = ot.NAME,
-                                PointSearch = p.POINT.ToString(),
-                                Note = p.NOTE
+                         from con in concurrent.Where(x => x.ID == p.EMPLOYEE_CONCURRENT_ID).DefaultIfEmpty()
+                         from ee in employee.Where(x => x.ID == con.EMPLOYEE_ID).DefaultIfEmpty()
+                         from cv in employeCv.Where(x => x.ID == ee.PROFILE_ID).DefaultIfEmpty()
+                         from po in position.Where(x => x.ID == p.POSITION_CONCURRENT_ID).DefaultIfEmpty()
+                         from org in organization.Where(x => x.ID == p.ORG_CONCURRENT_ID).DefaultIfEmpty()
+                         from ot in otherList.Where(x => x.ID == p.CLASSIFICATION_ID).DefaultIfEmpty()
+                             // JOIN OTHER ENTITIES BASED ON THE BUSINESS
+                         select new HuEvaluateConcurrentDTO
+                         {
+                             Id = p.XLSX_ROW,
+                             // Phần thông tin có trong tất cả các
+                             XlsxUserId = p.XLSX_USER_ID,
+                             XlsxExCode = p.XLSX_EX_CODE,
+                             XlsxSession = p.XLSX_SESSION,
+                             XlsxInsertOn = p.XLSX_INSERT_ON,
+                             XlsxFileName = p.XLSX_FILE_NAME,
+                             XlsxRow = p.XLSX_ROW,
+                             YearSearch = p.YEAR.ToString(),
+                             EmployeeCode = ee.CODE,
+                             EmployeeName = cv.FULL_NAME,
+                             PositionConcurrentName = po.NAME,
+                             OrgConcurrentName = org.NAME,
+                             ClassificationName = ot.NAME,
+                             PointSearch = p.POINT.ToString(),
+                             Note = p.NOTE
 
-                            };
+                         };
 
             var singlePhaseResult = await _genericReducerConcurrent.SinglePhaseReduce(joined, request);
             return singlePhaseResult;
@@ -252,7 +235,6 @@ namespace API.Controllers.HuEvaluate
             try
             {
                 bool checkData = false;
-                bool checkPoint = false;
                 bool pathMode = true;
                 var now = DateTime.UtcNow;
                 List<HuEvaluateDTO> listAdd = new();
@@ -294,19 +276,19 @@ namespace API.Controllers.HuEvaluate
                                          from cv in _uow.Context.Set<HU_EMPLOYEE_CV>().Where(x => x.ID == ee.PROFILE_ID).DefaultIfEmpty()
                                          from po in _uow.Context.Set<HU_POSITION>().Where(x => x.ID == item.POSITION_CONCURRENT_ID).DefaultIfEmpty()
                                          from org in _uow.Context.Set<HU_ORGANIZATION>().Where(x => x.ID == item.ORG_CONCURRENT_ID).DefaultIfEmpty()
-                                 where cv.ID == item.PROFILE_ID
-                                 select new
-                                 {
-                                     Id = cv.ID,
-                                     ConCurrentID = con.ID,
-                                     EmployeeId = ee.ID,
-                                     EmployeeCode = ee.CODE,
-                                     EmployeeName = cv.FULL_NAME,
-                                     PositionId = po.ID,
-                                     PositionName = po.NAME,
-                                     OrgId = org.ID,
-                                     OrgName = org.NAME
-                                 }).FirstOrDefault();
+                                         where cv.ID == item.PROFILE_ID
+                                         select new
+                                         {
+                                             Id = cv.ID,
+                                             ConCurrentID = con.ID,
+                                             EmployeeId = ee.ID,
+                                             EmployeeCode = ee.CODE,
+                                             EmployeeName = cv.FULL_NAME,
+                                             PositionId = po.ID,
+                                             PositionName = po.NAME,
+                                             OrgId = org.ID,
+                                             OrgName = org.NAME,
+                                         }).FirstOrDefault();
                     var getClassification = (from cl in _uow.Context.Set<HU_CLASSIFICATION>().Where(x => x.CLASSIFICATION_LEVEL == item.CLASSIFICATION_ID)
                                              from ot in _uow.Context.Set<SYS_OTHER_LIST>().Where(x => x.ID == cl.CLASSIFICATION_TYPE)
                                              where ot.CODE == "LXL02"
@@ -317,54 +299,41 @@ namespace API.Controllers.HuEvaluate
                                                  PointFrom = cl.POINT_FROM,
                                                  PointTo = cl.POINT_TO,
                                              }).FirstOrDefault();
-                    if (item.POINT > getClassification.PointFrom && item.POINT < getClassification.PointTo)
-                    {
-                        var checkBeforeInsert = (from ev in _uow.Context.Set<HU_EVALUATE>()
-                                                 where ev.EVALUATE_TYPE == item.EVALUATE_TYPE && ev.EMPLOYEE_CONCURRENT_ID == item.EMPLOYEE_CONCURRENT_ID && ev.YEAR == item.YEAR
-                                                 select new
-                                                 {
-                                                     Id = ev.ID
-                                                 }).ToList();
-                        if (checkBeforeInsert.Count > 0)
-                        {
-                            checkData = true;
-                            return;
-                        }
-                        listAdd.Add(new()
-                        {
-                            
-                            EmployeeConcurrentId = getConcurrent.ConCurrentID,
-                            EmployeeConcurrentName = getConcurrent.EmployeeName,
-                            EmployeeName = "",
-                            CreatedBy = request.XlsxSid,
-                            EvaluateType = getClassification.EvaluateType,
-                            Year = item.YEAR,
-                            Point = item.POINT,
-                            OrgConcurrentId = getConcurrent.OrgId,
-                            OrgConcurrentName = getConcurrent.OrgName,
-                            OrgName = "",
-                            PositionConcurrentId = getConcurrent.PositionId,
-                            PositionName = "",
-                            PositionConcurrentName = getConcurrent.PositionName,
-                            ClassificationId = getClassification.Id,
-                            Note = item.NOTE
-                        });
 
-                    }
-                    else
+                    var checkBeforeInsert = (from ev in _uow.Context.Set<HU_EVALUATE>()
+                                             where ev.EVALUATE_TYPE == item.EVALUATE_TYPE && ev.EMPLOYEE_CONCURRENT_ID == item.EMPLOYEE_CONCURRENT_ID && ev.YEAR == item.YEAR
+                                             select new
+                                             {
+                                                 Id = ev.ID
+                                             }).ToList();
+                    if (checkBeforeInsert.Count > 0)
                     {
-                        checkPoint = true;
+                        checkData = true;
                         return;
                     }
+                    listAdd.Add(new()
+                    {
 
+                        EmployeeConcurrentId = getConcurrent!.ConCurrentID,
+                        EmployeeConcurrentName = getConcurrent.EmployeeName,
+                        EmployeeName = "",
+                        CreatedBy = request.XlsxSid,
+                        EvaluateType = item.EVALUATE_TYPE,
+                        Year = item.YEAR,
+                        Point = item.POINT,
+                        OrgConcurrentId = getConcurrent.OrgId,
+                        OrgConcurrentName = getConcurrent.OrgName,
+                        OrgName = "",
+                        PositionConcurrentId = getConcurrent.PositionId,
+                        PositionName = "",
+                        PositionConcurrentName = getConcurrent.PositionName,
+                        ClassificationId = getClassification!.Id,
+                        Note = item.NOTE
+                    });
                 });
                 if (checkData == true)
                 {
                     return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.DUBLICATE_VALUE_EVALUATE_TYPE_YEAR_EMPLOYEE_CONCURRENT_ID };
-                }
-                if (checkPoint == true)
-                {
-                    return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.CREATE_OBJECT_NUMBER_IS_NOT_ALLOWED };
                 }
                 var insertResponse = await _genericRepository.CreateRange(_uow, listAdd, request.XlsxSid);
                 if (insertResponse.InnerBody != null)

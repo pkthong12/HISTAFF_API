@@ -32,9 +32,7 @@ namespace API.DTO
 		public long? SchoolId { get; set; }
 		public string? SchoolName { get; set; }
         public int? Year { get; set; }
-        public string? YearStr { get; set; }
         public decimal? Mark { get; set; }
-        public string? MarkStr { get; set; }
         public long? TypeTrain { get; set; }
         public string? CodeCertificate { get; set; }
         public string? Classification { get; set; }
@@ -44,8 +42,8 @@ namespace API.DTO
         public DateTime? ModifiedDate { get; set; }
         public string? ModifiedBy { get; set; }
         public string? ModifiedLog { get; set; }
-        public bool? IsLicense { get; set; }
-        public string? Level { get; set; }
+
+		public string? Level { get; set; }
 		public long? LevelId { get; set; }
 		public string? LevelName { get; set; }
 		public string? IsPrimeStr { get; set; }
@@ -60,6 +58,6 @@ namespace API.DTO
         // nếu Admin thêm bằng tay
         // thì nó sẽ là null
         public string? StatusRecord { get; set; }
-        public int? JobOderNum { get; set; } 
+        public int? JobOrderNum { get; set; }
     }
 }

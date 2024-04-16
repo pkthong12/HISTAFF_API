@@ -5,9 +5,7 @@ namespace API.DTO
     public class SysMutationLogDTO : BaseDTO
     {
         public string? SysFunctionCode { get; set; }
-
         public string? SysActionCode { get; set; }
-
         public string? Before { get; set; }
         public string? Before1 { get; set; }
         public string? Before2 { get; set; }

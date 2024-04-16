@@ -12,19 +12,15 @@
         public required string ErCode { get; set; } = null!;
         public required string StoreName { get; set; }
         public long? PeriodId { get; set; }
-        public long? EmployeeId { get; set; }
-        public string? WorkStatus { get; set; }
         public int? Year { get; set; }
         public int? Month { get; set; }
         public DateTime? DateStart { get; set; }
         public DateTime? DateEnd { get; set; }
         public long[]? OrgIds { get; set; }
-        public long? OrgId { get; set; }
         public string? ListOrgIds { get; set; }
         public string? Lang { get; set; }
         public string? EmployeeDeclare { get; set; }
         public string? EmployeeRepresentative { get; set; }
-        public DateTime? ReportDate { get; set; }
     }
 
     public class HeaderTitle

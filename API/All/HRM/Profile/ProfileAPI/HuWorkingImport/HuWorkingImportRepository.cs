@@ -44,9 +44,6 @@ namespace API.Controllers.HuEvaluate
                          from ot in otherList.Where(x => x.ID == p.TYPE_ID).DefaultIfEmpty()
                          from emobject in otherList.Where(x => x.ID == p.EMPLOYEE_OBJ_ID).DefaultIfEmpty()
                          from curpo in position.Where(x =>x.ID == p.CUR_POSITION_ID).DefaultIfEmpty()
-                         from sign in employee.Where(x => x.ID == p.SIGN_ID).DefaultIfEmpty()
-                         from signCv in employeCv.Where(x => x.ID == sign.PROFILE_ID).DefaultIfEmpty()
-                         from signPosition in position.Where(x => x.ID == sign.POSITION_ID).DefaultIfEmpty()
                              // JOIN OTHER ENTITIES BASED ON THE BUSINESS
                          select new HuWorkingImportDTO
                          {
@@ -68,9 +65,7 @@ namespace API.Controllers.HuEvaluate
                              WorkPlaceName = com.WORK_ADDRESS,
                              EmployeeObjName = emobject.NAME,
                              Note = p.NOTE,
-                             CurPositionName = curpo.NAME,
-                             SignerName = signCv.FULL_NAME,
-                             SignerPosition = signPosition.NAME
+                             CurPositionName = curpo.NAME
                          };
 
             var singlePhaseResult = await _genericReducer.SinglePhaseReduce(joined, request);
@@ -159,10 +154,10 @@ namespace API.Controllers.HuEvaluate
 
 
                 });
-                //if(checkNoneExpireDate == true)
-                //{
-                //    return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.EFFECT_DATE_MORE_THAN_EFFECT_DATE_OF_OLD_RECORD };
-                //}
+                if(checkNoneExpireDate == true)
+                {
+                    return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.EFFECT_DATE_MORE_THAN_EFFECT_DATE_OF_OLD_RECORD };
+                }
                 var insertResponse = await _genericRepository.CreateRange(_uow, listAdd, request.XlsxSid);
                 if (insertResponse.InnerBody != null)
                 {

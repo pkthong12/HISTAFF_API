@@ -272,9 +272,9 @@ namespace API.Controllers.PortalRequestChange
                                                              AllowanceId = wa.ALLOWANCE_ID,
                                                              AllowanceName = n.NAME,
                                                              Amount = wa.AMOUNT,
-                                                             Effectdate = p.EFFECT_DATE,
-                                                             ExpireDate = p.EXPIRE_DATE,
-                                                             Coefficient = p.COEFFICIENT
+                                                             Effectdate = wa.EFFECT_DATE,
+                                                             ExpireDate = wa.EXPIRE_DATE,
+                                                             Coefficient = wa.COEFFICIENT
                                                          }).ToList(),
 
                                     }).ToListAsync();

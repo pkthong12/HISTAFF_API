@@ -25,7 +25,6 @@ using System.Runtime.Intrinsics.Arm;
 using Org.BouncyCastle.Crypto;
 using System.Linq.Dynamic.Core;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
-using CORE.AutoMapper;
 
 namespace ProfileAPI.List
 {
@@ -39,7 +38,6 @@ namespace ProfileAPI.List
         private readonly CoreDbContext _coreDbContext;
         private readonly GenericReducer<HU_DISCIPLINE, DisciplineDTO> genericReducer;
         private IGenericRepository<HU_DISCIPLINE, DisciplineDTO> _genericRepository;
-        private IGenericRepository<HU_DISCIPLINE_EMP, HuDisciplineEmpDTO> _childGenericRepository;
         private AppSettings _appSettings;
         private readonly IWebHostEnvironment _env;
         private readonly IFileService _fileService;
@@ -49,7 +47,6 @@ namespace ProfileAPI.List
             _coreDbContext = coreDbContext;
             genericReducer = new();
             _genericRepository = _uow.GenericRepository<HU_DISCIPLINE, DisciplineDTO>();
-            _childGenericRepository = _uow.GenericRepository<HU_DISCIPLINE_EMP, HuDisciplineEmpDTO>();
             _appSettings = options.Value;
             _env = env;
             _fileService = fileService;
@@ -79,7 +76,7 @@ namespace ProfileAPI.List
                              from d in otherLists.Where(x => x.ID == p.DISCIPLINE_TYPE).DefaultIfEmpty()
                              from s in employees.Where(x => x.ID == p.SIGN_ID).DefaultIfEmpty()
                              from st in positions.Where(x => x.ID == s.POSITION_ID).DefaultIfEmpty()
-                             orderby j.ORDERNUM
+                             orderby p.CREATED_DATE descending
                              select new DisciplineDTO
                              {
                                  Id = de.ID,
@@ -117,10 +114,10 @@ namespace ProfileAPI.List
                                  UpdatedBy = p.UPDATED_BY,
                                  CreatedDate = p.CREATED_DATE,
                                  UpdatedDate = p.UPDATED_DATE,
-                                 JobOrderNum = (int)(j.ORDERNUM ?? 99)
+                                 JobOrderNum = (int)(j.ORDERNUM ?? 999)
                              };
                 request.Sort = new List<SortItem>();
-                request.Sort.Add(new SortItem() { Field = "CreatedDate", SortDirection = EnumSortDirection.DESC });
+                //request.Sort.Add(new SortItem() { Field = "CreatedDate", SortDirection = EnumSortDirection.DESC });
                 var response = await genericReducer.SinglePhaseReduce(joined, request);
                 if (response.ErrorType != EnumErrorType.NONE)
                 {
@@ -151,30 +148,40 @@ namespace ProfileAPI.List
             {
                 if (model.Ids != null)
                 {
-                    bool checkData = false;
-                    var getOtherList = _uow.Context.Set<SYS_OTHER_LIST>().Where(x => x.CODE == "CD").FirstOrDefault();
-                    model.Ids.ForEach(item =>
+                    string[] str = { "TC", "DD" };
+                    var otherLists = _uow.Context.Set<SYS_OTHER_LIST>().AsNoTracking().AsQueryable();
+                    var entity = _uow.Context.Set<HU_DISCIPLINE>().AsNoTracking().AsQueryable();
+                    var disciplineEmps = _uow.Context.Set<HU_DISCIPLINE_EMP>().AsNoTracking().AsQueryable();
+                    var types = _uow.Context.Set<SYS_OTHER_LIST_TYPE>().AsNoTracking().AsQueryable();
+                    var joined = (from t in entity
+                                  from d in disciplineEmps.Where(x => x.DISCIPLINE_ID == t.ID)
+                                  from o in otherLists.Where(x => x.ID == t.STATUS_ID)
+                                  where model.Ids.Contains(d.ID) 
+                                     && str.Contains(o.CODE) select t).Any();
+                    if (joined)
                     {
-                        var getDataBeforeDelete = _uow.Context.Set<HU_DISCIPLINE_EMP>().Where(x => x.ID == item).FirstOrDefault();
-                        var getParentOfRecord = _uow.Context.Set<HU_DISCIPLINE>().Where(x => x.ID == getDataBeforeDelete!.DISCIPLINE_ID).FirstOrDefault();
-                        if(getParentOfRecord!.STATUS_ID != getOtherList!.ID)
-                        {
-                            checkData = true;
-                            return;
-                        }
-                    });
-                    
-                    if(checkData == true) 
-                    {
-                        return Ok(new FormatedResponse()
-                        {
-                            ErrorType = EnumErrorType.CATCHABLE,
-                            StatusCode = EnumStatusCode.StatusCode400,
-                            MessageCode = CommonMessageCode.CAN_NOT_DELETE_RECORDS_HAVE_IS_ACTIVE,
-                        });
+                        return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = "UI_FORM_CONTROL_ERROR_DISCIPLINE_DELETE_FAILED" });
                     }
-                    var response = await _childGenericRepository.DeleteIds(_uow,model.Ids);
-                    return Ok(response);
+                    var Ids = (from p in disciplineEmps where model.Ids.Contains(p.ID) select p.DISCIPLINE_ID).Distinct().ToList();
+                    var deleteEmpsEntity = (from p in disciplineEmps where model.Ids.Contains(p.ID) select p).ToList();
+                    _coreDbContext.DisciplineEmps.RemoveRange(deleteEmpsEntity);
+                    await _coreDbContext.SaveChangesAsync();
+                    _uow.Commit();
+                    foreach (var i in Ids)
+                    {
+                        if(!(from p in disciplineEmps where i == p.DISCIPLINE_ID select p).ToList().Any())
+                        {
+                            var deleteEntity = (from p in entity where i == p.ID select p).ToList();
+                            _coreDbContext.Disciplines.RemoveRange(deleteEntity);
+                        }
+                    }
+                    await _coreDbContext.SaveChangesAsync();
+                    return Ok(new FormatedResponse()
+                    {
+                        ErrorType = EnumErrorType.CATCHABLE,
+                        MessageCode = CommonMessageCode.DELETE_SUCCESS,
+                        StatusCode = EnumStatusCode.StatusCode200,
+                    });
                 }
                 else
                 {
@@ -627,17 +634,38 @@ namespace ProfileAPI.List
         {
             var sid = Request.Sid(_appSettings);
             if (sid == null) return Unauthorized();
-            var entityListDiscipEmp = _uow.Context.Set<HU_DISCIPLINE_EMP>();
-            var entityListDiscip = _uow.Context.Set<HU_DISCIPLINE>();
-            var searchEmp = await entityListDiscipEmp.Where(p => model.Ids.Contains(p.ID)).ToListAsync();
+            var entityListDiscipEmp = _uow.Context.Set<HU_DISCIPLINE_EMP>().AsNoTracking().AsQueryable();
+            var entityListDiscip = _uow.Context.Set<HU_DISCIPLINE>().AsNoTracking().AsQueryable();
+            var searchEmp = await entityListDiscipEmp.AsNoTracking().Where(p => model.Ids.Contains(p.ID)).ToListAsync();
             var response = new List<HU_DISCIPLINE>();
-            searchEmp.ForEach(x =>
+            //searchEmp.ForEach(x =>
+            //{
+            //    var searchDiscip = entityListDiscip.AsNoTracking().Where(p => p.ID == x.DISCIPLINE_ID).First();
+            //    searchDiscip.STATUS_ID = model.ValueToBind ? OtherConfig.STATUS_APPROVE : OtherConfig.STATUS_WAITING;
+            //    response.Add(searchDiscip);
+            //});
+            var count = 0;
+            foreach ( var x in searchEmp)
             {
-                var searchDiscip = entityListDiscip.Where(p => p.ID == x.DISCIPLINE_ID).First();
-                searchDiscip.STATUS_ID = model.ValueToBind ? OtherConfig.STATUS_APPROVE : OtherConfig.STATUS_WAITING;
-            });
+                var tmp = x.DISCIPLINE_ID;
+                if (x.DISCIPLINE_ID == tmp)
+                {
+                    count++;
+                }
+                if (count == 1)
+                {
+                    var searchDiscip = entityListDiscip.AsNoTracking().Where(p => p.ID == x.DISCIPLINE_ID).First();
+                    searchDiscip.STATUS_ID = model.ValueToBind ? OtherConfig.STATUS_APPROVE : OtherConfig.STATUS_WAITING;
+                    response.Add(searchDiscip);
+                }
+                else
+                {
+                    break;
+                }
+            };
             try
             {
+                _uow.Context.UpdateRange(response);
                 _uow.Context.SaveChanges();
                 return Ok(new FormatedResponse()
                 {

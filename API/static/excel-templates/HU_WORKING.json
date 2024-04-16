@@ -46,7 +46,7 @@
         {
           "ParentTable": "HU_EMPLOYEE",
           "ChildTable": "HU_WORKING",
-          "ChildKey": "EMPLOYEE_ID",
+          "ChildKey": "WAGE_ID",
           "ParentUniqueIndexColumns": [ "CODE" ],
           "ChildUniqueIndexColumns": [ "DECISION_NO" ],
           "ChildCondition": "(IS_WAGE = -1 AND STATUS_ID = 994)"
@@ -81,6 +81,7 @@
           "RenderColumns": [
             "PROFILE_ID",
             "EMPLOYEE_ID",
+            "CUR_POSITION_ID",
             "ORG_ID",
             "POSITION_ID",
             "TYPE_ID",
@@ -99,8 +100,7 @@
           "RequiredColumns": [
             "EMPLOYEE_ID",
             "DECISION_NO",
-            "TYPE_ID",
-            "EFFECT_DATE"
+            "TYPE_ID"
           ],
           "UniqueIndexes": [ ],
           "Rules": [
@@ -124,7 +124,7 @@
             {
               "Column": "CUR_POSITION_ID",
               "IndirectReference": [ "HU_EMPLOYEE", "HU_POSITION" ],
-              "IndirectColumn": "MASTER"
+              "IndirectColumn": "EMPLOYEE_ID"
             },
             {
               "Column": "WAGE_ID",

@@ -7,8 +7,6 @@ using CORE.GenericUOW;
 using CORE.StaticConstant;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using System.Globalization;
-using System.Text.RegularExpressions;
 
 namespace API.Controllers.AtTimeExplanation
 {
@@ -63,7 +61,7 @@ namespace API.Controllers.AtTimeExplanation
         public async Task<IActionResult> GetById(long id)
         {
             var response = await _AtTimeExplanationRepository.GetById(id);
-            return Ok(response);
+            return Ok(new FormatedResponse() { InnerBody = response });
         }
 
         [HttpGet]
@@ -78,11 +76,8 @@ namespace API.Controllers.AtTimeExplanation
         {
             var sid = Request.Sid(_appSettings);
             if (sid == null) return Unauthorized();
-            IFormatProvider culture = new CultureInfo("en-US", true);
-            model.SwipeIn = DateTime.ParseExact(DateTime.Now.ToString("dd/MM/yyyy") + " " + model.SwipeInStr, "dd/MM/yyyy HH:mm", culture);
-            model.SwipeOut = DateTime.ParseExact(DateTime.Now.ToString("dd/MM/yyyy") + " " + model.SwipeOutStr, "dd/MM/yyyy HH:mm", culture);
             var response = await _AtTimeExplanationRepository.Create(_uow, model, sid);
-            return Ok(response);
+            return Ok(new FormatedResponse() { InnerBody = response });
         }
         [HttpPost]
         public async Task<IActionResult> CreateRange(List<AtTimeExplanationDTO> models)
@@ -98,9 +93,6 @@ namespace API.Controllers.AtTimeExplanation
         {
             var sid = Request.Sid(_appSettings);
             if (sid == null) return Unauthorized();
-            IFormatProvider culture = new CultureInfo("en-US", true);
-            model.SwipeIn = DateTime.ParseExact(DateTime.Now.ToString("dd/MM/yyyy") + " " + model.SwipeInStr, "dd/MM/yyyy HH:mm", culture);
-            model.SwipeOut = DateTime.ParseExact(DateTime.Now.ToString("dd/MM/yyyy") + " " + model.SwipeOutStr, "dd/MM/yyyy HH:mm", culture);
             var response = await _AtTimeExplanationRepository.Update(_uow, model, sid);
             return Ok(new FormatedResponse() { InnerBody = response });
         }
@@ -132,7 +124,7 @@ namespace API.Controllers.AtTimeExplanation
         public async Task<IActionResult> DeleteIds(IdsRequest model)
         {
             var response = await _AtTimeExplanationRepository.DeleteIds(_uow, model.Ids);
-            return Ok(response);
+            return Ok(new FormatedResponse() { InnerBody = response });
         }
 
         [HttpPost]

@@ -20,5 +20,6 @@ namespace API.DTO
         public int Count { get; set; }
         public string? State { get; set; }
         public List<ReminderParam> Value { get; set; }
+        public List<ReminderParam>? Visited { get; set; }
     }
 }

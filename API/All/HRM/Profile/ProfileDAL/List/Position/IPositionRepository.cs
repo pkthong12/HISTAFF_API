@@ -11,7 +11,7 @@ namespace ProfileDAL.Repositories
     {
         Task<PagedResult<PositionViewDTO>> GetAll(PositionViewDTO param);
         Task<GenericPhaseTwoListResponse<PositionViewNoPagingDTO>> SinglePhaseQueryList(GenericQueryListDTO<PositionViewNoPagingDTO> request);
-        Task<ResultWithError> GetById(long id);
+		Task<ResultWithError> GetById(long id);
         Task<ResultWithError> CreateAsync(PositionInputDTO param);
         Task<ResultWithError> UpdateAsync(PositionInputDTO param);
         Task<ResultWithError> ChangeStatusAsync(PositionInputDTO request);
@@ -27,10 +27,6 @@ namespace ProfileDAL.Repositories
         Task<PagedResult<PositionViewDTO>> GetPositionOrgID(PositionViewDTO _filter);
         Task<ResultWithError> SwapMasterInterim(PositionInputDTO param);
         Task<ResultWithError> CheckTdvAsync(PositionInputDTO param);
-        Task<FormatedResponse> TransferPosition(List<long> listTransfer, long orgId, string userId);
-        Task<FormatedResponse> CloningPosition(List<long> listCloning, long orgId, int aMount, string userId);
-        Task<FormatedResponse> PositionTransferSave(string userId);
-        Task<FormatedResponse> PositionTransferRevert(string userId);
-        void PositionTransferDelete(string userId);
+
     }
 }

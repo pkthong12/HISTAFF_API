@@ -73,13 +73,13 @@
           "HeaderTextColor": "white",
           "IdentityColumns": [ "ID" ],
           "RenderColumns": [
-            "CLASSIFICATION_ID",
             "YEAR",
             "ORG_CONCURRENT_ID",
             "POSITION_CONCURRENT_ID",
             "PROFILE_ID",
             "EMPLOYEE_ID",
             "EMPLOYEE_CONCURRENT_ID",
+            "CLASSIFICATION_ID",
             "POINT",
             "NOTE"
 

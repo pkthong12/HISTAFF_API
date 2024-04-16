@@ -51,5 +51,6 @@ namespace API.Entities
         public string? PAYMENT_CONTENT { get; set; }
         public string? PAYMENT_ATTACHMENT { get; set; }
         public string? LIST_REWARD_LEVEL_ID { get; set; }
+
     }
 }

@@ -79,7 +79,7 @@ namespace API.All.HRM.Profile.ProfileAPI.Portal.PortalRegisterOff
         {
             var sid = Request.Sid(_appSettings);
             if (sid == null) return Unauthorized();
-            if (model.TypeCode == "OFF" || model.TypeCode == "OVERTIME")
+            if(model.TypeCode == "OFF" || model.TypeCode == "OVERTIME")
             {
                 model.TimeStart = new DateTime(model.WorkingDay!.Value.Year, model.WorkingDay!.Value.Month, model.WorkingDay!.Value.Day, model.TimeStart!.Value.Hour, model.TimeStart!.Value.Minute, model.TimeStart!.Value.Second);
                 model.TimeEnd = new DateTime(model.WorkingDay!.Value.Year, model.WorkingDay!.Value.Month, model.WorkingDay!.Value.Day, model.TimeEnd!.Value.Hour, model.TimeEnd!.Value.Minute, model.TimeEnd!.Value.Second);

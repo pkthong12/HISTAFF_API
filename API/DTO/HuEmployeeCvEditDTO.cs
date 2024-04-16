@@ -22,6 +22,7 @@ namespace API.DTO
         public string? IdNo { get; set; }
 
         public DateTime? IdDate { get; set; }
+        public string? IdDateStr { get; set; }
 
         public long? IdPlace { get; set; }
 
@@ -176,6 +177,7 @@ namespace API.DTO
         public string? License { get; set; }
         public long? TaxCodeAddress { get; set; }
         public string? ModelChange { get; set; }
+        public string[]? ModelChanges { get; set; }
 
 
         public long? EducationLevelId {  get; set; }

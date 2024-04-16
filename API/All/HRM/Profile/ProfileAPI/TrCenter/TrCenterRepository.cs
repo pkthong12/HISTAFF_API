@@ -311,27 +311,6 @@ namespace API.Controllers.TrCenter
            var response = await _genericRepository.ToggleActiveIds(_uow, ids, valueToBind, sid);
             return response;
         }
-
-        public async Task<FormatedResponse> GetListTrainingCenter()
-        {
-            try
-            {
-                var joined = await (from p in _dbContext.TrCenters.AsNoTracking()
-                                    where p.IS_ACTIVE == true
-                                    orderby p.CREATED_DATE descending
-                                    select new
-                                    {
-                                        Id = p.ID,
-                                        Code = p.CODE_CENTER,
-                                        Name = "[" + p.CODE_CENTER + "] " + p.NAME_CENTER
-                                    }).ToListAsync();
-                return new FormatedResponse() { InnerBody = joined, StatusCode = EnumStatusCode.StatusCode200 };
-            }
-            catch (Exception ex)
-            {
-                return new FormatedResponse() { MessageCode = ex.Message, ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500 };
-            }
-        }
     }
 }
 

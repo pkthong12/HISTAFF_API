@@ -32,7 +32,6 @@ namespace API.Controllers.InsRegimesMng
 
         public async Task<GenericPhaseTwoListResponse<InsRegimesMngDTO>> SinglePhaseQueryList(GenericQueryListDTO<InsRegimesMngDTO> request)
         {
-            var x = _dbContext.InsRegimesMngs.AsNoTracking().ToList();
             var joined = from p in _dbContext.InsRegimesMngs.AsNoTracking()
                          from r in _dbContext.InsRegimess.AsNoTracking().Where(r => r.ID == p.REGIME_ID).DefaultIfEmpty()
                          from e in _dbContext.HuEmployees.AsNoTracking().Where(emp => emp.ID == p.EMPLOYEE_ID).DefaultIfEmpty()
@@ -41,8 +40,9 @@ namespace API.Controllers.InsRegimesMng
                          from j in _dbContext.HuJobs.AsNoTracking().Where(x => x.ID == t.JOB_ID).DefaultIfEmpty()
                          from o in _dbContext.HuOrganizations.AsNoTracking().Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
                          from cmp in _dbContext.HuCompanys.AsNoTracking().Where(cmp => cmp.ID == o.COMPANY_ID).DefaultIfEmpty()
+                         from c in _dbContext.SysUsers.AsNoTracking().Where(c => p.CREATED_BY == null ? false : c.ID == p.CREATED_BY).DefaultIfEmpty()
+                         from u in _dbContext.SysUsers.AsNoTracking().Where(u => p.UPDATED_BY == null ? false : u.ID == p.UPDATED_BY).DefaultIfEmpty()
                              // JOIN OTHER ENTITIES BASED ON THE BUSINESS
-                         orderby j.ORDERNUM
                          select new InsRegimesMngDTO
                          {
                              Id = p.ID,
@@ -78,6 +78,12 @@ namespace API.Controllers.InsRegimesMng
                              Status = p.STATUS,
                              IsActive = p.IS_ACTIVE,
                              Note = p.NOTE,
+                             CreatedLog = p.CREATED_LOG,
+                             CreatedByUsername = c.USERNAME,
+                             CreatedDate = p.CREATED_DATE,
+                             UpdatedBy = p.UPDATED_BY,
+                             UpdatedByUsername = u.USERNAME,
+                             UpdatedDate = p.UPDATED_DATE,
                          };
 
             var singlePhaseResult = await _genericReducer.SinglePhaseReduce(joined, request);

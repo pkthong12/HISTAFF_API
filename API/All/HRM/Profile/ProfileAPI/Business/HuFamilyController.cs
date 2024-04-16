@@ -27,22 +27,88 @@ namespace ProfileAPI.List
         private IGenericRepository<HU_FAMILY, HuFamilyDTO> _genericRepository;
         private readonly IFamilyRepository _FamilyRepository;
         private AppSettings _appSettings;
-        public HuFamilyController(CoreDbContext coreDbContext, IOptions<AppSettings> options, IWebHostEnvironment env, IFileService fileService, FullDbContext fullDbContext)
+        public HuFamilyController(CoreDbContext coreDbContext, IOptions<AppSettings> options, IWebHostEnvironment env, IFileService fileService)
         {
             _uow = new GenericUnitOfWork(coreDbContext);
             genericReducer = new();
             _genericRepository = _uow.GenericRepository<HU_FAMILY, HuFamilyDTO>();
             _appSettings = options.Value;
-            _FamilyRepository = new FamilyRepository(coreDbContext, _uow, env, options, fileService, fullDbContext);
+            _FamilyRepository = new FamilyRepository(coreDbContext, _uow, env, options, fileService);
         }
-
         [HttpPost]
         public async Task<IActionResult> QueryList(GenericQueryListDTO<HuFamilyDTO> request)
         {
+
             try
             {
-                var response = await _FamilyRepository.SinglePhaseQueryList(request);
-
+                var entity = _uow.Context.Set<HU_FAMILY>().AsNoTracking().AsQueryable();
+                var employees = _uow.Context.Set<HU_EMPLOYEE>().AsNoTracking().AsQueryable();
+                var positions = _uow.Context.Set<HU_POSITION>().AsNoTracking().AsQueryable();
+                var organizations = _uow.Context.Set<HU_ORGANIZATION>().AsNoTracking().AsQueryable();
+                var otherLists = _uow.Context.Set<SYS_OTHER_LIST>().AsNoTracking().AsQueryable();
+                var provinces = _uow.Context.Set<HU_PROVINCE>().AsNoTracking().AsQueryable();
+                var nations = _uow.Context.Set<HU_NATION>().AsNoTracking().AsQueryable();
+                var districts = _uow.Context.Set<HU_DISTRICT>().AsNoTracking().AsQueryable();
+                var wards = _uow.Context.Set<HU_WARD>().AsNoTracking().AsQueryable();
+                var jobs = _uow.Context.Set<HU_JOB>().AsQueryable();
+                var joined = from p in entity
+                             from e in employees.Where(x => x.ID == p.EMPLOYEE_ID).DefaultIfEmpty()
+                             from t in positions.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
+                             from o in organizations.Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
+                             from j in jobs.Where(x => x.ID == t.JOB_ID).DefaultIfEmpty()
+                             from r in otherLists.Where(x => x.ID == p.RELATIONSHIP_ID).DefaultIfEmpty()
+                             from g in otherLists.Where(x => x.ID == p.GENDER).DefaultIfEmpty()
+                             from n in nations.Where(x => x.ID == p.NATIONALITY).DefaultIfEmpty()
+                             from pr in provinces.Where(x => x.ID == p.BIRTH_CER_PROVINCE).DefaultIfEmpty()
+                             from d in districts.Where(x => x.ID == p.BIRTH_CER_DISTRICT).DefaultIfEmpty()
+                             from w in wards.Where(x => x.ID == p.BIRTH_CER_WARD).DefaultIfEmpty()
+                             from s in otherLists.Where(x => x.ID == p.STATUS_ID).DefaultIfEmpty()
+                             orderby p.CREATED_DATE descending
+                             select new HuFamilyDTO
+                             {
+                                 Id = p.ID,
+                                 EmployeeId = p.EMPLOYEE_ID,
+                                 EmployeeName = e.Profile.FULL_NAME,
+                                 EmployeeCode = e.CODE,
+                                 PositionName = t.NAME,
+                                 OrgId = e.ORG_ID,
+                                 OrgName = o.NAME,
+                                 RelationshipId = p.RELATIONSHIP_ID,
+                                 RelationshipName = r.NAME,
+                                 Fullname = p.FULLNAME,
+                                 Gender = p.GENDER,
+                                 GenderName = g.NAME,
+                                 BirthDate = p.BIRTH_DATE,
+                                 PitCode = p.PIT_CODE,
+                                 SameCompany = p.SAME_COMPANY,
+                                 IsDead = p.IS_DEAD,
+                                 IsDeduct = p.IS_DEDUCT,
+                                 DeductFrom = p.DEDUCT_FROM,
+                                 DeductTo = p.DEDUCT_TO,
+                                 RegistDeductDate = p.REGIST_DEDUCT_DATE,
+                                 IsHousehold = p.IS_HOUSEHOLD,
+                                 IdNo = p.ID_NO,
+                                 Career = p.CAREER,
+                                 Nationality = p.NATIONALITY,
+                                 NationalityName = n.NAME,
+                                 BirthCerPlace = p.BIRTH_CER_PLACE,
+                                 BirthCerProvince = p.BIRTH_CER_PROVINCE,
+                                 BirthCerProvinceName = pr.NAME,
+                                 BirthCerDistrict = p.BIRTH_CER_DISTRICT,
+                                 BirthCerDistrictName = d.NAME,
+                                 BirthCerWard = p.BIRTH_CER_WARD,
+                                 BirthCerWardName = w.NAME,
+                                 UploadFile = p.UPLOAD_FILE,
+                                 StatusId = e.WORK_STATUS_ID,
+                                 StatusName = s.NAME,
+                                 CreatedBy = p.CREATED_BY,
+                                 UpdatedBy = p.UPDATED_BY,
+                                 CreatedDate = p.CREATED_DATE,
+                                 UpdatedDate = p.UPDATED_DATE,
+                                 Note = p.NOTE,
+                                 JobOrderNum = (int)(j.ORDERNUM ?? 99)
+                             };
+                var response = await genericReducer.SinglePhaseReduce(joined, request);
                 if (response.ErrorType != EnumErrorType.NONE)
                 {
                     return Ok(new FormatedResponse()
@@ -65,103 +131,6 @@ namespace ProfileAPI.List
                 return Ok(new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message });
             }
         }
-        //[HttpPost]
-        //public async Task<GenericPhaseTwoListResponse<HuFamilyDTO>> SinglePhaseQueryList(GenericQueryListDTO<HuFamilyDTO> request)
-        //{
-
-        //    //try
-        //    //{
-        //        var entity = _uow.Context.Set<HU_FAMILY>().AsNoTracking().AsQueryable();
-        //        var employees = _uow.Context.Set<HU_EMPLOYEE>().AsNoTracking().AsQueryable();
-        //        var positions = _uow.Context.Set<HU_POSITION>().AsNoTracking().AsQueryable();
-        //        var organizations = _uow.Context.Set<HU_ORGANIZATION>().AsNoTracking().AsQueryable();
-        //        var otherLists = _uow.Context.Set<SYS_OTHER_LIST>().AsNoTracking().AsQueryable();
-        //        var provinces = _uow.Context.Set<HU_PROVINCE>().AsNoTracking().AsQueryable();
-        //        var nations = _uow.Context.Set<HU_NATION>().AsNoTracking().AsQueryable();
-        //        var districts = _uow.Context.Set<HU_DISTRICT>().AsNoTracking().AsQueryable();
-        //        var wards = _uow.Context.Set<HU_WARD>().AsNoTracking().AsQueryable();
-        //        var jobs = _uow.Context.Set<HU_JOB>().AsQueryable();
-        //        var joined = from p in entity
-        //                     from e in employees.Where(x => x.ID == p.EMPLOYEE_ID).DefaultIfEmpty()
-        //                     from t in positions.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
-        //                     from o in organizations.Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
-        //                     from j in jobs.Where(x => x.ID == t.JOB_ID).DefaultIfEmpty()
-        //                     from r in otherLists.Where(x => x.ID == p.RELATIONSHIP_ID).DefaultIfEmpty()
-        //                     from g in otherLists.Where(x => x.ID == p.GENDER).DefaultIfEmpty()
-        //                     from n in nations.Where(x => x.ID == p.NATIONALITY).DefaultIfEmpty()
-        //                     from pr in provinces.Where(x => x.ID == p.BIRTH_CER_PROVINCE).DefaultIfEmpty()
-        //                     from d in districts.Where(x => x.ID == p.BIRTH_CER_DISTRICT).DefaultIfEmpty()
-        //                     from w in wards.Where(x => x.ID == p.BIRTH_CER_WARD).DefaultIfEmpty()
-        //                     from s in otherLists.Where(x => x.ID == p.STATUS_ID).DefaultIfEmpty()
-        //                     orderby p.BIRTH_DATE ascending
-        //                     select new HuFamilyDTO
-        //                     {
-        //                         Id = p.ID,
-        //                         EmployeeName = e.Profile!.FULL_NAME,
-        //                         EmployeeCode = e.CODE,
-        //                         PositionName = t.NAME,
-        //                         OrgId = e.ORG_ID,
-        //                         OrgName = o.NAME,
-        //                         RelationshipId = p.RELATIONSHIP_ID,
-        //                         RelationshipName = r.NAME,
-        //                         Fullname = p.FULLNAME,
-        //                         Gender = p.GENDER,
-        //                         GenderName = g.NAME,
-        //                         BirthDate = p.BIRTH_DATE,
-        //                         PitCode = p.PIT_CODE,
-        //                         SameCompany = p.SAME_COMPANY,
-        //                         IsDead = p.IS_DEAD,
-        //                         IsDeduct = p.IS_DEDUCT,
-        //                         DeductFrom = p.DEDUCT_FROM,
-        //                         DeductTo = p.DEDUCT_TO,
-        //                         RegistDeductDate = p.REGIST_DEDUCT_DATE,
-        //                         IsHousehold = p.IS_HOUSEHOLD,
-        //                         IdNo = p.ID_NO,
-        //                         Career = p.CAREER,
-        //                         Nationality = p.NATIONALITY,
-        //                         NationalityName = n.NAME,
-        //                         BirthCerPlace = p.BIRTH_CER_PLACE,
-        //                         BirthCerProvince = p.BIRTH_CER_PROVINCE,
-        //                         BirthCerProvinceName = pr.NAME,
-        //                         BirthCerDistrict = p.BIRTH_CER_DISTRICT,
-        //                         BirthCerDistrictName = d.NAME,
-        //                         BirthCerWard = p.BIRTH_CER_WARD,
-        //                         BirthCerWardName = w.NAME,
-        //                         UploadFile = p.UPLOAD_FILE,
-        //                         StatusId = p.STATUS_ID,
-        //                         StatusName = s.NAME,
-        //                         CreatedBy = p.CREATED_BY,
-        //                         UpdatedBy = p.UPDATED_BY,
-        //                         CreatedDate = p.CREATED_DATE,
-        //                         UpdatedDate = p.UPDATED_DATE,
-        //                         Note = p.NOTE,
-        //                         JobOrderNum = (int)(j.ORDERNUM ?? 99)
-        //                     };
-        //    var singlePhaseResult = await genericReducer.SinglePhaseReduce(joined, request);
-        //    return singlePhaseResult;
-        //    //    var response = await genericReducer.SinglePhaseReduce(joined, request);
-        //    //    if (response.ErrorType != EnumErrorType.NONE)
-        //    //    {
-        //    //        return Ok(new FormatedResponse()
-        //    //        {
-        //    //            ErrorType = response.ErrorType,
-        //    //            MessageCode = response.MessageCode ?? CommonMessageCode.NOT_ALL_CASES_CATCHED,
-        //    //            StatusCode = EnumStatusCode.StatusCode400,
-        //    //        });
-        //    //    }
-        //    //    else
-        //    //    {
-        //    //        return Ok(new FormatedResponse()
-        //    //        {
-        //    //            InnerBody = response
-        //    //        });
-        //    //    }
-        //    //}
-        //    //catch (Exception ex)
-        //    //{
-        //    //    return Ok(new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message });
-        //    //}
-        //}
         [HttpPost]
         public async Task<IActionResult> DeleteIds(IdsRequest model)
         {
@@ -613,27 +582,6 @@ namespace ProfileAPI.List
                                         Id = p.ID,
                                         Name = p.NAME
                                     }).FirstOrDefaultAsync();
-                var response = new FormatedResponse() { InnerBody = joined };
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                return Ok(new FormatedResponse() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message });
-            }
-        }
-        [HttpGet]
-        public async Task<IActionResult> GetListFamilyMember(long employeeId)
-        {
-            try
-            {
-                var entity = _uow.Context.Set<HU_FAMILY>().AsNoTracking().AsQueryable();
-                var joined = await (from p in entity
-                                    where p.EMPLOYEE_ID == employeeId && p.IS_DEAD == false
-                                    select new
-                                    {
-                                        Id = p.ID,
-                                        Name = p.FULLNAME
-                                    }).ToListAsync();
                 var response = new FormatedResponse() { InnerBody = joined };
                 return Ok(response);
             }

@@ -24,7 +24,6 @@ namespace API.DTO.PortalDTO
         public int? TimeLate { get; set; }
         public int? TimeEarly { get; set; }
         public bool? IsEachDay { get; set; }
-        public long? ExplainReason { get; set; }
 
     }
 
@@ -39,7 +38,6 @@ namespace API.DTO.PortalDTO
         public long? EmployeeId { get; set; }
         public string? TypeCode { get; set; }
         public string? IdReggroup { get; set; }
-        public long? ExplainReason { get; set; }
     }
 
     public class PortalDateTimeSearch

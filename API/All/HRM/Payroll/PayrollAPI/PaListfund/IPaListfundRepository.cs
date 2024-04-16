@@ -10,7 +10,6 @@ namespace API.Controllers.PaListfund
 
         Task<FormatedResponse> GetCompanyTypes();
         Task<FormatedResponse> CreateCodeNew();
-        Task<FormatedResponse> GetListFundByPeriodId(long periodId);
         Task<FormatedResponse> GetListFund();
     }
 }

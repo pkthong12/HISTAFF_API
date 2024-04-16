@@ -11,6 +11,8 @@ using Common.Interfaces;
 using Common.DataAccess;
 using System.Data;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Logical;
+using Azure.Core;
+using Microsoft.Extensions.Options;
 
 namespace API.Controllers.SeReminder
 {
@@ -209,7 +211,43 @@ namespace API.Controllers.SeReminder
                 //         P_CURENT_USER_ID = _dbContext.CurrentUserId,
                 //    });
                 List<long?> ids = orgIds.Select(c => (long?)((dynamic)c).ID).ToList();
-                
+
+                //LAY QUYEN PHE DUYET CUA USER
+                var rules = await QueryData.ExecuteList(Procedures.PKG_COMMON_LIST_RULE,
+                    new
+                    {
+                        P_USER_ID = _dbContext.CurrentUserId
+                    }, false);
+
+                List<long?> idr = rules.Select(r => (long?)((dynamic)r).FUNCTION_ID).ToList();
+                var visited_aspe = false;
+                var visited_bccc = false;
+                var visited_qtcc = false;
+                var visited_fi = false;
+                var visited_edu = false;
+                foreach (var sys in idr)
+                {
+                    var code = _dbContext.SysFunctions.AsNoTracking().Where(x => x.ID == sys).Select(p => p.CODE).FirstOrDefault();
+                    if (code == "approve-staff-profile-edit")
+                    {
+                        visited_aspe = true;
+                    }
+                    else if (code == "approve/approve-certificate-edit")
+                    {
+                        visited_bccc = true;
+                    }
+                    else if (code == "hu approve-working-before")
+                    {
+                        visited_qtcc = true;
+                    }else if (code == "approve/family-info")
+                    {
+                        visited_fi = true;
+                    }else if (code == "approve/approve-education-edit")
+                    {
+                        visited_edu = true;
+                    }
+                }
+
                 foreach (var item in listRemind)
                 {
                     switch (item.Code)
@@ -224,7 +262,7 @@ namespace API.Controllers.SeReminder
                                                 where ((DateTime)p.EXPIRE_DATE).DayOfYear - _dayofyear <= item.Day && ((DateTime)p.EXPIRE_DATE).DayOfYear - _dayofyear >= 0
                                                    && e.WORK_STATUS_ID != OtherConfig.EMP_STATUS_TERMINATE
                                                    && o.CODE == "HDTV"
-                                                  && ids.Contains(e.ORG_ID)
+                                                //&& ids.Contains(e.ORG_ID)
                                                 select new ReminderParam
                                                 {
                                                     Id = (long)p.ID,
@@ -250,7 +288,7 @@ namespace API.Controllers.SeReminder
                                                     && item.Day != 0
                                                     && e.WORK_STATUS_ID != OtherConfig.EMP_STATUS_TERMINATE
                                                     && o.CODE != "HDTV" && o.CODE != "HDHV"
-                                                    && ids.Contains(e.ORG_ID)
+                                                //&& ids.Contains(e.ORG_ID)
                                                 select new ReminderParam
                                                 {
                                                     Id = (long)p.ID,
@@ -269,7 +307,7 @@ namespace API.Controllers.SeReminder
                                 var _c = await (from p in _dbContext.HuEmployees.Where(c => c.Profile!.BIRTH_DATE != null)
                                                 where ((DateTime)p.Profile.BIRTH_DATE).DayOfYear - _dayofyear <= item.Day && ((DateTime)p.Profile!.BIRTH_DATE).DayOfYear - _dayofyear >= 0
                                                  && p.WORK_STATUS_ID != OtherConfig.EMP_STATUS_TERMINATE
-                                                && ids.Contains(p.ORG_ID)
+                                                //&& ids.Contains(p.ORG_ID)
                                                 select new ReminderParam
                                                 {
                                                     Id = (long)p.ID,
@@ -322,7 +360,7 @@ namespace API.Controllers.SeReminder
                                                 join emp in _dbContext.HuEmployees on p.EMPLOYEE_ID equals emp.ID into tmp1
                                                 from e2 in tmp1
                                                 where ((DateTime)p.EFFECT_DATE).DayOfYear - _dayofyear <= item.Day && ((DateTime)p.EFFECT_DATE).DayOfYear - _dayofyear >= 0
-                                                && ids.Contains(e2.ORG_ID)
+                                                //&& ids.Contains(e2.ORG_ID)
                                                 select new ReminderParam
                                                 {
                                                     Id = (long)p.ID,
@@ -345,7 +383,7 @@ namespace API.Controllers.SeReminder
                                                 && ((DateTime)p.EFFECT_DATE) >= _dayNow
                                                 && item.Day != 0
                                                 && e.WORK_STATUS_ID != OtherConfig.EMP_STATUS_TERMINATE
-                                                && ids.Contains(e.ORG_ID)
+                                            //&& ids.Contains(e.ORG_ID)
                                             //where ((DateTime)p.EFFECT_DATE!).DayOfYear <= _dayofyear
                                             //    && ((DateTime)p.EFFECT_DATE).DayOfYear >= _dayofyear
                                             //    && item.Day != 0
@@ -360,7 +398,7 @@ namespace API.Controllers.SeReminder
                             item.Value = new List<ReminderParam>();
                             item.Value.AddRange(_f);
                             item.Count = _f.Count();
-                            break; 
+                            break;
                         case SystemConfig.WARN07: //Nhân viên nghỉ thai sản sắp đi làm lại
                             try
                             {
@@ -369,7 +407,7 @@ namespace API.Controllers.SeReminder
                                                 join e in _dbContext.HuEmployees on p.EMPLOYEE_ID equals e.ID
                                                 where ((DateTime)p.DATE_END!).DayOfYear - _dayofyear <= item.Day && ((DateTime)p.DATE_END).DayOfYear - _dayofyear >= 0
                                                    && e.WORK_STATUS_ID != OtherConfig.EMP_STATUS_TERMINATE
-                                                  && ids.Contains(e.ORG_ID)
+                                                //&& ids.Contains(e.ORG_ID)
                                                 select new ReminderParam
                                                 {
                                                     Id = (long)p.ID,
@@ -393,7 +431,7 @@ namespace API.Controllers.SeReminder
                                                 join ost in _dbContext.SysOtherLists on st.JOB_FAMILY_ID equals ost.ID
                                                 where (((DateTime)p.EFFECT_DATE!).Month + ((DateTime)p.EFFECT_DATE!).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) <= item.Day
                                                 && (((DateTime)p.EFFECT_DATE!).Month + ((DateTime)p.EFFECT_DATE!).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) >= 0
-                                                && ids.Contains(e2.ORG_ID)
+                                                //&& ids.Contains(e2.ORG_ID)
                                                 && (ost.CODE == "NVTH" || ost.CODE == "LDTT" || ost.CODE == "LDCM")
                                                 select new ReminderParam
                                                 {
@@ -421,8 +459,8 @@ namespace API.Controllers.SeReminder
                                                        ((DateTime)p.EFFECT_TO) <= _dayNow.AddMonths(item.Day.Value)
                                                         && ((DateTime)p.EFFECT_TO) >= _dayNow
                                                         && item.Day != 0
-                                                       && e.WORK_STATUS_ID != OtherConfig.EMP_STATUS_TERMINATE
-                                                      && ids.Contains(e.ORG_ID)
+                                                        && e.WORK_STATUS_ID != OtherConfig.EMP_STATUS_TERMINATE
+                                                    //&& ids.Contains(e.ORG_ID)
                                                     select new HuCertificateDTO
                                                     {
                                                         Id = p.ID,
@@ -458,7 +496,7 @@ namespace API.Controllers.SeReminder
                                                 join e in _dbContext.HuEmployees on p.EMPLOYEE_ID equals e.ID
                                                 where ((DateTime)p.EXPIRATION_DATE).DayOfYear - _dayofyear <= item.Day && ((DateTime)p.EXPIRATION_DATE).DayOfYear - _dayofyear >= 0
                                                     && e.WORK_STATUS_ID != OtherConfig.EMP_STATUS_TERMINATE
-                                                    && ids.Contains(e.ORG_ID)
+                                                //&& ids.Contains(e.ORG_ID)
                                                 select new ReminderParam
                                                 {
                                                     Id = (long)e.ID,
@@ -505,9 +543,9 @@ namespace API.Controllers.SeReminder
                                                 join po in _dbContext.HuPositions on e2.POSITION_ID equals po.ID
                                                 join st in _dbContext.HuJobs on po.JOB_ID equals st.ID
                                                 join ost in _dbContext.SysOtherLists on st.JOB_FAMILY_ID equals ost.ID
-                                                where (((DateTime)p.EFFECT_DATE).Month + ((DateTime)p.EFFECT_DATE).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) <= item.Day 
+                                                where (((DateTime)p.EFFECT_DATE).Month + ((DateTime)p.EFFECT_DATE).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) <= item.Day
                                                 && (((DateTime)p.EFFECT_DATE).Month + ((DateTime)p.EFFECT_DATE).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) >= 0
-                                                && ids.Contains(e2.ORG_ID)
+                                                //&& ids.Contains(e2.ORG_ID)
                                                 && (ost.CODE == "LD" || ost.CODE == "NQL")
                                                 select new ReminderParam
                                                 {
@@ -538,7 +576,7 @@ namespace API.Controllers.SeReminder
                                                    && e.WORK_STATUS_ID != OtherConfig.EMP_STATUS_TERMINATE
                                                    && t.CODE == "BN" //quyet dinh bo nhiem
                                                    && (ost.CODE == "LD" || ost.CODE == "NQL")
-                                                  && ids.Contains(e.ORG_ID)
+                                                //&& ids.Contains(e.ORG_ID)
                                                 select new ReminderParam
                                                 {
                                                     Id = (long)e.ID,
@@ -561,7 +599,7 @@ namespace API.Controllers.SeReminder
                                                 where ((DateTime)p.EXPIRE_DATE).DayOfYear - _dayofyear <= item.Day && ((DateTime)p.EXPIRE_DATE).DayOfYear - _dayofyear >= 0
                                                    && e.WORK_STATUS_ID != OtherConfig.EMP_STATUS_TERMINATE
                                                    && t.CODE == "BN" //quyet dinh bo nhiem
-                                                  && ids.Contains(e.ORG_ID)
+                                                                     //&& ids.Contains(e.ORG_ID)
                                                 select new ReminderParam
                                                 {
                                                     Id = (long)e.ID,
@@ -607,7 +645,7 @@ namespace API.Controllers.SeReminder
                                 var _o = await (from w in _dbContext.HuVWageMax.Where(c => c.EXPIRE_UPSAL_DATE != null && c.IS_WAGE != null)
                                                 from e in _dbContext.HuEmployees.Where(c => c.WORK_STATUS_ID != OtherConfig.EMP_STATUS_TERMINATE && c.ID == w.EMPLOYEE_ID)
                                                 where ((DateTime)w.EXPIRE_UPSAL_DATE).DayOfYear - _dayofyear <= item.Day && ((DateTime)w.EXPIRE_UPSAL_DATE).DayOfYear - _dayofyear >= 0
-                                                   && ids.Contains(e.ORG_ID)
+                                                //&& ids.Contains(e.ORG_ID)
                                                 select new ReminderParam
                                                 {
                                                     Id = (long)w.ID,
@@ -658,9 +696,13 @@ namespace API.Controllers.SeReminder
                                 break;
                             }
                             catch { break; }
-                        case SystemConfig.WARN17: //Thay đổi sơ yếu lí lịch trên con Portal
+
+
+                        case SystemConfig.WARN17: //Thay đổi sơ yếu lí lịch trên con Portal - approve-staff-profile-edit
                             var q = await (from p in _dbContext.HuEmployeeCvEdits.Where(x => x.IS_SEND_PORTAL == true && x.IS_APPROVED_PORTAL == false)
                                            join e in _dbContext.HuEmployees on p.EMPLOYEE_ID equals e.ID
+                                           //from f in _dbContext.SysUserFunctionActions.Where(u => u.USER_ID == _dbContext.CurrentUserId)
+                                           where visited_aspe == true //idr.Contains(f.FUNCTION_ID)
                                            select new ReminderParam
                                            {
                                                Id = (int)e.ID,
@@ -671,9 +713,11 @@ namespace API.Controllers.SeReminder
                             item.Value.AddRange(q);
                             item.Count = q.Count();
                             break;
-                        case SystemConfig.WARN18: //Thay đổi sơ yếu lí lịch trên con Portal
+
+                        case SystemConfig.WARN18: //Thay đổi sơ yếu lí lịch nguoi than trên con Portal
                             var a = await (from p in _dbContext.HuFamilyEdits.Where(x => x.IS_SEND_PORTAL == true && x.IS_APPROVE_PORTAL == false)
                                            join e in _dbContext.HuEmployees on p.EMPLOYEE_ID equals e.ID
+                                           where visited_aspe == true //ids.Contains(e.ORG_ID)
                                            select new ReminderParam
                                            {
                                                Id = (int)e.ID,
@@ -684,13 +728,13 @@ namespace API.Controllers.SeReminder
                             item.Value.AddRange(a);
                             item.Count = a.Count();
                             break;
-                        case SystemConfig.WARN19: //Thay đổi sơ yếu lí lịch trên con Portal
-                            // warn19 là thông báo trình độ học vấn
+                        case SystemConfig.WARN19: //Thay đổi trinh do hoc van trên con Portal
                             var b = await (from p in _dbContext.HuEmployeeCvEdits
                                            .Where(x => x.IS_SEND_PORTAL == true
                                                     && x.IS_APPROVED_PORTAL == false
                                                     && x.IS_SEND_PORTAL_EDUCATION == true)
                                            join e in _dbContext.HuEmployees on p.EMPLOYEE_ID equals e.ID
+                                           where visited_edu == true //ids.Contains(e.ORG_ID)
                                            select new ReminderParam
                                            {
                                                Id = (int)e.ID,
@@ -704,19 +748,18 @@ namespace API.Controllers.SeReminder
                         case SystemConfig.WARN20:
                             // Thay đổi bằng cấp - chứng chỉ trên con Portal
                             // warn20 là thông báo bằng cấp - chứng chỉ
-                            var queryHuCertificateEdits =
-                                            await (from p in _dbContext.HuCertificateEdits
-                                            .Where(x => x.IS_SEND_PORTAL == true && x.IS_APPROVE_PORTAL == null)
-                                                   join e in _dbContext.HuEmployees on p.EMPLOYEE_ID equals e.ID
-                                                   select new ReminderParam
-                                                   {
-                                                       Id = (int)e.ID,
-                                                       Name = e.Profile.FULL_NAME,
-                                                       Code = e.CODE
-                                                   }).ToArrayAsync();
-                            item.Value = new List<ReminderParam>();
-                            item.Value.AddRange(queryHuCertificateEdits);
-                            item.Count = queryHuCertificateEdits.Count();
+                            var queryHuCertificateEdits = await (from p in _dbContext.HuCertificateEdits.Where(x => x.IS_SEND_PORTAL == true && x.IS_APPROVE_PORTAL == null)
+                                                                 join e in _dbContext.HuEmployees on p.EMPLOYEE_ID equals e.ID
+                                                                 where visited_bccc == true
+                                                                 select new ReminderParam
+                                                                 {
+                                                                     Id = (int)e.ID,
+                                                                     Name = e.Profile.FULL_NAME,
+                                                                     Code = e.CODE
+                                                                 }).ToArrayAsync();
+                                                    item.Value = new List<ReminderParam>();
+                                                    item.Value.AddRange(queryHuCertificateEdits);
+                                                    item.Count = queryHuCertificateEdits.Count();
                             break;
                         case SystemConfig.WARN21: //NV sắp hết hạn Quyết định Điều động/biệt phái
                             try
@@ -739,7 +782,7 @@ namespace API.Controllers.SeReminder
                                 break;
                             }
                             catch { break; }
-                            
+
                         case SystemConfig.WARN22:// Điều chỉnh Hồ sơ nhân viên
                             try
                             {
@@ -750,7 +793,7 @@ namespace API.Controllers.SeReminder
                                                 join e in _dbContext.HuEmployees on p.EMPLOYEE_ID equals e.ID
                                                 where (((DateTime)p.CREATED_DATE!).Month + ((DateTime)p.CREATED_DATE!).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) <= item.Day
                                                 && (((DateTime)p.CREATED_DATE!).Month + ((DateTime)p.CREATED_DATE!).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) >= 0
-                                                && ids.Contains(e.ORG_ID)
+                                                && visited_aspe == true//&& ids.Contains(e.ORG_ID)
                                                 select new ReminderParam
                                                 {
                                                     Id = (long)p.ID,
@@ -764,20 +807,20 @@ namespace API.Controllers.SeReminder
                             }
                             catch { break; }
 
-                        case SystemConfig.WARN23:// Điều chỉnh Thông tin người thân
+                        case SystemConfig.WARN23:// Điều chỉnh Thông tin người thân - approve-staff-profile-edit
                             try
                             {
                                 var _fe = await (from p in _dbContext.HuFamilyEdits.Where(c => c.CREATED_DATE != null && c.STATUS_ID == OtherConfig.STATUS_WAITING)
-                                                join e in _dbContext.HuEmployees on p.EMPLOYEE_ID equals e.ID
-                                                where (((DateTime)p.CREATED_DATE!).Month + ((DateTime)p.CREATED_DATE!).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) <= item.Day
+                                                 join e in _dbContext.HuEmployees on p.EMPLOYEE_ID equals e.ID
+                                                 where (((DateTime)p.CREATED_DATE!).Month + ((DateTime)p.CREATED_DATE!).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) <= item.Day
                                                 && (((DateTime)p.CREATED_DATE!).Month + ((DateTime)p.CREATED_DATE!).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) >= 0
-                                                && ids.Contains(e.ORG_ID)
-                                                select new ReminderParam
-                                                {
-                                                    Id = (long)p.ID,
-                                                    Name = e.Profile!.FULL_NAME,
-                                                    Code = e.CODE
-                                                }).ToArrayAsync();
+                                                && visited_fi == true //&& idr.Contains(e.ORG_ID)
+                                                 select new ReminderParam
+                                                 {
+                                                     Id = (long)p.ID,
+                                                     Name = e.Profile!.FULL_NAME,
+                                                     Code = e.CODE
+                                                 }).ToArrayAsync();
                                 item.Value = new List<ReminderParam>();
                                 item.Value.AddRange(_fe);
                                 item.Count = _fe.Count();
@@ -788,11 +831,11 @@ namespace API.Controllers.SeReminder
                         case SystemConfig.WARN24:// Điều chỉnh Bằng cấp - Chứng chỉ
                             try
                             {
-                                var _ce = await (from p in _dbContext.HuCertificateEdits.Where(c => c.CREATED_DATE != null && c.STATUS_ID == OtherConfig.STATUS_WAITING)
+                                var _ce = await (from p in _dbContext.HuCertificateEdits.Where(c => c.CREATED_DATE != null && c.STATUS_ID == OtherConfig.STATUS_WAITING && c.IS_SEND_PORTAL == true)
                                                  join e in _dbContext.HuEmployees on p.EMPLOYEE_ID equals e.ID
                                                  where (((DateTime)p.CREATED_DATE!).Month + ((DateTime)p.CREATED_DATE!).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) <= item.Day
                                                  && (((DateTime)p.CREATED_DATE!).Month + ((DateTime)p.CREATED_DATE!).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) >= 0
-                                                 && ids.Contains(e.ORG_ID)
+                                                 && visited_bccc == true//&& ids.Contains(e.ORG_ID)
                                                  select new ReminderParam
                                                  {
                                                      Id = (long)p.ID,
@@ -810,16 +853,16 @@ namespace API.Controllers.SeReminder
                             try
                             {
                                 var _w = await (from p in _dbContext.PortalRequestChanges.Where(c => c.CREATED_DATE != null && c.IS_APPROVE == OtherConfig.STATUS_WAITING && c.SYS_OTHER_CODE == OtherListConst.WORKING)
-                                                 join e in _dbContext.HuEmployees on p.EMPLOYEE_ID equals e.ID
-                                                 where (((DateTime)p.CREATED_DATE!).Month + ((DateTime)p.CREATED_DATE!).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) <= item.Day
-                                                 && (((DateTime)p.CREATED_DATE!).Month + ((DateTime)p.CREATED_DATE!).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) >= 0
-                                                 && ids.Contains(e.ORG_ID)
-                                                 select new ReminderParam
-                                                 {
-                                                     Id = (long)p.ID,
-                                                     Name = e.Profile!.FULL_NAME,
-                                                     Code = e.CODE
-                                                 }).ToArrayAsync();
+                                                join e in _dbContext.HuEmployees on p.EMPLOYEE_ID equals e.ID
+                                                where (((DateTime)p.CREATED_DATE!).Month + ((DateTime)p.CREATED_DATE!).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) <= item.Day
+                                                && (((DateTime)p.CREATED_DATE!).Month + ((DateTime)p.CREATED_DATE!).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) >= 0
+                                                && visited_qtcc == true//&& ids.Contains(e.ORG_ID)
+                                                select new ReminderParam
+                                                {
+                                                    Id = (long)p.ID,
+                                                    Name = e.Profile!.FULL_NAME,
+                                                    Code = e.CODE
+                                                }).ToArrayAsync();
                                 item.Value = new List<ReminderParam>();
                                 item.Value.AddRange(_w);
                                 item.Count = _w.Count();
@@ -834,7 +877,7 @@ namespace API.Controllers.SeReminder
                                                  join e in _dbContext.HuEmployees on p.EMPLOYEE_ID equals e.ID
                                                  where (((DateTime)p.CREATED_DATE!).Month + ((DateTime)p.CREATED_DATE!).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) <= item.Day
                                                  && (((DateTime)p.CREATED_DATE!).Month + ((DateTime)p.CREATED_DATE!).Year * 12) - (_dayNow.Month + _dayNow.Year * 12) >= 0
-                                                 && ids.Contains(e.ORG_ID)
+                                                 && visited_qtcc == true//&& ids.Contains(e.ORG_ID)
                                                  select new ReminderParam
                                                  {
                                                      Id = (long)p.ID,
@@ -851,17 +894,17 @@ namespace API.Controllers.SeReminder
                             try
                             {
                                 var _al = await (from p in _dbContext.HuAllowanceEmps.Where(c => c.DATE_START != null && c.DATE_END != null)
-                                                join e in _dbContext.HuEmployees on p.EMPLOYEE_ID equals e.ID
-                                                where ((DateTime)p.DATE_END!).DayOfYear - _dayNow.DayOfYear <= item.Day && ((DateTime)p.DATE_END).DayOfYear - _dayNow.DayOfYear >= 0
-                                                   && e.WORK_STATUS_ID != OtherConfig.EMP_STATUS_TERMINATE
-                                                  && ids.Contains(e.ORG_ID)
-                                                select new ReminderParam
-                                                {
-                                                    Id = (long)p.ID,
-                                                    Name = e.Profile!.FULL_NAME,
-                                                    Code = e.CODE,
-                                                    Avatar = e.Profile!.AVATAR
-                                                }).ToArrayAsync();
+                                                 join e in _dbContext.HuEmployees on p.EMPLOYEE_ID equals e.ID
+                                                 where ((DateTime)p.DATE_END!).DayOfYear - _dayNow.DayOfYear <= item.Day && ((DateTime)p.DATE_END).DayOfYear - _dayNow.DayOfYear >= 0
+                                                    && e.WORK_STATUS_ID != OtherConfig.EMP_STATUS_TERMINATE
+                                                 //&& ids.Contains(e.ORG_ID)
+                                                 select new ReminderParam
+                                                 {
+                                                     Id = (long)p.ID,
+                                                     Name = e.Profile!.FULL_NAME,
+                                                     Code = e.CODE,
+                                                     Avatar = e.Profile!.AVATAR
+                                                 }).ToArrayAsync();
                                 item.Value = new List<ReminderParam>();
                                 item.Value.AddRange(_al);
                                 item.Count = _al.Count();

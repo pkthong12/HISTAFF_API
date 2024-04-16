@@ -1,17 +1,26 @@
 ﻿using API.All.DbContexts;
+using Common.DataAccess;
+using Common.Extensions;
+using Common.Interfaces;
 using RegisterServicesWithReflection.Services.Base;
+using System.Net;
+using System.Net.Mail;
+using System.Text;
 
 namespace API.All.Services
 {
     [ScopedRegistration]
-    public class SchedureService : ISchedureService
+    public class SchedureService: ISchedureService
     {
 
         private FullDbContext _fullDbContext;
+        protected AbsQueryDataTemplate QueryData;
+
 
         public SchedureService(FullDbContext fullDbContext)
         {
             _fullDbContext = fullDbContext;
+            QueryData = new SqlQueryDataTemplate(fullDbContext);
         }
 
         public async Task<object> AddTestingRecordAt5AmEveryMorning()
@@ -69,42 +78,114 @@ namespace API.All.Services
             }
         }
 
-        public void ChangeIsActivePosition()
+        public string CalculateTimesheetDailyByDate()
         {
-            var getListPosition = _fullDbContext.HuPositions.Where(x => x.MASTER != null || x.MASTER != 0).ToList();
-            getListPosition.ForEach(item =>
+            var datetimeNow = DateTime.Now;
+            var currentPeriod = (from e in _fullDbContext.AtSalaryPeriods
+                                 where e.START_DATE.Date <= datetimeNow.Date && e.END_DATE.Date >= datetimeNow.Date
+                                 select new
+                                 {
+                                     Id = e.ID,
+                                     StartDate = e.START_DATE,
+                                     EndDate = e.END_DATE,
+                                 }).FirstOrDefault();
+            if (currentPeriod != null)
             {
-                item.IS_ACTIVE = true;
+                var x = new
+                {
+                    P_USER_ID = "46cc736a-ac6c-43fd-8ecc-2d84d9f9fc76",
+                    P_PERIOD_ID = currentPeriod.Id,
+                    P_ORG_ID = 1,
+                    P_ISDISSOLVE = -1,
+                    P_EMPLOYEE_ID = 0
+                };
+                var data = QueryData.ExecuteStoreToTable(Procedures.PKG_ATTENDANCE_CALCULATE_CAL_TIME_TIMESHEET_MACHINE,
+                    x, false);
+            }
+            return "DEVELOPER_ROOTING_SUCCESS";
+        }
+        public void ChangePositionPoliticalByDate()
+        {
+            var getListConccurent = (from c in _fullDbContext.HuConcurrentlys
+                                     join  ee in _fullDbContext.HuEmployees on c.EMPLOYEE_ID equals ee.ID
+                                     join cv in _fullDbContext.HuEmployeeCvs on ee.PROFILE_ID equals cv.ID
+                                     join sys in _fullDbContext.SysOtherLists on c.POSITION_POLITICAL_ID equals sys.ID
+                                     select new
+                                     {
+                                         concurrently = c,
+                                         employee = ee,
+                                         employeeCv = cv,
+                                         sysOtherList = sys
+                                     }).ToList();
+            getListConccurent.ForEach(item =>
+            {
+
+
+                if (item.concurrently.EFFECTIVE_DATE >= DateTime.Now)
+                {
+                    if (item.sysOtherList.CODE == "00290")
+                    {
+                        item.employeeCv.IS_UNIONIST = true;
+                    }
+                    if (item.sysOtherList.CODE == "00291")
+                    {
+                        item.employeeCv.IS_JOIN_YOUTH_GROUP = true;
+                    }
+                    if (item.sysOtherList.CODE == "00292")
+                    {
+                        item.employeeCv.IS_MEMBER = true;
+                    }
+                }
+                if (item.concurrently.EXPIRATION_DATE != null && item.concurrently.EXPIRATION_DATE <= DateTime.Now)
+                {
+                    if (item.sysOtherList.CODE == "00290")
+                    {
+                        item.employeeCv.IS_UNIONIST = false;
+                    }
+                    if (item.sysOtherList.CODE == "00291")
+                    {
+                        item.employeeCv.IS_JOIN_YOUTH_GROUP = false;
+                    }
+                    if (item.sysOtherList.CODE == "00292")
+                    {
+                        item.employeeCv.IS_MEMBER = false;
+                    }
+                }
             });
-            _fullDbContext.HuPositions.UpdateRange(getListPosition);
             _fullDbContext.SaveChanges();
         }
 
-        public async Task<object> TheSystemChecksTheTerminate()
+        public void SendEmailPortal()
         {
-            var approveId = _fullDbContext.SysOtherLists.FirstOrDefault(x => x.CODE == "DD")!.ID;
+            var list = _fullDbContext.SeMails.AsNoTracking().Where(x => x.ACTFLG == "I").ToList();
+            var config =  _fullDbContext.SeConfigs.FirstOrDefault();
 
-            // The system retrieves all records
-            // with the condition "EFFECT_DATE" = "DateTime.Now.Date"
-            var getAll = from item in _fullDbContext.HuTerminates
-                         where item.EFFECT_DATE!.Value.Date == DateTime.Now.Date
-                               && item.STATUS_ID == approveId
-                         select item;
-
-            var hasRetiredId = _fullDbContext.SysOtherLists.FirstOrDefault(x => x.CODE == "ESQ")!.ID;
-
-            foreach (var item in getAll)
+            foreach (var item in list)
             {
-                // get employee
-                var employee = _fullDbContext.HuEmployees.FirstOrDefault(x => x.ID == item.EMPLOYEE_ID);
-
-                employee!.WORK_STATUS_ID = hasRetiredId;
-                employee.STATUS_DETAIL_ID = item.TYPE_ID;
-                
+                MailMessage msg = new();
+                msg.To.Add(item.MAIL_TO!);
+                msg.From = new MailAddress(item.MAIL_FROM!);
+                msg.Subject = item.SUBJECT;
+                msg.Body = item.MAIL_CONTENT;
+                msg.IsBodyHtml = true;
+                msg.BodyEncoding = Encoding.UTF8;
+                using SmtpClient smtp = new();
+                var credential = new NetworkCredential
+                {
+                    UserName = config!.ACCOUNT,
+                    Password = config!.PASSWORD
+                };
+                smtp.Credentials = credential;
+                smtp.Host = config.NAME!;
+                smtp.Port = config.MODULE!.Value;
+                smtp.EnableSsl = config.IS_AUTH_SSL!.Value;
+                item.ACTFLG = "S";
+                _fullDbContext.Update(item);
                 _fullDbContext.SaveChanges();
+                smtp.Send(msg);
             }
-
-            return await Task.Run(() => true);
         }
     }
+
+
 }

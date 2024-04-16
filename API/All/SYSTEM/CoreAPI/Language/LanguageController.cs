@@ -1,4 +1,5 @@
 ﻿using API.All.DbContexts;
+using API.Entities;
 using CORE.DTO;
 using CORE.GenericUOW;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,7 @@ namespace API.All.SYSTEM.CoreAPI.Language
         private IGenericRepository<SYS_LANGUAGE, SysLanguageDTO> _genericRepository;
         private readonly GenericReducer<SYS_LANGUAGE, SysLanguageDTO> genericReducer;
         private readonly AppSettings _appSettings;
-        protected readonly ILogger<LanguageController> _logger;
+        private readonly ILogger<LanguageController> _logger;
 
         public LanguageController(CoreDbContext coreDbContext, IOptions<AppSettings> options, ILogger<LanguageController> logger)
         {
@@ -60,7 +61,7 @@ namespace API.All.SYSTEM.CoreAPI.Language
                     Vi = x.VI,
                     En = x.EN
                 }).OrderBy(x => x.Key)).ToListAsync();
-                return Ok(new FormatedResponse() { InnerBody = response, MessageCode = CommonMessageCode.QUERY_LIST_SUCCESS });
+                return Ok(new FormatedResponse() { InnerBody = response });
             }
             catch (Exception ex)
             {
@@ -136,15 +137,7 @@ namespace API.All.SYSTEM.CoreAPI.Language
                                   UpdatedByUsername = u.USERNAME,
                               }).FirstOrDefaultAsync();
 
-                if (joined != null)
-                {
-                    return Ok(new FormatedResponse() { InnerBody = joined });
-                } else
-                {
-                    return Ok(new FormatedResponse() { MessageCode = CommonMessageCode.ENTITY_NOT_FOUND, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 });
-                }
-
-                
+                return Ok(new FormatedResponse() { InnerBody = joined });
             }
             catch (Exception ex)
             {
@@ -163,7 +156,9 @@ namespace API.All.SYSTEM.CoreAPI.Language
                 if (sid == null) return Unauthorized();
 
                 var response = await _genericRepository.Create(_uow, model, sid);
-                _logger.LogError($"{model.Key} added to SYS_LANGUAGE");
+
+                _logger.LogError("_____________****************************>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+
                 return Ok(response);
             }
             catch (Exception ex)

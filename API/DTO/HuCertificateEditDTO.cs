@@ -66,6 +66,7 @@ namespace API.DTO
         // thì mới điền dữ liệu vào bảng chính
         // sau khi phê duyệt
         public string? ModelChange {  get; set; }
+        public string[]? ModelChanges { get; set; }
 
 
         // IdHuCertificate

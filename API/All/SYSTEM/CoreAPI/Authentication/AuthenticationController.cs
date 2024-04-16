@@ -22,9 +22,8 @@ using CORE.Services.File;
 using API.All.SYSTEM.CoreAPI.Authorization;
 using CORE.StaticConstant;
 using API.All.Services;
-using API.All.SYSTEM.Common;
-using System.Xml;
 using CORE.Extension;
+using System.Xml;
 
 namespace CoreAPI
 {
@@ -107,7 +106,7 @@ namespace CoreAPI
 
                 if (user != null)
                 {
-                    var iat = user.EmployeeId != null  ? user.EmployeeId.ToString() : "0";
+                    var iat = user.EmployeeId != null ? user.EmployeeId.ToString() : "0";
                     var isAdmin = (user.IsAdmin == true).ToString();
                     var claims = new[]
                     {
@@ -130,15 +129,7 @@ namespace CoreAPI
                     {
                         if (Credentials.AppType == "PORTAL")
                         {
-                            return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.PORTAL_IS_NOT_ALLOWED});
-                        }
-                    }
-
-                    if (user.IsMobile != true && user.IsRoot != true && user.IsAdmin != true)
-                    {
-                        if (Credentials.AppType == "MOBILE")
-                        {
-                            return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCodes.MOBILE_IS_NOT_ALLOWED });
+                            return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.PORTAL_IS_NOT_ALLOWED });
                         }
                     }
 
@@ -157,7 +148,6 @@ namespace CoreAPI
                         IsLock = user.IsLock,
                         IsWebapp = user.IsWebapp,
                         IsPortal = user.IsPortal,
-                        IsMobile = user.IsMobile,
                         RefreshToken = user.RefreshToken
                     };
 
@@ -325,15 +315,7 @@ namespace CoreAPI
                 {
                     if (refreshTokenObject?.AppType == "PORTAL")
                     {
-                        return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.PORTAL_IS_NOT_ALLOWED});
-                    }
-                }
-
-                if (user?.IS_MOBILE != true && user?.IS_ROOT != true && user?.IS_ADMIN != true)
-                {
-                    if (refreshTokenObject?.AppType == "MOBILE")
-                    {
-                        return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCodes.MOBILE_IS_NOT_ALLOWED });
+                        return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.PORTAL_IS_NOT_ALLOWED });
                     }
                 }
 
@@ -362,7 +344,6 @@ namespace CoreAPI
                     IsLock = user.IS_LOCK,
                     IsWebapp = user.IS_WEBAPP,
                     IsPortal = user.IS_PORTAL,
-                    IsMobile = user.IS_MOBILE,
                     EmployeeId = user.EMPLOYEE_ID,
                     RefreshToken = tokenCheck.NewRefreshToken!
                 };
@@ -377,11 +358,11 @@ namespace CoreAPI
                 {
                     if (actionPermissionRes.InnerBody != null)
                     {
-                        data.PermissionActions = (List<FunctionActionPermissionDTO>)actionPermissionRes.InnerBody ?? [];
+                        data.PermissionActions = (List<FunctionActionPermissionDTO>)actionPermissionRes.InnerBody ?? new();
                     }
                     else
                     {
-                        data.PermissionActions = [];
+                        data.PermissionActions = new();
                     }
                 }
                 else
@@ -727,71 +708,80 @@ namespace CoreAPI
         [AllowAnonymous]
         public async Task<IActionResult> HandleADFSResponse([FromForm] Dictionary<string, string> adfsData)
         {
-
-            static XmlNamespaceManager GetNamespaceManager(XmlDocument xmlDoc)
+            try
             {
-                XmlNamespaceManager nsmgr = new(xmlDoc.NameTable);
-                nsmgr.AddNamespace("saml", "urn:oasis:names:tc:SAML:1.0:assertion");
-                // Add other namespaces as needed
-
-                return nsmgr;
-            }
-
-            if (adfsData != null && adfsData.TryGetValue("wresult", out string? value))
-            {
-                var wresult = await Task.Run(() => value);
-
-                XmlDocument xmlDoc = new();
-                xmlDoc.LoadXml(wresult);
-
-                string? issuer = xmlDoc.SelectSingleNode("//saml:Assertion/@Issuer", GetNamespaceManager(xmlDoc))?.InnerText;
-                string? subject = xmlDoc.SelectSingleNode("//saml:Assertion/saml:AttributeStatement/saml:Subject/saml:SubjectConfirmation/saml:ConfirmationMethod", GetNamespaceManager(xmlDoc))?.InnerText;
-                string? nameAttribute = xmlDoc.SelectSingleNode("//saml:Assertion/saml:AttributeStatement/saml:Attribute[@AttributeName='name']", GetNamespaceManager(xmlDoc))?.InnerText;
-                string? givenNameAttribute = xmlDoc.SelectSingleNode("//saml:Assertion/saml:AttributeStatement/saml:Attribute[@AttributeName='givenname']", GetNamespaceManager(xmlDoc))?.InnerText;
-
-                if (nameAttribute == null)
+                static XmlNamespaceManager GetNamespaceManager(XmlDocument xmlDoc)
                 {
-                    return Redirect($"{_appSettings.Saml2AdfsSetting.SPUrl}?local=1");
+                    XmlNamespaceManager nsmgr = new(xmlDoc.NameTable);
+                    nsmgr.AddNamespace("saml", "urn:oasis:names:tc:SAML:1.0:assertion");
+                    // Add other namespaces as needed
+
+                    return nsmgr;
                 }
-                else
+
+                if (adfsData != null && adfsData.TryGetValue("wresult", out string? value))
                 {
+                    var wresult = await Task.Run(() => value);
 
-                    //find the user
-                    var user = _dbContext.SysUsers.FirstOrDefault(x => x.EMAIL!.ToLower() == nameAttribute.ToLower());
+                    _logger.LogInformation(wresult);
 
-                    if (user != null)
-                    {
+                    XmlDocument xmlDoc = new();
+                    xmlDoc.LoadXml(wresult);
 
-                        var tokenHandler = new JwtSecurityTokenHandler();
-                        var key = Encoding.ASCII.GetBytes(_appSettings.JwtToken.SecretKey);
-                        var javascriptExp = DateTime.Now.GetJavascriptTimeStamp() + 30 * 1000; // 30 seconds
-                        var tokenDescriptor = new SecurityTokenDescriptor
-                        {
-                            Subject = new ClaimsIdentity(new[] {
-                        new Claim("exp_at", javascriptExp.ToString()),
-                     }),
-                            //Expires = expires,
-                            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-                        };
-                        var token = tokenHandler.CreateToken(tokenDescriptor);
-                        string tokenString = tokenHandler.WriteToken(token);
+                    string? issuer = xmlDoc.SelectSingleNode("//saml:Assertion/@Issuer", GetNamespaceManager(xmlDoc))?.InnerText;
+                    string? subject = xmlDoc.SelectSingleNode("//saml:Assertion/saml:AttributeStatement/saml:Subject/saml:SubjectConfirmation/saml:ConfirmationMethod", GetNamespaceManager(xmlDoc))?.InnerText;
+                    string? nameAttribute = xmlDoc.SelectSingleNode("//saml:Assertion/saml:AttributeStatement/saml:Attribute[@AttributeName='name']", GetNamespaceManager(xmlDoc))?.InnerText;
+                    string? givenNameAttribute = xmlDoc.SelectSingleNode("//saml:Assertion/saml:AttributeStatement/saml:Attribute[@AttributeName='givenname']", GetNamespaceManager(xmlDoc))?.InnerText;
 
-                        user.SHORT_LIVED_TOKEN = tokenString;
-                        _dbContext.SysUsers.Update(user);
-                        _dbContext.SaveChanges();
-
-                        return Redirect($"{_appSettings.Saml2AdfsSetting.SPUrl}?token={tokenString}");
-                    }
-                    else
+                    if (nameAttribute == null)
                     {
                         return Redirect($"{_appSettings.Saml2AdfsSetting.SPUrl}?local=1");
                     }
+                    else
+                    {
 
+                        //find the user
+                        var user = _dbContext.SysUsers.FirstOrDefault(x => x.EMAIL!.ToLower() == nameAttribute.ToLower());
+
+                        if (user != null)
+                        {
+
+                            var tokenHandler = new JwtSecurityTokenHandler();
+                            var key = Encoding.ASCII.GetBytes(_appSettings.JwtToken.SecretKey);
+                            var javascriptExp = DateTime.Now.GetJavascriptTimeStamp() + 30 * 1000; // 30 seconds
+                            var tokenDescriptor = new SecurityTokenDescriptor
+                            {
+                                Subject = new ClaimsIdentity(new[] {
+                        new Claim("exp_at", javascriptExp.ToString()),
+                     }),
+                                //Expires = expires,
+                                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                            };
+                            var token = tokenHandler.CreateToken(tokenDescriptor);
+                            string tokenString = tokenHandler.WriteToken(token);
+
+                            user.SHORT_LIVED_TOKEN = tokenString;
+                            _dbContext.SysUsers.Update(user);
+                            _dbContext.SaveChanges();
+
+                            return Redirect($"{_appSettings.Saml2AdfsSetting.SPUrl}?token={tokenString}");
+                        }
+                        else
+                        {
+                            return Redirect($"{_appSettings.Saml2AdfsSetting.SPUrl}?local=1");
+                        }
+
+                    }
+                }
+                else
+                {
+                    return Redirect($"{_appSettings.Saml2AdfsSetting.SPUrl}?local=1");
                 }
             }
-            else
+            catch (Exception ex)
             {
-                return Redirect($"{_appSettings.Saml2AdfsSetting.SPUrl}?local=1");
+                _logger.LogCritical(ex.Message);
+                return BadRequest(ex.Message);
             }
         }
 
@@ -799,80 +789,90 @@ namespace CoreAPI
         [AllowAnonymous]
         public async Task<IActionResult> HandleADFSResponsePortal([FromForm] Dictionary<string, string> adfsData)
         {
-
-            var replyUrl = _appSettings.Saml2AdfsSetting?.SPUrlPortal;
-
-            if (replyUrl == null)
+            try
             {
-                return BadRequest();
-            }
+                var replyUrl = _appSettings.Saml2AdfsSetting?.SPUrlPortal;
 
-            static XmlNamespaceManager GetNamespaceManager(XmlDocument xmlDoc)
-            {
-                XmlNamespaceManager nsmgr = new(xmlDoc.NameTable);
-                nsmgr.AddNamespace("saml", "urn:oasis:names:tc:SAML:1.0:assertion");
-                // Add other namespaces as needed
-
-                return nsmgr;
-            }
-
-            if (adfsData != null && adfsData.TryGetValue("wresult", out string? value))
-            {
-                var wresult = await Task.Run(() => value);
-
-                XmlDocument xmlDoc = new();
-                xmlDoc.LoadXml(wresult);
-
-                string? issuer = xmlDoc.SelectSingleNode("//saml:Assertion/@Issuer", GetNamespaceManager(xmlDoc))?.InnerText;
-                string? subject = xmlDoc.SelectSingleNode("//saml:Assertion/saml:AttributeStatement/saml:Subject/saml:SubjectConfirmation/saml:ConfirmationMethod", GetNamespaceManager(xmlDoc))?.InnerText;
-                string? nameAttribute = xmlDoc.SelectSingleNode("//saml:Assertion/saml:AttributeStatement/saml:Attribute[@AttributeName='name']", GetNamespaceManager(xmlDoc))?.InnerText;
-                string? givenNameAttribute = xmlDoc.SelectSingleNode("//saml:Assertion/saml:AttributeStatement/saml:Attribute[@AttributeName='givenname']", GetNamespaceManager(xmlDoc))?.InnerText;
-
-                if (nameAttribute == null)
+                if (replyUrl == null)
                 {
-                    return Redirect($"{replyUrl}?local=1");
+                    return BadRequest();
                 }
-                else
+
+                static XmlNamespaceManager GetNamespaceManager(XmlDocument xmlDoc)
                 {
+                    XmlNamespaceManager nsmgr = new(xmlDoc.NameTable);
+                    nsmgr.AddNamespace("saml", "urn:oasis:names:tc:SAML:1.0:assertion");
+                    // Add other namespaces as needed
 
-                    //find the user
-                    var user = _dbContext.SysUsers.FirstOrDefault(x => x.EMAIL!.ToLower() == nameAttribute.ToLower());
+                    return nsmgr;
+                }
 
-                    if (user != null)
-                    {
+                if (adfsData != null && adfsData.TryGetValue("wresult", out string? value))
+                {
+                    var wresult = await Task.Run(() => value);
 
-                        var tokenHandler = new JwtSecurityTokenHandler();
-                        var key = Encoding.ASCII.GetBytes(_appSettings.JwtToken.SecretKey);
-                        var javascriptExp = DateTime.Now.GetJavascriptTimeStamp() + 30 * 1000; // 30 seconds
-                        var tokenDescriptor = new SecurityTokenDescriptor
-                        {
-                            Subject = new ClaimsIdentity(new[] {
-                                new Claim("exp_at", javascriptExp.ToString()),
-                             }),
-                            //Expires = expires,
-                            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-                        };
-                        var token = tokenHandler.CreateToken(tokenDescriptor);
-                        string tokenString = tokenHandler.WriteToken(token);
+                    _logger.LogInformation(wresult);
 
-                        user.SHORT_LIVED_TOKEN = tokenString;
-                        _dbContext.SysUsers.Update(user);
-                        _dbContext.SaveChanges();
+                    XmlDocument xmlDoc = new();
+                    xmlDoc.LoadXml(wresult);
 
-                        return Redirect($"{replyUrl}?token={tokenString}");
-                    }
-                    else
+                    string? issuer = xmlDoc.SelectSingleNode("//saml:Assertion/@Issuer", GetNamespaceManager(xmlDoc))?.InnerText;
+                    string? subject = xmlDoc.SelectSingleNode("//saml:Assertion/saml:AttributeStatement/saml:Subject/saml:SubjectConfirmation/saml:ConfirmationMethod", GetNamespaceManager(xmlDoc))?.InnerText;
+                    string? nameAttribute = xmlDoc.SelectSingleNode("//saml:Assertion/saml:AttributeStatement/saml:Attribute[@AttributeName='name']", GetNamespaceManager(xmlDoc))?.InnerText;
+                    string? givenNameAttribute = xmlDoc.SelectSingleNode("//saml:Assertion/saml:AttributeStatement/saml:Attribute[@AttributeName='givenname']", GetNamespaceManager(xmlDoc))?.InnerText;
+
+                    if (nameAttribute == null)
                     {
                         return Redirect($"{replyUrl}?local=1");
                     }
+                    else
+                    {
 
+                        //find the user
+                        var user = _dbContext.SysUsers.FirstOrDefault(x => x.EMAIL!.ToLower() == nameAttribute.ToLower());
+
+                        if (user != null)
+                        {
+
+                            var tokenHandler = new JwtSecurityTokenHandler();
+                            var key = Encoding.ASCII.GetBytes(_appSettings.JwtToken.SecretKey);
+                            var javascriptExp = DateTime.Now.GetJavascriptTimeStamp() + 30 * 1000; // 30 seconds
+                            var tokenDescriptor = new SecurityTokenDescriptor
+                            {
+                                Subject = new ClaimsIdentity(new[] {
+                                new Claim("exp_at", javascriptExp.ToString()),
+                             }),
+                                //Expires = expires,
+                                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                            };
+                            var token = tokenHandler.CreateToken(tokenDescriptor);
+                            string tokenString = tokenHandler.WriteToken(token);
+
+                            user.SHORT_LIVED_TOKEN = tokenString;
+                            _dbContext.SysUsers.Update(user);
+                            _dbContext.SaveChanges();
+
+                            return Redirect($"{replyUrl}?token={tokenString}");
+                        }
+                        else
+                        {
+                            return Redirect($"{replyUrl}?local=1");
+                        }
+
+                    }
+                }
+                else
+                {
+                    return Redirect($"{replyUrl}?local=1");
                 }
             }
-            else
+            catch (Exception ex)
             {
-                return Redirect($"{replyUrl}?local=1");
+                _logger.LogCritical(ex.Message);
+                return BadRequest(ex.Message);
             }
         }
+
 
         [HttpGet]
         [AllowAnonymous]
@@ -934,7 +934,6 @@ namespace CoreAPI
                                 IsLock = r.IS_LOCK,
                                 IsWebapp = r.IS_WEBAPP,
                                 IsPortal = r.IS_PORTAL,
-                                IsMobile = r.IS_MOBILE,
                                 Avatar = r.AVATAR!,
                                 IsFirstLogin = r.IS_FIRST_LOGIN,
                                 EmployeeId = r.EMPLOYEE_ID,
@@ -975,14 +974,6 @@ namespace CoreAPI
                                     if (Credentials.AppType == "PORTAL")
                                     {
                                         return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.PORTAL_IS_NOT_ALLOWED });
-                                    }
-                                }
-
-                                if (user.IsMobile != true && user.IsRoot != true && user.IsAdmin != true)
-                                {
-                                    if (Credentials.AppType == "MOBILE")
-                                    {
-                                        return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, ErrorType = EnumErrorType.CATCHABLE, MessageCode = CommonMessageCode.MOBILE_IS_NOT_ALLOWED });
                                     }
                                 }
                                 */
@@ -1077,8 +1068,8 @@ namespace CoreAPI
                 });
             }
         }
-
     }
+
     public class LoginModel
     {
         public required string Username { get; set; }
@@ -1094,4 +1085,6 @@ namespace CoreAPI
         public string? DeviceId { get; set; }
         public string? AppType { get; set; }
     }
+
+
 }

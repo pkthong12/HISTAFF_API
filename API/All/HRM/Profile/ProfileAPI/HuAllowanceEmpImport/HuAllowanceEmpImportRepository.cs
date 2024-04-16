@@ -1,10 +1,12 @@
 ﻿using API.All.DbContexts;
 using API.All.SYSTEM.CoreAPI.Xlsx;
 using API.DTO;
+using Common.Extensions;
 using CORE.DTO;
 using CORE.Enum;
 using CORE.GenericUOW;
 using CORE.StaticConstant;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
 
 namespace API.All.HRM.Profile.ProfileAPI.HuAllowanceEmpImport
 {
@@ -71,7 +73,7 @@ namespace API.All.HRM.Profile.ProfileAPI.HuAllowanceEmpImport
 
                 var allowanceEmp = typeof(HU_ALLOWANCE_EMP);
                 var allowanceEmpProperties = allowanceEmp.GetProperties().ToList();
-
+                var res = new HU_ALLOWANCE_EMP();
                 tmp.ForEach(item =>
                 {
                     var obj = Activator.CreateInstance(typeof(HU_ALLOWANCE_EMP)) ?? throw new Exception(CommonMessageCode.ACTIVATOR_CREATE_INSTANCE_RETURNS_NULL);
@@ -100,26 +102,43 @@ namespace API.All.HRM.Profile.ProfileAPI.HuAllowanceEmpImport
                         }
                     });
 
+                    if(a?.EMPLOYEE_ID == null)
+                    {
+                        throw new Exception("EMPLOYEE_ID_CANNOT_NULL_IN_ROW" + " " + item.XLSX_ROW);
+                    }
+
+                    if (a?.ALLOWANCE_ID == null)
+                    {
+                        throw new Exception("ALLOWANCE_ID_CANNOT_NULL_IN_ROW" + " " + item.XLSX_ROW);
+                    }
+
+                    if (a?.DATE_START == null)
+                    {
+                        throw new Exception("DATE_START_CANNOT_NULL_IN_ROW" + " " + item.XLSX_ROW);
+                    }
+
                     a.CREATED_DATE = now;
                     a.CREATED_BY = request.XlsxSid;
-
+                    res = a;
                     _dbContext.HuAllowanceEmps.Add(a);
                     _dbContext.SaveChanges();
 
                 });
+
+
 
                 // Clear tmp
                 _dbContext.HuAllowanceEmpImports.RemoveRange(tmp);
                 _dbContext.SaveChanges();
 
                 _uow.Commit();
-                return new() { InnerBody = true };
+                return new() { InnerBody = res, StatusCode = EnumStatusCode.StatusCode200, MessageCode = CommonMessageCode.CREATE_SUCCESS };
 
             }
             catch (Exception ex)
             {
                 _uow.Rollback();
-                return new() { ErrorType = EnumErrorType.UNCATCHABLE, StatusCode = EnumStatusCode.StatusCode500, MessageCode = ex.Message };
+                return new() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = ex.Message };
             }
         }
     }

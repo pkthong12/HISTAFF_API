@@ -38,7 +38,6 @@ using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
 using API.All.HRM.Insurance.InsuranceAPI.Business.InsChange;
 using API.All.HRM.Profile.ProfileAPI.HuEmployeeCv;
 using Org.BouncyCastle.Asn1.X509;
-using API.All.SYSTEM.Common;
 
 namespace API.Controllers.HuEmployeeCv
 {
@@ -292,7 +291,7 @@ namespace API.Controllers.HuEmployeeCv
             return new() { InnerBody = query };
         }
 
-        public async Task<FormatedResponse> UpdateBank(StaffProfileUpdateDTO request)
+        public async Task<FormatedResponse> UpdateBank(StaffProfileUpdateDTO request, string sid)
         {
             try
             {
@@ -305,6 +304,8 @@ namespace API.Controllers.HuEmployeeCv
                     entity.BANK_BRANCH_2 = request.BankBranchId2;
                     entity.BANK_NO = request.BankNo;
                     entity.BANK_NO_2 = request.BankNo2;
+                    entity.UPDATED_BY = sid;
+                    entity.UPDATED_DATE = DateTime.Now;
                     _dbContext.SaveChanges();
                     return new() { MessageCode = CommonMessageCode.UPDATE_SUCCESS, InnerBody = true, StatusCode = EnumStatusCode.StatusCode200 };
                 }
@@ -463,7 +464,6 @@ namespace API.Controllers.HuEmployeeCv
                                from o in _dbContext.HuOrganizations.Where(x => x.ID == d.ORG_ID).DefaultIfEmpty()
                                from com in _dbContext.HuCompanys.Where(x => x.ID == o.COMPANY_ID).DefaultIfEmpty()
                                from v in _dbContext.SysOtherLists.Where(x => x.ID == com.REGION_ID).DefaultIfEmpty()
-                               from dsts in _dbContext.SysOtherLists.Where(x => x.ID == c.DEFENSE_SECURITY_TRAINING).DefaultIfEmpty()
                                where c.ID == employeeCvId
                                select new
                                {
@@ -492,8 +492,7 @@ namespace API.Controllers.HuEmployeeCv
                                    PoliticalTheory = c.POLITICAL_THEORY,
                                    CareerBeforeRecruitment = c.CARRER_BEFORE_RECUITMENT,
                                    TitleConferred = c.TITLE_CONFERRED,
-                                   SchoolOfWork = c.SCHOOL_OF_WORK,
-                                   DefenseSecurityTrainingStr = dsts.NAME
+                                   SchoolOfWork = c.SCHOOL_OF_WORK
                                }).SingleAsync();
             return new() { InnerBody = query };
         }
@@ -536,21 +535,22 @@ namespace API.Controllers.HuEmployeeCv
                                    CareerBeforeRecruitment = c.CARRER_BEFORE_RECUITMENT,
                                    TitleConferred = c.TITLE_CONFERRED,
                                    SchoolOfWork = c.SCHOOL_OF_WORK,
-                                   Nationality = v2.NAME,
-                                   DefenseSecurityTraining = c.DEFENSE_SECURITY_TRAINING
+                                   Nationality = v2.NAME
                                }).SingleAsync();
             return new() { InnerBody = query };
         }
 
-        public async Task<FormatedResponse> UpdateAdditonal(StaffProfileUpdateDTO request)
+        public async Task<FormatedResponse> UpdateAdditonal(StaffProfileUpdateDTO request, string sid)
         {
             try
             {
-                var entity = _dbContext.HuEmployeeCvs.Where(x => x.ID == request.Id).FirstOrDefault();
+                var entity = await _dbContext.HuEmployeeCvs.Where(x => x.ID == request.Id).FirstOrDefaultAsync();
                 var entity2 = _dbContext.HuEmployees.Where(x => x.PROFILE_ID == entity.ID).FirstOrDefault();
                 if (entity != null)
                 {
                     entity.PASS_NO = request.Passport;
+                    entity.UPDATED_BY = sid;
+                    entity.UPDATED_DATE = DateTime.Now;
                     entity.PASS_PLACE = request.PassAddress;
                     entity.PASS_DATE = request.PassDate;
                     entity.PASS_EXPIRE = request.PassDateExpired;
@@ -576,7 +576,6 @@ namespace API.Controllers.HuEmployeeCv
                     entity.TITLE_CONFERRED = request.TitleConferred;
                     entity.POLITICAL_THEORY = request.PoliticalTheory;
                     entity.SCHOOL_OF_WORK = request.SchoolOfWork;
-                    entity.DEFENSE_SECURITY_TRAINING = request.DefenseSecurityTraining;
                     _dbContext.UpdateRange();
                     _dbContext.SaveChanges();
                     return new() { MessageCode = CommonMessageCode.UPDATE_SUCCESS, InnerBody = true, StatusCode = EnumStatusCode.StatusCode200 };
@@ -640,7 +639,7 @@ namespace API.Controllers.HuEmployeeCv
             return new() { InnerBody = query };
         }
 
-        public async Task<FormatedResponse> UpdateCurruculum(StaffProfileUpdateDTO request)
+        public async Task<FormatedResponse> UpdateCurruculum(StaffProfileUpdateDTO request, string sid)
         {
             try
             {
@@ -648,164 +647,45 @@ namespace API.Controllers.HuEmployeeCv
                 {
                     return new FormatedResponse() { MessageCode = CommonMessageCode.BIRTH_DAY_NOT_BIGGER_THAN_DATE_TIME_NOW, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
                 }
-                var query = await (from p in _dbContext.HuEmployees
-                                   from e in _dbContext.HuEmployeeCvs.Where(x => x.ID == p.PROFILE_ID).DefaultIfEmpty()
-                                   where e.TAX_CODE == request.TaxCode && e.TAX_CODE != null
-                                   select new
-                                   {
-                                       Code = p.CODE
-                                   }).ToListAsync();
-                List<string> result = new List<string>();
-                if (query != null)
+                var entity = await _dbContext.HuEmployeeCvs.Where(x => x.ID == request.Id).FirstOrDefaultAsync();
+                if (entity != null)
                 {
-                    foreach (var item in query)
-                    {
-                        result.Add(item.Code);
-                    }
-                }
-                string value = String.Join("\n", result);
-                if (value == "")
-                {
-                    var entity = _dbContext.HuEmployeeCvs.Where(x => x.ID == request.Id).FirstOrDefault();
-                    if (entity != null)
-                    {
-                        entity.HEALTH_NOTES = request.HealthNote;
-                        entity.GENDER_ID = request.GenderId;
-                        entity.EXAMINATION_DATE = request.DateExam;
-                        entity.HEART = request.Heart;
-                        entity.RIGHT_EYE = request.RightEye;
-                        entity.LEFT_EYE = request.LeftEye;
-                        entity.HEALTH_TYPE = request.HeathType;
-                        entity.BLOOD_PRESSURE = request.BloodPressure;
-                        entity.WEIGHT = request.Weight;
-                        entity.HEIGHT = request.Height;
-                        entity.BLOOD_GROUP = request.BloodGroup;
-                        entity.TAX_CODE_ADDRESS = request.TaxCodeAddress;
-                        entity.RELIGION_ID = request.ReligionId;
-                        entity.MARITAL_STATUS_ID = request.MaritalStatusId;
-                        entity.TAX_CODE = request.TaxCode == "" ? null : request.TaxCode;
-                        entity.TAX_CODE_DATE = request.TaxCodeDate;
-                        entity.ID_NO = request.IdentityNumber;
-                        entity.ID_DATE = request.IdentityNumberDate;
-                        entity.ID_PLACE = request.IdentityNumberAddress;
-                        entity.DOMICILE = request.Domicile;
-                        entity.BIRTH_REGIS_ADDRESS = request.BirthRegisAddress;
-                        entity.NATIONALITY_ID = request.NationalityId;
-                        entity.NATIVE_ID = request.NationId;
-                        entity.EXAMINATION_DATE = request.DateExam;
-                        entity.BIRTH_PLACE = request.BirthPlace;
-                        entity.BIRTH_DATE = request.BirthDay;
-                        _dbContext.SaveChanges();
+                    entity.UPDATED_DATE = DateTime.Now;
+                    entity.UPDATED_BY = sid;
+                    entity.HEALTH_NOTES = request.HealthNote;
+                    entity.GENDER_ID = request.GenderId;
+                    entity.EXAMINATION_DATE = request.DateExam;
+                    entity.HEART = request.Heart;
+                    entity.RIGHT_EYE = request.RightEye;
+                    entity.LEFT_EYE = request.LeftEye;
+                    entity.HEALTH_TYPE = request.HeathType;
+                    entity.BLOOD_PRESSURE = request.BloodPressure;
+                    entity.WEIGHT = request.Weight;
+                    entity.HEIGHT = request.Height;
+                    entity.BLOOD_GROUP = request.BloodGroup;
+                    entity.TAX_CODE_ADDRESS = request.TaxCodeAddress;
+                    entity.RELIGION_ID = request.ReligionId;
+                    entity.MARITAL_STATUS_ID = request.MaritalStatusId;
+                    entity.TAX_CODE = request.TaxCode;
+                    entity.TAX_CODE_DATE = request.TaxCodeDate;
+                    entity.ID_NO = request.IdentityNumber;
+                    entity.ID_DATE = request.IdentityNumberDate;
+                    entity.ID_PLACE = request.IdentityNumberAddress;
+                    entity.DOMICILE = request.Domicile;
+                    entity.BIRTH_REGIS_ADDRESS = request.BirthRegisAddress;
+                    entity.NATIONALITY_ID = request.NationalityId;
+                    entity.NATIVE_ID = request.NationId;
+                    entity.EXAMINATION_DATE = request.DateExam;
+                    entity.BIRTH_PLACE = request.BirthPlace;
+                    entity.BIRTH_DATE = request.BirthDay;
+                    _dbContext.SaveChanges();
 
-                        return new() { MessageCode = CommonMessageCode.UPDATE_SUCCESS, InnerBody = true, StatusCode = EnumStatusCode.StatusCode200 };
-                    }
-                    else
-                    {
-                        return new FormatedResponse() { MessageCode = CommonMessageCode.ENTITY_NOT_FOUND, InnerBody = false, StatusCode = EnumStatusCode.StatusCode400 };
-                    }
+                    return new() { MessageCode = CommonMessageCode.UPDATE_SUCCESS, InnerBody = true, StatusCode = EnumStatusCode.StatusCode200 };
                 }
                 else
                 {
-                    var getData = await (from p in _dbContext.HuEmployees
-                                         from e in _dbContext.HuEmployeeCvs.Where(x => x.ID == p.PROFILE_ID).DefaultIfEmpty()
-                                         where e.TAX_CODE == request.TaxCode && e.ID == request.Id
-                                         select new
-                                         {
-                                             Code = p.CODE
-                                         }).ToListAsync();
-                    if(getData.Count() != 0 )
-                    {
-                        var entity = _dbContext.HuEmployeeCvs.Where(x => x.ID == request.Id).FirstOrDefault();
-                        if (entity != null)
-                        {
-                            entity.HEALTH_NOTES = request.HealthNote;
-                            entity.GENDER_ID = request.GenderId;
-                            entity.EXAMINATION_DATE = request.DateExam;
-                            entity.HEART = request.Heart;
-                            entity.RIGHT_EYE = request.RightEye;
-                            entity.LEFT_EYE = request.LeftEye;
-                            entity.HEALTH_TYPE = request.HeathType;
-                            entity.BLOOD_PRESSURE = request.BloodPressure;
-                            entity.WEIGHT = request.Weight;
-                            entity.HEIGHT = request.Height;
-                            entity.BLOOD_GROUP = request.BloodGroup;
-                            entity.TAX_CODE_ADDRESS = request.TaxCodeAddress;
-                            entity.RELIGION_ID = request.ReligionId;
-                            entity.MARITAL_STATUS_ID = request.MaritalStatusId;
-                            entity.TAX_CODE = request.TaxCode == "" ? null : request.TaxCode;
-                            entity.TAX_CODE_DATE = request.TaxCodeDate;
-                            entity.ID_NO = request.IdentityNumber;
-                            entity.ID_DATE = request.IdentityNumberDate;
-                            entity.ID_PLACE = request.IdentityNumberAddress;
-                            entity.DOMICILE = request.Domicile;
-                            entity.BIRTH_REGIS_ADDRESS = request.BirthRegisAddress;
-                            entity.NATIONALITY_ID = request.NationalityId;
-                            entity.NATIVE_ID = request.NationId;
-                            entity.EXAMINATION_DATE = request.DateExam;
-                            entity.BIRTH_PLACE = request.BirthPlace;
-                            entity.BIRTH_DATE = request.BirthDay;
-                            _dbContext.SaveChanges();
-                        }
-                        return new() { MessageCode = CommonMessageCode.UPDATE_SUCCESS, InnerBody = true, StatusCode = EnumStatusCode.StatusCode200 };
-                    }
-                    else
-                    {
-                        return new FormatedResponse() { MessageCode = CommonMessageCodes.TAX_CODE_HAVE_EXISTS, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
-                    }
-                    // CHECK TAX CODE
-                    /*var getData = await (from p in _dbContext.HuEmployees
-                                       from e in _dbContext.HuEmployeeCvs.Where(x => x.ID == p.PROFILE_ID).DefaultIfEmpty()
-                                       where e.TAX_CODE == request.TaxCode && e.ID == request.Id
-                                       select new
-                                       {
-                                           Code = p.CODE
-                                       }).ToListAsync();
-                    List<string> listString = new List<string>();
-                    if (getData != null)
-                    {
-                        foreach (var item in getData)
-                        {
-                            listString.Add(item.Code);
-                        }
-                    }
-                    string stringValue = String.Join("\n", listString);
-                    if (stringValue == "")
-                    {
-                        var entity = _dbContext.HuEmployeeCvs.Where(x => x.ID == request.Id).FirstOrDefault();
-                        if (entity != null)
-                        {
-                            entity.HEALTH_NOTES = request.HealthNote;
-                            entity.GENDER_ID = request.GenderId;
-                            entity.EXAMINATION_DATE = request.DateExam;
-                            entity.HEART = request.Heart;
-                            entity.RIGHT_EYE = request.RightEye;
-                            entity.LEFT_EYE = request.LeftEye;
-                            entity.HEALTH_TYPE = request.HeathType;
-                            entity.BLOOD_PRESSURE = request.BloodPressure;
-                            entity.WEIGHT = request.Weight;
-                            entity.HEIGHT = request.Height;
-                            entity.BLOOD_GROUP = request.BloodGroup;
-                            entity.TAX_CODE_ADDRESS = request.TaxCodeAddress;
-                            entity.RELIGION_ID = request.ReligionId;
-                            entity.MARITAL_STATUS_ID = request.MaritalStatusId;
-                            entity.TAX_CODE = request.TaxCode == "" ? null : request.TaxCode;
-                            entity.TAX_CODE_DATE = request.TaxCodeDate;
-                            entity.ID_NO = request.IdentityNumber;
-                            entity.ID_DATE = request.IdentityNumberDate;
-                            entity.ID_PLACE = request.IdentityNumberAddress;
-                            entity.DOMICILE = request.Domicile;
-                            entity.BIRTH_REGIS_ADDRESS = request.BirthRegisAddress;
-                            entity.NATIONALITY_ID = request.NationalityId;
-                            entity.NATIVE_ID = request.NationId;
-                            entity.EXAMINATION_DATE = request.DateExam;
-                            entity.BIRTH_PLACE = request.BirthPlace;
-                            entity.BIRTH_DATE = request.BirthDay;
-                            _dbContext.SaveChanges();
-
-                        }
-                    }*/
+                    return new() { MessageCode = CommonMessageCode.ENTITY_NOT_FOUND, InnerBody = false, StatusCode = EnumStatusCode.StatusCode400 };
                 }
-                //return new FormatedResponse() { InnerBody = true };
             }
             catch (Exception ex)
             {
@@ -817,34 +697,6 @@ namespace API.Controllers.HuEmployeeCv
         {
             try
             {
-                var getDateJoinCompany = (from item in _dbContext.HuContracts
-                                          where item.EMPLOYEE_ID == employeeId
-                                          orderby item.START_DATE ascending
-                                          select item.START_DATE).FirstOrDefault();
-
-                // declare list code of "official contract"
-                //List<string> list = ["HXDTH12T", "HXDTH36T", "HXDTH60T", "HDKXDTH"]; code old
-                List<string> list = ["HXDTH", "HDKXDTH"];
-
-                // get list id of "official contract"
-                var listOfficialContractId = _dbContext.HuContractTypes
-                                            .Where(x => list.Contains(x.CODE))
-                                            .Select(x => x.ID)
-                                            .ToList();
-
-                // get date of "official contract"
-                // but it is the first
-                // hđ ở tương lai thì k có ngày vào chính thức
-                var getDateOfficialContract = (from item in _dbContext.HuContracts.Where(x => x.EMPLOYEE_ID == employeeId && x.STATUS_ID == OtherConfig.STATUS_APPROVE)
-                                               from hct in _dbContext.HuContractTypes.Where(x => x.ID == item.CONTRACT_TYPE_ID)
-                                               where listOfficialContractId.Contains(hct.ID)
-                                               orderby item.START_DATE ascending
-                                               select item.START_DATE).FirstOrDefault();
-                //if (getDateOfficialContract!.Value.Date > DateTime.Now.Date)
-                //{
-                //    getDateOfficialContract = null;
-                //}
-
                 var query = await (from p in _dbContext.HuEmployees
                                    from q in _dbContext.HuEmployeeCvs.Where(x => x.ID == p.PROFILE_ID).DefaultIfEmpty()
                                    from o in _dbContext.HuOrganizations.Where(x => x.ID == p.ORG_ID).DefaultIfEmpty()
@@ -873,10 +725,7 @@ namespace API.Controllers.HuEmployeeCv
                                        WorkingAddress = com.WORK_ADDRESS ?? "",
                                        OrgName = o.NAME ?? "",
                                        OtherName = q.OTHER_NAME ?? "",
-                                       ItimeId = p.ITIME_ID,
-                                       DateJoinCompany = getDateJoinCompany,
-                                       DateOfficialContract = getDateOfficialContract
-                                       //DateOfficialContract = p.JOIN_DATE_STATE == null ? getDateOfficialContract : p.JOIN_DATE_STATE,
+                                       ItimeId = p.ITIME_ID
                                    }).SingleAsync();
                 return new() { InnerBody = query };
             }
@@ -932,13 +781,15 @@ namespace API.Controllers.HuEmployeeCv
             }
         }
 
-        public async Task<FormatedResponse> UpdatePolitical(StaffProfileUpdateDTO request)
+        public async Task<FormatedResponse> UpdatePolitical(StaffProfileUpdateDTO request, string sid)
         {
             try
             {
-                var entity = _dbContext.HuEmployeeCvs.Where(x => x.ID == request.Id).FirstOrDefault();
+                var entity = await _dbContext.HuEmployeeCvs.Where(x => x.ID == request.Id).FirstOrDefaultAsync();
                 if (entity != null)
                 {
+                    entity.UPDATED_DATE = DateTime.Now;
+                    entity.UPDATED_BY = sid;
                     entity.PRISON_NOTE = request.PrisonNote;
                     entity.FAMILY_DETAIL = request.FamilyDetail;
                     entity.RELATIONS = request.Relations;
@@ -1540,11 +1391,13 @@ namespace API.Controllers.HuEmployeeCv
             }
         }
 
-        public async Task<FormatedResponse> UpdateSituationId(StaffProfileUpdateDTO request)
+        public async Task<FormatedResponse> UpdateSituationId(StaffProfileUpdateDTO request, string sid)
         {
-            var entity = _dbContext.HuEmployeeCvs.Where(x => x.ID == request.Id).FirstOrDefault();
+            var entity = await _dbContext.HuEmployeeCvs.Where(x => x.ID == request.Id).FirstOrDefaultAsync();
             if (entity != null)
             {
+                entity.UPDATED_DATE = DateTime.Now;
+                entity.UPDATED_BY = sid;
                 entity.MAIN_INCOME = request.MainIncome;
                 entity.OTHER_SOURCES = request.OtherSources;
                 entity.LAND_GRANTED = request.LandGranted;
@@ -1621,11 +1474,13 @@ namespace API.Controllers.HuEmployeeCv
             return new() { InnerBody = query };
         }
 
-        public async Task<FormatedResponse> UpdatePresenterId(StaffProfileUpdateDTO request)
+        public async Task<FormatedResponse> UpdatePresenterId(StaffProfileUpdateDTO request, string sid)
         {
-            var entity = _dbContext.HuEmployeeCvs.Where(x => x.ID == request.Id).FirstOrDefault();
+            var entity = await _dbContext.HuEmployeeCvs.Where(x => x.ID == request.Id).FirstOrDefaultAsync();
             if (entity != null)
             {
+                entity.UPDATED_DATE = DateTime.Now;
+                entity.UPDATED_BY = sid;
                 entity.PRESENTER = request.Presenter;
                 entity.PRESENTER_ADDRESS = request.PresenterAddress;
                 entity.PRESENTER_PHONE_NUMBER = request.PresenterPhoneNumber;
@@ -1742,13 +1597,15 @@ namespace API.Controllers.HuEmployeeCv
             }
         }
 
-        public async Task<FormatedResponse> UpdatePoliticalOrganizationId(StaffProfileUpdateDTO request)
+        public async Task<FormatedResponse> UpdatePoliticalOrganizationId(StaffProfileUpdateDTO request, string sid)
         {
             try
             {
-                var entity = _dbContext.HuEmployeeCvs.Where(x => x.ID == request.Id).FirstOrDefault();
+                var entity = await _dbContext.HuEmployeeCvs.Where(x => x.ID == request.Id).FirstOrDefaultAsync();
                 if (entity != null)
                 {
+                    entity.UPDATED_DATE = DateTime.Now;
+                    entity.UPDATED_BY = sid;
                     entity.IS_UNIONIST = request.IsUnionist;
                     entity.UNIONIST_POSITION = request.UnionistPosition;
                     entity.UNIONIST_DATE = request.UnionistDate;
@@ -1797,28 +1654,10 @@ namespace API.Controllers.HuEmployeeCv
         {
             try
             {
-                var getDateJoinCompany = (from item in _dbContext.HuContracts
-                                          where item.EMPLOYEE_ID == id
-                                          orderby item.START_DATE ascending
-                                          select item.START_DATE).FirstOrDefault();
 
-                // declare list code of "official contract"
-                List<string> list = ["HXDTH12T", "HXDTH36T", "HXDTH60T", "HDKXDTH", "HDKXDTH", "HXDTH"];
-
-                // get list id of "official contract"
-                var listOfficialContractId = _dbContext.HuContractTypes
-                                            .Where(x => list.Contains(x.CODE))
-                                            .Select(x => x.ID)
-                                            .ToList();
-
-                // get date of "official contract"
-                // but it is the first
-                var getDateOfficialContract = (from item in _dbContext.HuContracts.Where(x => x.EMPLOYEE_ID == id)
-                                               from hct in _dbContext.HuContractTypes.Where(x => x.ID == item.CONTRACT_TYPE_ID)
-                                               where listOfficialContractId.Contains(hct.ID)
-                                               orderby item.START_DATE ascending
-                                               select item.START_DATE).FirstOrDefault();
-
+                //var contract = _dbContext.HuContracts.Where(x => x.ID == id).FirstOrDefault();
+                var working = _dbContext.HuWorkings.Where(x => x.EMPLOYEE_ID == id && x.IS_WAGE == null).FirstOrDefault();
+                var terminal = _dbContext.HuTerminates.Where(x => x.EMPLOYEE_ID == id).FirstOrDefault();
                 var query = await (from p in _dbContext.HuEmployees
                                    from e in _dbContext.HuEmployeeCvs.Where(x => x.ID == p.PROFILE_ID).DefaultIfEmpty()
                                    from o in _dbContext.HuOrganizations.Where(x => x.ID == p.ORG_ID).DefaultIfEmpty()
@@ -1830,6 +1669,7 @@ namespace API.Controllers.HuEmployeeCv
                                    from st in _dbContext.HuJobs.Where(x => x.ID == pos2.JOB_ID).DefaultIfEmpty()
                                    from com in _dbContext.HuCompanys.Where(x => x.ID == o.COMPANY_ID).DefaultIfEmpty()
                                    from ob in _dbContext.SysOtherLists.Where(x => x.ID == e.EMPLOYEE_OBJECT_ID).DefaultIfEmpty()
+                                   from contract in _dbContext.HuContracts.Where(x => x.ID == p.CONTRACT_ID).DefaultIfEmpty()
                                    where p.ID == id
                                    select new
                                    {
@@ -1850,9 +1690,7 @@ namespace API.Controllers.HuEmployeeCv
                                        OtherName = e.OTHER_NAME,
                                        IsNotContract = p.IS_NOT_CONTRACT,
                                        IsNotContractStr = p.IS_NOT_CONTRACT == true ? "Có" : "Không",
-                                       DateJoinCompany = getDateJoinCompany,
-                                       DateOfficialContract = getDateOfficialContract //code cu lay ngay vao chinh thuc o hd
-                                       //DateOfficialContract = p.JOIN_DATE_STATE == null ? getDateOfficialContract : p.JOIN_DATE_STATE
+                                       DisableIsNotContract = (contract != null || working != null || terminal != null) ? true : false
                                    }).SingleAsync();
                 return new() { InnerBody = query };
             }
@@ -1915,13 +1753,12 @@ namespace API.Controllers.HuEmployeeCv
                 return new() { InnerBody = null, StatusCode = EnumStatusCode.StatusCode400 };
             }
         }
-
         public async Task<FormatedResponse> CheckSameItimeid(string itimeId)
         {
             try
             {
                 var query = await (from p in _dbContext.HuEmployees
-                                       //from e in _dbContext.HuEmployeeCvs.Where(x => x.ID == p.PROFILE_ID).DefaultIfEmpty()
+                                   //from e in _dbContext.HuEmployeeCvs.Where(x => x.ID == p.PROFILE_ID).DefaultIfEmpty()
                                    where p.ITIME_ID == itimeId
                                    select new
                                    {
@@ -1937,13 +1774,11 @@ namespace API.Controllers.HuEmployeeCv
                 }
                 string value = String.Join("\n", result);
                 return new() { InnerBody = value, StatusCode = EnumStatusCode.StatusCode200 };
-            }
-            catch (Exception ex)
+            } catch (Exception ex)
             {
                 return new() { InnerBody = null, StatusCode = EnumStatusCode.StatusCode400 };
             }
         }
-
         public async Task<FormatedResponse> CheckSameTaxCode(string taxCode)
         {
             try
@@ -1972,54 +1807,55 @@ namespace API.Controllers.HuEmployeeCv
             }
         }
 
-        public async Task<FormatedResponse> UpdateGeneralInfo(StaffProfileUpdateDTO request)
+        public async Task<FormatedResponse> UpdateGeneralInfo(StaffProfileUpdateDTO request, string sid)
         {
             try
             {
-                var query = await (from p in _dbContext.HuEmployees
-                                       //from e in _dbContext.HuEmployeeCvs.Where(x => x.ID == p.PROFILE_ID).DefaultIfEmpty()
-                                   where p.ITIME_ID == request.ItimeId
-                                   select new
-                                   {
-                                       Code = p.CODE
-                                   }).ToListAsync();
-                List<string> result = new List<string>();
-                if (query != null)
+                var entity = await _dbContext.HuEmployees.Where(x => x.ID == request.Id).SingleOrDefaultAsync();
+                var itimeId = _dbContext.HuEmployees.Where(x => x.ITIME_ID == request.ItimeId).FirstOrDefault();
+                var esw = _dbContext.SysOtherLists.Where(x => x.CODE == "ESW").FirstOrDefault();
+                var eswDetail = _dbContext.SysOtherLists.Where(x => x.CODE == "00068").FirstOrDefault();
+                if (itimeId != null && entity!.ITIME_ID != itimeId.ITIME_ID && !string.IsNullOrEmpty(request.ItimeId))
                 {
-                    foreach (var item in query)
-                    {
-                        result.Add(item.Code);
-                    }
+                    return new FormatedResponse() { MessageCode = CommonMessageCodes.ITIME_ID_NOT_SAME_VALUE, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode500 };
                 }
-                string value = String.Join("\n", result);
-                if(value == "")
+                var entity_cv = _dbContext.HuEmployeeCvs.Where(x => x.ID == entity!.PROFILE_ID).SingleOrDefault();
+
+                if (entity != null)
                 {
-                    var entity = _dbContext.HuEmployees.Where(x => x.ID == request.Id).SingleOrDefault();
-
-                    var entity_cv = _dbContext.HuEmployeeCvs.Where(x => x.ID == entity.PROFILE_ID).SingleOrDefault();
-
-                    if (entity != null)
+                    entity.ORG_ID = request.OrgId;
+                    
+                    entity.UPDATED_DATE = DateTime.Now;
+                    entity.UPDATED_BY = sid;
+                    entity.POSITION_ID = request.PositionId;
+                    entity.EMPLOYEE_OBJECT_ID = request.ObjectEmployeeId;
+                    entity.ITIME_ID = request.ItimeId;
+                    if(entity.WORK_STATUS_ID == null)
                     {
-                        entity.ORG_ID = request.OrgId;
-                        entity.POSITION_ID = request.PositionId;
-                        entity.EMPLOYEE_OBJECT_ID = request.ObjectEmployeeId;
-                        entity.ITIME_ID = request.ItimeId == "" ? null : request.ItimeId;
-
-                        entity_cv.EMPLOYEE_OBJECT_ID = request.ObjectEmployeeId;
-
-                        _dbContext.SaveChanges();
-                        return new FormatedResponse() { MessageCode = CommonMessageCode.UPDATE_SUCCESS, InnerBody = true, StatusCode = EnumStatusCode.StatusCode200 };
-                    }
-                    else
+                        if(request.IsNotContract == true)
+                        {
+                            entity.WORK_STATUS_ID = esw!.ID;
+                            entity.STATUS_DETAIL_ID = eswDetail!.ID;
+                            entity.IS_NOT_CONTRACT = request.IsNotContract;
+                        }
+                    } else
                     {
-                        return new FormatedResponse() { MessageCode = CommonMessageCode.ENTITIES_NOT_FOUND, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
+                        if(entity.STATUS_DETAIL_ID == eswDetail!.ID)
+                        {
+                            entity.IS_NOT_CONTRACT = request.IsNotContract;
+                        }
                     }
+                    entity_cv!.EMPLOYEE_OBJECT_ID = request.ObjectEmployeeId;
+                    entity_cv!.OTHER_NAME = request.OtherName;
+
+                    _dbContext.SaveChanges();
+                    return new() { MessageCode = CommonMessageCode.UPDATE_SUCCESS, InnerBody = true, StatusCode = EnumStatusCode.StatusCode200 };
                 }
                 else
                 {
-                    return new FormatedResponse() { MessageCode = CommonMessageCodes.ITEMID_HAS_EXISTS, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400 };
-
+                    return new FormatedResponse() { MessageCode = CommonMessageCode.ENTITIES_NOT_FOUND, ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode500 };
                 }
+
 
             }
             catch (Exception ex)
@@ -2226,7 +2062,6 @@ namespace API.Controllers.HuEmployeeCv
                 employeeCvEntity.NATIONALITY_ID = request.NationalityId != null ? request.NationalityId : null;
                 employeeCvEntity.HEALTH_CARE_ADDRESS = request.MedicalExamPlace != null ? request.MedicalExamPlace : null;
                 employeeCvEntity.BANK_NO_2 = request.BankNo2 != null ? request.BankNo2 : null;
-                employeeCvEntity.DEFENSE_SECURITY_TRAINING = request.DefenseSecurityTraining != null ? request.DefenseSecurityTraining : null;
 
                 employeeEntity.ITIME_ID = request.ItimeId != null ? request.ItimeId : null;
                 employeeEntity.IS_NOT_CONTRACT = request.IsNotContract != null ? request.IsNotContract : null;
@@ -2289,7 +2124,6 @@ namespace API.Controllers.HuEmployeeCv
                                     GroupId = groupUser?.ID,
                                     Passwordhash = BCrypt.Net.BCrypt.HashPassword(employeeCvEntity.ID_NO),
                                     IsPortal = true,
-                                    IsMobile = true,
                                     IsWebapp = false,
                                     EmployeeCode = employeeMapped.CODE,
                                     EmployeeId = employeeMapped.ID,
@@ -2414,6 +2248,8 @@ namespace API.Controllers.HuEmployeeCv
                             {
                                 string avatar = uploadResponse.SavedAs;
                                 entity.AVATAR = avatar;
+                                entity.UPDATED_BY = sid;
+                                entity.UPDATED_DATE = DateTime.Now;
                                 await _dbContext.SaveChangesAsync();
                             }
 
@@ -2762,8 +2598,8 @@ namespace API.Controllers.HuEmployeeCv
                                       Id = e.ID,
                                       Age = cv.BIRTH_DATE == null ? 0 : DateTime.Now.Subtract(cv.BIRTH_DATE.Value).TotalDays / 365.25,
                                   }).ToListAsync();
-            var newEmpInMonth = await _dbContext.HuEmployees.AsNoTracking().Where(p => p.JOIN_DATE == null ? false : (p.JOIN_DATE!.Value.Month == DateTime.Now.Month && p.JOIN_DATE!.Value.Year == DateTime.Now.Year) && p.WORK_STATUS_ID != OtherConfig.EMP_STATUS_TERMINATE && (model.OrgIds.Count != 0 ? model.OrgIds.Contains(p.ORG_ID!.Value) : true)).CountAsync();
-            var terEmpInMonth = await _dbContext.HuEmployees.AsNoTracking().Where(p => p.TER_LAST_DATE == null ? false : (p.TER_LAST_DATE!.Value.Month == DateTime.Now.Month && p.TER_LAST_DATE!.Value.Year == DateTime.Now.Year) && (model.OrgIds.Count != 0 ? model.OrgIds.Contains(p.ORG_ID!.Value) : true)).CountAsync();
+            var newEmpInMonth = await _dbContext.HuEmployees.AsNoTracking().Where(p => p.JOIN_DATE == null ? false : (p.JOIN_DATE!.Value.Month <= DateTime.Now.Month && p.JOIN_DATE!.Value.Year == DateTime.Now.Year) && p.WORK_STATUS_ID != OtherConfig.EMP_STATUS_TERMINATE && (model.OrgIds.Count != 0 ? model.OrgIds.Contains(p.ORG_ID!.Value) : true)).CountAsync();
+            var terEmpInMonth = await _dbContext.HuEmployees.AsNoTracking().Where(p => p.TER_LAST_DATE == null ? false : (p.TER_LAST_DATE!.Value.Month <= DateTime.Now.Month && p.TER_LAST_DATE!.Value.Year == DateTime.Now.Year) && (model.OrgIds.Count != 0 ? model.OrgIds.Contains(p.ORG_ID!.Value) : true)).CountAsync();
             var averageAge = totalEmp.Count == 0 ? 0 : Math.Floor(totalEmp.Sum(p => p.Age) / totalEmp.Count);
             var query = new
             {
@@ -2782,7 +2618,7 @@ namespace API.Controllers.HuEmployeeCv
                                 where model.OrgIds.Count != 0 ? model.OrgIds.Contains(e.ORG_ID!.Value) : true
                                 select new
                                 {
-                                    Id = s.ID,
+                                    Id = s.ID ?? 0,
                                     NativeName = s.NAME ?? "Không xác định",
                                 }).GroupBy(p => new { p.Id, p.NativeName }).Select(group => new
                                 {
@@ -2976,109 +2812,19 @@ namespace API.Controllers.HuEmployeeCv
                 }
             };
         }
-
-        public async Task<FormatedResponse> UpdateGeneralInfo2(StaffProfileUpdateDTO request)
+        public async Task<FormatedResponse> GetIdOrgDissolve(HuEmployeeCvInputDTO? model)
         {
-            try
+            if (model.ShowDissolved.HasValue && model.ShowDissolved == false)
             {
-                // check duplicate field ITIME_ID
-                var check = await _dbContext.HuEmployees
-                                  .AnyAsync(x =>
-                                      x.ITIME_ID == request.ItimeId
-                                      && x.ID != request.Id
-                                      && x.ITIME_ID != ""
-                                      && x.ITIME_ID != null
-                                  );
-
-                if (check)
-                {
-                    return new FormatedResponse()
-                    {
-                        ErrorType = EnumErrorType.CATCHABLE,
-                        MessageCode = CommonMessageCodes.ITEMID_HAS_EXISTS,
-                        StatusCode = EnumStatusCode.StatusCode400
-                    };
-                }
-                else
-                {
-                    var entity = _dbContext.HuEmployees.FirstOrDefault(x => x.ID == request.Id);
-
-                    var entity_cv = _dbContext.HuEmployeeCvs.FirstOrDefault(x => x.ID == entity!.PROFILE_ID);
-
-                    if (entity != null)
-                    {
-                        // when a user updates field "ITIME_ID"
-                        entity.ITIME_ID = request.ItimeId == "" ? null : request.ItimeId;
-
-                        // when a user updates field "EMPLOYEE_OBJECT_ID"
-                        entity.EMPLOYEE_OBJECT_ID = request.ObjectEmployeeId;
-                        entity_cv!.EMPLOYEE_OBJECT_ID = request.ObjectEmployeeId;
-
-                        // when a user updates field "OTHER_NAME"
-                        entity_cv.OTHER_NAME = request.OtherName;
-
-                        // when a user updates field "IS_NOT_CONTRACT"
-                        entity.IS_NOT_CONTRACT = request.IsNotContract;
-
-
-                        // get approve id
-                        var approveId = _dbContext.SysOtherLists.FirstOrDefault(x => x.CODE == "DD")!.ID;
-
-                        // when an employee does not have the contract
-                        // set work status id
-                        var check1 = _dbContext.HuContracts.Any(x => x.EMPLOYEE_ID == request.Id);
-
-                        var check2 = _dbContext.HuContracts.Any(x => x.EMPLOYEE_ID == request.Id && x.STATUS_ID == approveId);
-
-                        if (check1 == false || check2 == false)
-                        {
-                            // when "IS_NOT_CONTRACT == true"
-                            if (entity.IS_NOT_CONTRACT == true)
-                            {
-                                // get work status id by code
-                                var workStatusId = _dbContext.SysOtherLists.FirstOrDefault(x => x.CODE == "ESW")!.ID;
-                                entity.WORK_STATUS_ID = workStatusId;
-
-                                var statusDetailId = _dbContext.SysOtherLists.FirstOrDefault(x => x.CODE == "00068")!.ID;
-                                entity.STATUS_DETAIL_ID = statusDetailId;
-                            }
-                            else
-                            {
-                                entity.WORK_STATUS_ID = null;
-                                entity.STATUS_DETAIL_ID = null;
-                            }
-                        }
-                        
-
-                        _dbContext.SaveChanges();
-                        
-                        return new FormatedResponse()
-                        {
-                            MessageCode = CommonMessageCode.UPDATE_SUCCESS,
-                            InnerBody = true,
-                            StatusCode = EnumStatusCode.StatusCode200
-                        };
-                    }
-                    else
-                    {
-                        return new FormatedResponse()
-                        {
-                            ErrorType = EnumErrorType.CATCHABLE,
-                            MessageCode = CommonMessageCode.ENTITIES_NOT_FOUND,
-                            StatusCode = EnumStatusCode.StatusCode400
-                        };
-                    }
-                }
+                var listId = await _dbContext.HuOrganizations.AsNoTracking().Where(p => model.OrgIds.Contains(p.ID) && p.IS_ACTIVE == false).Select(p => p.ID).ToListAsync();
+                model.OrgIds = model.OrgIds!.Except(listId).ToList();
             }
-            catch (Exception ex)
+            return new FormatedResponse()
             {
-                return new FormatedResponse()
-                {
-                    ErrorType = EnumErrorType.UNCATCHABLE,
-                    MessageCode = ex.Message,
-                    StatusCode = EnumStatusCode.StatusCode400
-                };
-            }
+                InnerBody = model.OrgIds,
+                StatusCode = EnumStatusCode.StatusCode200
+            };
         }
     }
 }
+

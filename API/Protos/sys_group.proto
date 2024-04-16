@@ -21,7 +21,7 @@ service GrpcSysGroup {
 
 // The request message containing the user's name.
 message QueryFunctionActionPermissionListRequest {
-  int32 objectId = 1;
+  int32 groupId = 1;
 }
 
 // The response message containing the greetings.

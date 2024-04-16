@@ -8,7 +8,6 @@ namespace API.Controllers.TrCenter
     {
         Task<GenericPhaseTwoListResponse<TrCenterDTO>> SinglePhaseQueryList(GenericQueryListDTO<TrCenterDTO> request);
         Task<FormatedResponse> CreateNewCode();
-        Task<FormatedResponse> GetListTrainingCenter();
     }
 }
 

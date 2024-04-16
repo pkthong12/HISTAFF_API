@@ -21,111 +21,115 @@
     "FontFamily": "Times New Roman",
     "Size": 11.0,
     "FontBolds": [
-      "A1:G1",
-      "B3:G3",
-      "B4:G4",
-      "B6:G6",
-      "A7:N7"
+      "A1:H1",
+      "A3:O3",
+      "A4:O4",
+      "A5:O6",
+      "A7:O7"
     ],
     "ErCode": "BC_THONG_KE_DU_LIEU",
     "HeaderRow": 7,
     "HeaderTitles": [
       {
         "Text": "ER_HEADER_TITLE_COMPANY_NAME",
-        "Cell": "A1:G1"
+        "Cell": "A1:H1"
       },
       {
         "Text": "ER_HEADER_REPORT_NAME_DOCUMENT_REPORT",
-        "Cell": "B3:G3"
+        "Cell": "A3:O3"
       },
       {
         "Text": "ER_HEADER_REPORT_FROM_DATE_TO_DATE",
-        "Cell": "B4:G4"
+        "Cell": "A4:O4"
       },
       {
-        "Text": "ER_HEADER_REPORT_UNIT_NAME",
-        "Cell": "B6:G6"
+        "Text": "ER_HEADER_REPORT_ORG",
+        "Cell": "A5:O5"
       }
     ],
     "HeaderGridTitles": [
       {
-        "Text": "ER_EMP_CODE",
+        "Text": "ER_ORDER_NUM",
         "Cell": "A7:A7"
       },
       {
-        "Text": "ER_FULL_NAME",
+        "Text": "ER_EMP_CODE",
         "Cell": "B7:B7"
       },
       {
-        "Text": "ER_ORG_UNIT",
+        "Text": "ER_FULL_NAME",
         "Cell": "C7:C7"
       },
       {
-        "Text": "ER_POSITION",
+        "Text": "ER_ORG_UNIT",
         "Cell": "D7:D7"
       },
       {
-        "Text": "ER_STATUS",
+        "Text": "ER_POSITION",
         "Cell": "E7:E7"
       },
       {
-        "Text": "ER_TOTAL_NUM",
+        "Text": "ER_STATUS",
         "Cell": "F7:F7"
       },
       {
-        "Text": "ER_BIRTH_CERTIFICATE",
+        "Text": "ER_TOTAL_NUM",
         "Cell": "G7:G7"
       },
       {
-        "Text": "ER_DEGREE",
+        "Text": "ER_BIRTH_CERTIFICATE",
         "Cell": "H7:H7"
       },
       {
-        "Text": "ER_ID_NO",
+        "Text": "ER_DEGREE",
         "Cell": "I7:I7"
       },
       {
-        "Text": "ER_CERTIFICATE_RECIDENCE_INF",
+        "Text": "ER_ID_NO",
         "Cell": "J7:J7"
       },
       {
-        "Text": "ER_CURRICULUM_VITAE",
+        "Text": "ER_CERTIFICATE_RECIDENCE_INF",
         "Cell": "K7:K7"
       },
       {
-        "Text": "ER_CV",
+        "Text": "ER_CURRICULUM_VITAE",
         "Cell": "L7:L7"
       },
       {
-        "Text": "ER_CERTIFICATE",
+        "Text": "ER_CV",
         "Cell": "M7:M7"
       },
       {
-        "Text": "ER_HEALTH_CERTIFICATION",
+        "Text": "ER_CERTIFICATE",
         "Cell": "N7:N7"
+      },
+      {
+        "Text": "ER_HEALTH_CERTIFICATION",
+        "Cell": "O7:O7"
       }
     ],
     "MegreCellRange": [
-      "A1:G1",
-      "B3:G3",
-      "B4:G4",
-      "B6:G6"
+      "A1:H1",
+      "A3:O3",
+      "A4:O4",
+      "A5:O5"
     ],
     "HorizontalAlignmentCenter": [
-      "B3:G3",
-      "A7:N7",
-      "F:N",
+      "A3:O3",
+      "A4:O4",
+      "A5:O5",
+      "A7:O7",
+      "F:O",
       "A:A"
     ],
     "HorizontalAlignmentLeft": [
-      "A1:G1",
-      "B4:G4",
-      "B6:G6"
+      "A1:G1"
     ],
     "VerticalAlignmentCenter": [
-      "B3:G3",
-      "A7:N7",
-      "F:N",
+      "A3:A3",
+      "A7:O7",
+      "F:O",
       "A:A"
     ],
 
@@ -135,11 +139,11 @@
         "Height": 40
       }
     ],
-    "RangeAutoFit": "A8:N8",
-    "BorderHeader": "A7:N7",
+    "RangeAutoFit": "A8:O8",
+    "BorderHeader": "A7:O7",
     "FontSizeSpecifics": [
       {
-        "Cell": "A7:N7",
+        "Cell": "A7:O7",
         "Size": 10
       }
     ]

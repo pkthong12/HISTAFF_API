@@ -33,7 +33,7 @@ namespace API.Controllers.HuEvaluate
             var employee = _uow.Context.Set<HU_EMPLOYEE>().AsNoTracking().AsQueryable();
             var organization = _uow.Context.Set<HU_ORGANIZATION>().AsNoTracking().AsQueryable();
             var concurrent = _uow.Context.Set<HU_CONCURRENTLY>().AsQueryable();
-            var  position = _uow.Context.Set<HU_POSITION>().AsNoTracking().AsQueryable();
+            var position = _uow.Context.Set<HU_POSITION>().AsNoTracking().AsQueryable();
             var evaluate = _uow.Context.Set<HU_EVALUATE>().AsNoTracking().AsQueryable();
             var classification = _uow.Context.Set<HU_CLASSIFICATION>().AsNoTracking().AsQueryable();
             var employeCv = _uow.Context.Set<HU_EMPLOYEE_CV>().AsNoTracking().AsQueryable();
@@ -112,60 +112,48 @@ namespace API.Controllers.HuEvaluate
                     });
                     var getClassification = (from cl in _uow.Context.Set<HU_CLASSIFICATION>().Where(x => x.CLASSIFICATION_LEVEL == item.CLASSIFICATION_ID)
                                              from sys in _uow.Context.Set<SYS_OTHER_LIST>().Where(x => x.ID == cl.CLASSIFICATION_TYPE && x.CODE == "LXL03")
-                                             select new { 
+                                             select new
+                                             {
                                                  Id = cl.ID,
                                                  PointFrom = cl.POINT_FROM,
                                                  PointTo = cl.POINT_TO
                                              }).FirstOrDefault();
-                    if (item.POINT_EVALUATION > getClassification.PointFrom && item.POINT_EVALUATION < getClassification.PointTo)
-                    {
-                        var checkBeforeInsert = (from ev in _uow.Context.Set<HU_EVALUATION_COM>()
-                                                 where  ev.EMPLOYEE_ID == item.EMPLOYEE_ID && ev.YEAR_EVALUATION == item.YEAR_EVALUATION
-                                                 select new
-                                                 {
-                                                     Id = ev.ID
-                                                 }).ToList();
-                        var checkMember = (from employee in _uow.Context.Set<HU_EMPLOYEE>().Where(x => x.ID == item.EMPLOYEE_ID)
-                                           from employeeCv in _uow.Context.Set<HU_EMPLOYEE_CV>().Where(x => x.ID == employee.PROFILE_ID)
-                                           where employeeCv.IS_MEMBER == true
-                                           select new { Id = employeeCv.ID }).FirstOrDefault();
-                        if (checkBeforeInsert.Count > 0)
-                        {
-                            checkData = true;
-                            return;
-                        }
-                        if(checkIsMember == null)
-                        {
-                            checkIsMember = true;
-                            return;
-                        }
-                        listAdd.Add(new()
-                        {
-                            EmployeeId = item.EMPLOYEE_ID,
-                            CreatedBy = request.XlsxSid,
-                            YearEvaluation = item.YEAR_EVALUATION,
-                            PointEvaluation = item.POINT_EVALUATION,
-                            ClassificationId = getClassification.Id,
-                            Note = item.NOTE
-                        });
 
-                    }
-                    else
+                    var checkBeforeInsert = (from ev in _uow.Context.Set<HU_EVALUATION_COM>()
+                                             where ev.EMPLOYEE_ID == item.EMPLOYEE_ID && ev.YEAR_EVALUATION == item.YEAR_EVALUATION
+                                             select new
+                                             {
+                                                 Id = ev.ID
+                                             }).ToList();
+                    var checkMember = (from employee in _uow.Context.Set<HU_EMPLOYEE>().Where(x => x.ID == item.EMPLOYEE_ID)
+                                       from employeeCv in _uow.Context.Set<HU_EMPLOYEE_CV>().Where(x => x.ID == employee.PROFILE_ID)
+                                       where employeeCv.IS_MEMBER == true
+                                       select new { Id = employeeCv.ID }).FirstOrDefault();
+                    if (checkBeforeInsert.Count > 0)
                     {
-                        checkPoint = true;
+                        checkData = true;
                         return;
                     }
-
+                    if (checkIsMember == null)
+                    {
+                        checkIsMember = true;
+                        return;
+                    }
+                    listAdd.Add(new()
+                    {
+                        EmployeeId = item.EMPLOYEE_ID,
+                        CreatedBy = request.XlsxSid,
+                        YearEvaluation = item.YEAR_EVALUATION,
+                        PointEvaluation = item.POINT_EVALUATION,
+                        ClassificationId = getClassification.Id,
+                        Note = item.NOTE
+                    });
                 });
                 if (checkData == true)
                 {
                     return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.DUBLICATE_VALUE_EVALUATE_TYPE_YEAR_EMPLOYEE_CONCURRENT_ID };
                 }
-                if (checkPoint == true)
-                {
-                    return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.CREATE_OBJECT_NUMBER_IS_NOT_ALLOWED };
-                }
-                if(checkIsMember == true)
+                if (checkIsMember == true)
                 {
                     return new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.EMPLOYEE_NOT_IS_MEMBER };
                 }

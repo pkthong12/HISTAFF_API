@@ -20,8 +20,8 @@ namespace API.Controllers.SysUser
         Task<FormatedResponse> QueryUserOrgPermissionList(SYS_USER user, bool? useGroupIfEmpty = true); // user is param
         Task<FormatedResponse> QueryFunctionActionPermissionList(SYS_USER user, bool? useGroupIfEmpty = true); // user is param
         Task<FormatedResponse> ChangePasswordPortal(SysUserChangePasswordRequest request);
-        Task<FormatedResponse> SubmitUsernameWhenForgotPassword(ResetPasswordRequest request);
-        Task<FormatedResponse> SubmitVerificationCode(ResetPasswordRequest request);
-        Task<FormatedResponse> ChangePasswordWhenForgotPassword(ResetPasswordRequest request);
+        Task<FormatedResponse> GetUserByEmployeeId(long  employeeId);
+        void TurnOffAccountUser();
     }
 }
+

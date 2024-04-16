@@ -68,7 +68,7 @@ namespace CoreAPI.File
 
             string targetFolder = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Logs);
             IEnumerable<string> files = await Task.Run(() => Directory.EnumerateFiles(targetFolder));
-            List<string> shortPathList = [];
+            List<string> shortPathList = new();
             string pathToAdd = "";
 
             foreach (string f in files)
@@ -77,7 +77,7 @@ namespace CoreAPI.File
                 shortPathList.Add(pathToAdd);
             }
 
-            return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode200,  InnerBody = shortPathList });
+            return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode200, InnerBody = shortPathList });
 
         }
 

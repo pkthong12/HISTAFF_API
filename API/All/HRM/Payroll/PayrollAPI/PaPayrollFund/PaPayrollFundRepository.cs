@@ -5,8 +5,6 @@ using CORE.Enum;
 using CORE.StaticConstant;
 using API.All.DbContexts;
 using CORE.AutoMapper;
-using Microsoft.AspNetCore.Identity;
-using API.All.SYSTEM.Common;
 
 namespace API.Controllers.PaPayrollFund
 {
@@ -123,22 +121,8 @@ namespace API.Controllers.PaPayrollFund
         {
             try
             {
-                var checkExsist = _dbContext.PaPayrollFunds.FirstOrDefault
-                    (x => x.YEAR == dto.Year && x.SALARY_PERIOD_ID == dto.SalaryPeriodId && x.LIST_FUND_ID == dto.ListFundId);
-                if(checkExsist != null)
-                {
-                    return new FormatedResponse()
-                    {
-                        MessageCode = CommonMessageCodes.EXIST_PAYROLL_FUND,
-                        StatusCode = EnumStatusCode.StatusCode400,
-                        ErrorType = EnumErrorType.CATCHABLE
-                    };
-                }
-                else
-                {
-                    var response = await _genericRepository.Create(_uow, dto, sid);
-                    return response;
-                }
+                var response = await _genericRepository.Create(_uow, dto, sid);
+                return response;
             }
             catch (Exception ex)
             {
@@ -163,18 +147,6 @@ namespace API.Controllers.PaPayrollFund
             
             try
             {
-                var checkExsist = _dbContext.PaPayrollFunds.FirstOrDefault
-                    (x => x.YEAR == dto.Year && x.SALARY_PERIOD_ID == dto.SalaryPeriodId && x.LIST_FUND_ID == dto.ListFundId && x.ID != dto.Id);
-                if (checkExsist != null)
-                {
-                    return new FormatedResponse()
-                    {
-                        MessageCode = CommonMessageCodes.EXIST_PAYROLL_FUND,
-                        StatusCode = EnumStatusCode.StatusCode400,
-                        ErrorType = EnumErrorType.CATCHABLE
-                    };
-                }
-
                 var response = await _genericRepository.Update(_uow, dto, sid, patchMode);
                 return response;
             }

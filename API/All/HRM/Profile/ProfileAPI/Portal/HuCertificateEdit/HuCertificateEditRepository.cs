@@ -19,6 +19,10 @@ using DocumentFormat.OpenXml.Office2010.Excel;
 using PayrollDAL.Models;
 using Microsoft.AspNetCore.SignalR;
 using API.Socket;
+using Common.Extensions;
+using CORE.JsonHelper;
+using System.Reflection;
+using CORE.Services.File;
 
 namespace API.Controllers.HuCertificateEdit
 {
@@ -30,8 +34,11 @@ namespace API.Controllers.HuCertificateEdit
         private IGenericRepository<HU_CERTIFICATE, HuCertificateDTO> _genericParentRepository;
         private readonly GenericReducer<HU_CERTIFICATE_EDIT, HuCertificateEditDTO> _genericReducer;
         IHubContext<SignalHub> _hubContext;
+        private readonly AppSettings _appSettings;
+        private readonly IWebHostEnvironment _env;
+        private readonly IFileService _fileService;
 
-        public HuCertificateEditRepository(FullDbContext context, GenericUnitOfWork uow, IHubContext<SignalHub> hubContext)
+        public HuCertificateEditRepository(FullDbContext context, AppSettings appSettings, IWebHostEnvironment env, IFileService fileService, GenericUnitOfWork uow, IHubContext<SignalHub> hubContext)
         {
             _dbContext = context;
             _uow = uow;
@@ -42,12 +49,13 @@ namespace API.Controllers.HuCertificateEdit
         }
         public async Task<GenericPhaseTwoListResponse<HuCertificateEditDTO>> SinglePhaseQueryList(GenericQueryListDTO<HuCertificateEditDTO> request)
         {
+            string[] arrString = Array.Empty<string>();
             var joined = from p in _dbContext.HuCertificateEdits
                          from e in _dbContext.HuEmployees.Where(x => x.ID == p.EMPLOYEE_ID).AsNoTracking().DefaultIfEmpty()
                          from cv in _dbContext.HuEmployeeCvs.Where(x => x.ID == e.PROFILE_ID).AsNoTracking().DefaultIfEmpty()
                          from org in _dbContext.HuOrganizations.Where(x => x.ID == e.ORG_ID).AsNoTracking().DefaultIfEmpty()
                          from po in _dbContext.HuPositions.Where(x => x.ID == e.POSITION_ID).AsNoTracking().DefaultIfEmpty()
-                         from j in _dbContext.HuJobs.AsNoTracking().Where(x=> x.ID == po.JOB_ID).DefaultIfEmpty()
+                         from j in _dbContext.HuJobs.AsNoTracking().Where(x => x.ID == po.JOB_ID).DefaultIfEmpty()
 
                          from type in _dbContext.SysOtherLists.Where(x => x.ID == p.TYPE_CERTIFICATE).AsNoTracking().DefaultIfEmpty()
                          from s in _dbContext.SysOtherLists.Where(x => x.ID == p.STATUS_ID).AsNoTracking().DefaultIfEmpty()
@@ -69,7 +77,8 @@ namespace API.Controllers.HuCertificateEdit
                              Remark = p.REMARK,
                              OrgId = e.ORG_ID,
                              TrainFromDateStr = (p.TRAIN_FROM_DATE != null) ? p.TRAIN_FROM_DATE.Value.ToString("dd/MM/yyyy") : "",
-                             TrainToDateStr = (p.TRAIN_TO_DATE != null) ? p.TRAIN_TO_DATE.Value.ToString("dd/MM/yyyy") : ""
+                             TrainToDateStr = (p.TRAIN_TO_DATE != null) ? p.TRAIN_TO_DATE.Value.ToString("dd/MM/yyyy") : "",
+                             ModelChanges = !string.IsNullOrEmpty(p.MODEL_CHANGE) ? p.MODEL_CHANGE!.Split(";", StringSplitOptions.None) : arrString
                          };
 
             var singlePhaseResult = await _genericReducer.SinglePhaseReduce(joined, request);
@@ -3620,7 +3629,7 @@ namespace API.Controllers.HuCertificateEdit
                                    from typeTrain in otherLists.Where(x => x.ID == p.TYPE_TRAIN).DefaultIfEmpty()
                                    from school in otherLists.Where(x => x.ID == p.SCHOOL_ID).DefaultIfEmpty()
                                    from lv in otherLists.Where(x => x.ID == p.LEVEL_ID).DefaultIfEmpty()
-                                   where p.EMPLOYEE_ID == employeeId && p.IS_APPROVE_PORTAL == false && p.IS_SEND_PORTAL == true
+                                   where p.EMPLOYEE_ID == employeeId && p.IS_APPROVE_PORTAL == false && p.IS_SEND_PORTAL == true && p.STATUS_ID == OtherConfig.STATUS_WAITING
                                    select new HuCertificateEditDTO
                                    {
                                        Id = p.ID,
@@ -3739,6 +3748,330 @@ namespace API.Controllers.HuCertificateEdit
                 return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode500, ErrorType = EnumErrorType.UNCATCHABLE, MessageCode = ex.Message };
             }
         }
+
+        public async Task<FormatedResponse> SendApproveCertificate(HuCertificateEditDTO request)
+        {
+            bool pathMode = true;
+            string sid = "";
+            var getOtherList = (from t in _uow.Context.Set<SYS_OTHER_LIST_TYPE>().Where(x => x.CODE == "STATUS")
+                                from o in _uow.Context.Set<SYS_OTHER_LIST>().Where(x => x.CODE == "CD")
+                                select new { Id = o.ID }).FirstOrDefault();
+            var getData = _uow.Context.Set<HU_CERTIFICATE_EDIT>().Where(x => x.EMPLOYEE_ID == request.EmployeeId && x.IS_SEND_PORTAL == true && x.IS_APPROVE_PORTAL == false);
+            if (getData.Any())
+            {
+                return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.HAD_RECORD_IS_APPROVING };
+;           }
+            if(request.Id != null && request.IsSavePortal == true) //gửi duyệt bản ghi đã lưu
+            {
+                request.IsSendPortal = true;
+                request.IsSavePortal = false;
+                request.IsApprovePortal = false;
+                request.StatusId = getOtherList?.Id;
+                if (request.IdHuCertificate != null)
+                {
+                    var certificate = _uow.Context.Set<HU_CERTIFICATE>().Where(x => x.ID == request.IdHuCertificate).AsNoTracking().AsQueryable();
+                    List<string> listModelChange = new List<string>();
+                    if (certificate != null)
+                    {
+                        var entityType = typeof(HU_EMPLOYEE_CV);
+                        var dtoType = typeof(HuEmployeeCvDTO);
+                        var entityPropList = entityType.GetProperties().ToList();
+                        var dtoPropList = dtoType.GetProperties().ToList();
+
+                        var query = Activator.CreateInstance(dtoType);
+
+
+                        entityPropList.ForEach(prop =>
+                        {
+                            var value = prop.GetValue(certificate);
+                            var dtoProp = dtoPropList.SingleOrDefault(x => x.Name == prop.Name.SnakeToCamelCase().CamelToPascalCase());
+                            dtoProp?.SetValue(query, value);
+
+                        });
+
+
+                        if (query != null)
+                        {
+                            Type type = query.GetType();
+                            Type type2 = request.GetType();
+                            IList<PropertyInfo> props = new List<PropertyInfo>(type.GetProperties());
+                            IList<PropertyInfo> prop2s = new List<PropertyInfo>(type2.GetProperties());
+                            foreach (PropertyInfo prop in props)
+                            {
+                                foreach (PropertyInfo prop2 in prop2s)
+                                {
+
+                                    if (prop.Name != "Id" && prop.Name != null && prop.Name == prop2.Name && prop.GetValue(query) != null && prop2.GetValue(request) != null && prop.GetValue(query)!.ToString() != prop2.GetValue(request)!.ToString())
+                                    {
+                                        listModelChange.Add(Char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1));
+                                    }
+
+                                }
+                            }
+                            request.ModelChange = string.Join(";", listModelChange);
+                        }
+                    }
+                }
+                else
+                {
+                    string[] arrModelChanges = {"typeCertificate","name","effectFrom","trainFromDate","trainToDate",
+                                            "mojor","levelTrain","contentTrain","year","mark","schoolId",
+                                            "typeTrain","codeCertificate","classification","fileName","remark",
+                                            "levelId","level","effectTo","reason"};
+                    request.ModelChange = string.Join(";", arrModelChanges);
+                }
+                
+
+                List<UploadFileResponse> uploadFiles1 = new();
+                // First of all we need to upload all the attachments
+                if (request.FirstAttachmentBuffer != null)
+                {
+                    string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
+                    var uploadFileResponse = await _fileService.UploadFile(new UploadRequest()
+                    {
+                        ClientFileName = request.FirstAttachmentBuffer.ClientFileName,
+                        ClientFileType = request.FirstAttachmentBuffer.ClientFileType,
+                        ClientFileData = request.FirstAttachmentBuffer.ClientFileData
+                    }, location, sid);
+
+                    // Assign saved paths
+                    var property = typeof(HuCertificateEditDTO).GetProperty("FileName");
+
+                    if (property != null)
+                    {
+                        property?.SetValue(request, uploadFileResponse.SavedAs);
+                        uploadFiles1.Add(uploadFileResponse);
+                    }
+                    else
+                    {
+                        return new FormatedResponse()
+                        {
+                            ErrorType = EnumErrorType.CATCHABLE,
+                            StatusCode = EnumStatusCode.StatusCode400,
+                            MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": FirstAttachment"
+                        };
+                    }
+                }
+
+                var updateResponse = await _genericRepository.Update(_uow, request, sid, pathMode);
+                return updateResponse;  
+            }
+            if(request.Id != null && request.IsSavePortal == false) //gửi duyệt bản ghi đã bị từ chối
+            {
+                request.IsSendPortal = true;
+                request.IsApprovePortal = false;
+                request.StatusId = getOtherList?.Id;
+                
+
+                var certificate = _uow.Context.Set<HU_CERTIFICATE>().Where(x => x.ID == request.IdHuCertificate).AsNoTracking().AsQueryable();
+                List<string> listModelChange = new List<string>();
+                if (certificate != null)
+                {
+                    var entityType = typeof(HU_EMPLOYEE_CV);
+                    var dtoType = typeof(HuEmployeeCvDTO);
+                    var entityPropList = entityType.GetProperties().ToList();
+                    var dtoPropList = dtoType.GetProperties().ToList();
+
+                    var query = Activator.CreateInstance(dtoType);
+
+
+                    entityPropList.ForEach(prop =>
+                    {
+                        var value = prop.GetValue(certificate);
+                        var dtoProp = dtoPropList.SingleOrDefault(x => x.Name == prop.Name.SnakeToCamelCase().CamelToPascalCase());
+                        dtoProp?.SetValue(query, value);
+
+                    });
+
+
+                    if (query != null)
+                    {
+                        Type type = query.GetType();
+                        Type type2 = request.GetType();
+                        IList<PropertyInfo> props = new List<PropertyInfo>(type.GetProperties());
+                        IList<PropertyInfo> prop2s = new List<PropertyInfo>(type2.GetProperties());
+                        foreach (PropertyInfo prop in props)
+                        {
+                            foreach (PropertyInfo prop2 in prop2s)
+                            {
+
+                                if (prop.Name != "Id" && prop.Name != null && prop.Name == prop2.Name && prop.GetValue(query) != null && prop2.GetValue(request) != null && prop.GetValue(query)!.ToString() != prop2.GetValue(request)!.ToString())
+                                {
+                                    listModelChange.Add(Char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1));
+                                }
+
+                            }
+                        }
+                        request.ModelChange = string.Join(";", listModelChange);
+                    }
+                }
+                List<UploadFileResponse> uploadFiles1 = new();
+                // First of all we need to upload all the attachments
+                if (request.FirstAttachmentBuffer != null)
+                {
+                    string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
+                    var uploadFileResponse = await _fileService.UploadFile(new UploadRequest()
+                    {
+                        ClientFileName = request.FirstAttachmentBuffer.ClientFileName,
+                        ClientFileType = request.FirstAttachmentBuffer.ClientFileType,
+                        ClientFileData = request.FirstAttachmentBuffer.ClientFileData
+                    }, location, sid);
+
+                    // Assign saved paths
+                    var property = typeof(HuCertificateEditDTO).GetProperty("FileName");
+
+                    if (property != null)
+                    {
+                        property?.SetValue(request, uploadFileResponse.SavedAs);
+                        uploadFiles1.Add(uploadFileResponse);
+                    }
+                    else
+                    {
+                        return new FormatedResponse()
+                        {
+                            ErrorType = EnumErrorType.CATCHABLE,
+                            StatusCode = EnumStatusCode.StatusCode400,
+                            MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": FirstAttachment"
+                        };
+                    }
+                }
+
+                var updateResponse = await _genericRepository.Update(_uow, request, sid, pathMode);
+                return updateResponse;
+            }
+            if(request.Id == null || request.Id == 0) //thêm mới bản ghi và gửi duyệt
+            {
+                request.IsSendPortal = true;
+                request.IsSavePortal = false;
+                request.IsApprovePortal = false;
+                request.StatusId = getOtherList?.Id;
+
+                List<UploadFileResponse> uploadFiles1 = new();
+                // First of all we need to upload all the attachments
+                if (request.FirstAttachmentBuffer != null)
+                {
+                    string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
+                    var uploadFileResponse = await _fileService.UploadFile(new UploadRequest()
+                    {
+                        ClientFileName = request.FirstAttachmentBuffer.ClientFileName,
+                        ClientFileType = request.FirstAttachmentBuffer.ClientFileType,
+                        ClientFileData = request.FirstAttachmentBuffer.ClientFileData
+                    }, location, sid);
+
+                    // Assign saved paths
+                    var property = typeof(HuCertificateEditDTO).GetProperty("FileName");
+
+                    if (property != null)
+                    {
+                        property?.SetValue(request, uploadFileResponse.SavedAs);
+                        uploadFiles1.Add(uploadFileResponse);
+                    }
+                    else
+                    {
+                        return new FormatedResponse()
+                        {
+                            ErrorType = EnumErrorType.CATCHABLE,
+                            StatusCode = EnumStatusCode.StatusCode400,
+                            MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": FirstAttachment"
+                        };
+                    }
+                }
+                string[] arrModelChanges = {"typeCertificate","name","effectFrom","trainFromDate","trainToDate",
+                                            "mojor","levelTrain","contentTrain","year","mark","schoolId",
+                                            "typeTrain","codeCertificate","classification","fileName","remark",
+                                            "levelId","level","effectTo","reason"};
+                request.ModelChange = string.Join(";", arrModelChanges);
+
+                var createResponse = await _genericRepository.Create(_uow, request, sid);
+                return createResponse;
+            }
+
+            request.IsSendPortal = true;
+            request.IsSavePortal = false;
+            request.IsApprovePortal = false;
+            request.StatusId = getOtherList?.Id;
+            request.IdHuCertificate = request.Id;
+            request.Id = null;
+
+            if (request.IdHuCertificate != null)
+            {
+                var certificate = _uow.Context.Set<HU_CERTIFICATE>().Where(x => x.ID == request.IdHuCertificate).AsNoTracking().AsQueryable();
+                List<string> listModelChange = new List<string>();
+                if (certificate != null)
+                {
+                    var entityType = typeof(HU_EMPLOYEE_CV);
+                    var dtoType = typeof(HuEmployeeCvDTO);
+                    var entityPropList = entityType.GetProperties().ToList();
+                    var dtoPropList = dtoType.GetProperties().ToList();
+
+                    var query = Activator.CreateInstance(dtoType);
+
+
+                    entityPropList.ForEach(prop =>
+                    {
+                        var value = prop.GetValue(certificate);
+                        var dtoProp = dtoPropList.SingleOrDefault(x => x.Name == prop.Name.SnakeToCamelCase().CamelToPascalCase());
+                        dtoProp?.SetValue(query, value);
+
+                    });
+
+
+                    if (query != null)
+                    {
+                        Type type = query.GetType();
+                        Type type2 = request.GetType();
+                        IList<PropertyInfo> props = new List<PropertyInfo>(type.GetProperties());
+                        IList<PropertyInfo> prop2s = new List<PropertyInfo>(type2.GetProperties());
+                        foreach (PropertyInfo prop in props)
+                        {
+                            foreach (PropertyInfo prop2 in prop2s)
+                            {
+
+                                if (prop.Name != "Id" && prop.Name != null && prop.Name == prop2.Name && prop.GetValue(query) != null && prop2.GetValue(request) != null && prop.GetValue(query)!.ToString() != prop2.GetValue(request)!.ToString())
+                                {
+                                    listModelChange.Add(Char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1));
+                                }
+
+                            }
+                        }
+                        request.ModelChange = string.Join(";", listModelChange);
+                    }
+                }
+            }
+            List<UploadFileResponse> uploadFiles = new();
+            // First of all we need to upload all the attachments
+            if (request.FirstAttachmentBuffer != null)
+            {
+                string location = Path.Combine(_env.ContentRootPath, _appSettings.StaticFolders.Root, _appSettings.StaticFolders.Attachments);
+                var uploadFileResponse = await _fileService.UploadFile(new UploadRequest()
+                {
+                    ClientFileName = request.FirstAttachmentBuffer.ClientFileName,
+                    ClientFileType = request.FirstAttachmentBuffer.ClientFileType,
+                    ClientFileData = request.FirstAttachmentBuffer.ClientFileData
+                }, location, sid);
+
+                // Assign saved paths
+                var property = typeof(HuCertificateEditDTO).GetProperty("FileName");
+
+                if (property != null)
+                {
+                    property?.SetValue(request, uploadFileResponse.SavedAs);
+                    uploadFiles.Add(uploadFileResponse);
+                }
+                else
+                {
+                    return new FormatedResponse()
+                    {
+                        ErrorType = EnumErrorType.CATCHABLE,
+                        StatusCode = EnumStatusCode.StatusCode400,
+                        MessageCode = CommonMessageCode.ASSIGN_TO_VALUE_DOES_NOT_MATCH_ANY_COLUMN + ": FirstAttachment"
+                    };
+                }
+            }
+            var response = await _genericRepository.Create(_uow, request, sid);
+            return response;
+        }
+
     }
 }
 

@@ -152,6 +152,9 @@
         public const int POSTPONE_CONTRACT = 1172;   // Tạm hoãn hợp đồng
         public const int TYPE_TER_REASON = 1051;   // Nghỉ hưu
 
+        //Set up thoi gian hien thi tb
+        public const int NUM_OFF_NOTIFICATION = 30;
+
         
     }
     public class Message
@@ -202,6 +205,7 @@
         public const String PKG_ENTITLEMENT_CREATED_BY_CONTRACT = "PKG_ENTITLEMENT.CREATED_BY_CONTRACT";//da thay the
         public const String PKG_IMPORT_CONTRACT_DATA_IMPORT = "PKG_IMPORT.CONTRACT_DATA_IMPORT";//da thay the
         public const String PKG_PROFILE_GET_INFO = "PKG_PROFILE.GET_INFO";//da thay the cho tat ca cac function
+        public const String PKG_COMMON_LIST_RULE = "PKG_COMMON.LIST_RULE";//da thay the cho tat ca cac function
         public const String PKG_PROFILE_IMPORT_EMP = "PKG_PROFILE.IMPORT_EMP";
         public const String PKG_PROFILE_GET_DATA_IMPORT = "PKG_PROFILE.GET_DATA_IMPORT";//da thay the
         public const String PKG_PROFILE_PHONE_BOOK = "PKG_PROFILE.PHONE_BOOK";//da thay the

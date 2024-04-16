@@ -234,7 +234,7 @@ namespace API.Controllers.HuContractImport
                     {
                         if (checkWorking.STATUS_ID == OtherConfig.STATUS_WAITING)
                         {
-                            throw new Exception("WORKING_IS_NOT_APPROVE" + " " + cv.CONTRACT_NO);
+                            throw new Exception("WORKING_IS_NOT_APPROVE"+" "+cv.CONTRACT_NO);
                         }
                     }
                     else
@@ -245,11 +245,11 @@ namespace API.Controllers.HuContractImport
                     var checkContractNo = _dbContext.HuContracts.AsNoTracking().Where(p => p.CONTRACT_NO.Trim().ToUpper() == cv.CONTRACT_NO.Trim().ToUpper()).Any();
                     if (checkContractNo)
                     {
-                        throw new Exception("CONTRACT_NO_IS_EXIST" + " " + cv.CONTRACT_NO.ToUpper());
+                        throw new Exception("CONTRACT_NO_IS_EXIST"+" "+ cv.CONTRACT_NO.ToUpper());
                     }
                     //lay phong ban nhan vien
                     var emp = _dbContext.HuEmployees.AsNoTracking().Where(p => p.ID == cv.EMPLOYEE_ID).FirstOrDefault();
-                    if (emp == null)
+                    if (emp==null)
                     {
                         throw new Exception("EMPPLOYEE_NOT_EXIST");
                     }
@@ -260,12 +260,12 @@ namespace API.Controllers.HuContractImport
                     var signer = (from e in _dbContext.HuEmployees.AsNoTracking().Where(p => p.ID == cv.SIGN_ID)
                                   from cvs in _dbContext.HuEmployeeCvs.AsNoTracking().Where(p => p.ID == e.PROFILE_ID).DefaultIfEmpty()
                                   select cvs).FirstOrDefault();
-                    cv.SIGNER_NAME = signer == null ? null : signer!.FULL_NAME ?? "";
+                    cv.SIGNER_NAME = signer ==null?null: signer!.FULL_NAME ?? "";
                     //lay chuc danh nguoi ky
                     var signerPos = (from e in _dbContext.HuEmployees.AsNoTracking().Where(p => p.ID == cv.SIGN_ID)
                                      from p in _dbContext.HuPositions.AsNoTracking().Where(p => p.ID == e.POSITION_ID).DefaultIfEmpty()
                                      select p).FirstOrDefault();
-                    cv.SIGNER_POSITION = signerPos == null ? null : (signerPos!.NAME ?? "");
+                    cv.SIGNER_POSITION =signerPos == null ? null: (signerPos!.NAME ?? "");
 
                     cv.CREATED_DATE = now;
                     cv.CREATED_BY = request.XlsxSid;

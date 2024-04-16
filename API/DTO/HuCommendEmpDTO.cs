@@ -8,6 +8,5 @@
         public long? CommendId { get; set; }
         public long? PosId { get; set; }
         public long? OrgId { get; set; }
-        public long? StatusId { get; set; }
     }
 }

@@ -51,9 +51,9 @@ namespace InsuranceAPI.Business
                 var companies = _uow.Context.Set<HU_COMPANY>().AsNoTracking().AsQueryable();
                 var otherLists = _uow.Context.Set<SYS_OTHER_LIST>().AsNoTracking().AsQueryable();
                 var information = _uow.Context.Set<INS_INFORMATION>().AsNoTracking().AsQueryable();
-                var working = _uow.Context.Set<HU_WORKING>().AsNoTracking().AsQueryable(); 
+                var working = _uow.Context.Set<HU_WORKING>().AsNoTracking().AsQueryable();
                 var region = _uow.Context.Set<INS_REGION>().AsNoTracking().AsQueryable();
-                var specified = _uow.Context.Set<INS_SPECIFIED_OBJECTS>().AsNoTracking().AsQueryable(); 
+                var specified = _uow.Context.Set<INS_SPECIFIED_OBJECTS>().AsNoTracking().AsQueryable();
 
                 var joined = from p in entity
                              from e in employees.Where(x => x.ID == p.EMPLOYEE_ID).DefaultIfEmpty()
@@ -66,6 +66,7 @@ namespace InsuranceAPI.Business
                              from spec in specified.Where(x => x.ID == p.INS_SPECIFIED_ID).DefaultIfEmpty()
                              from r in region.Where(x => x.AREA_ID == c.REGION_ID && (x.EFFECT_DATE <= p.EFFECT_DATE || (x.EFFECT_DATE <= p.EFFECT_DATE && p.EFFECT_DATE <= x.EXPRIVED_DATE))).OrderByDescending(x => x.EFFECT_DATE).Take(1).DefaultIfEmpty()
                              where p.STATUS == 0
+                             //orderby p.CREATED_DATE ascending
                              select new InsArisingDTO
                              {
                                  Id = p.ID,
@@ -77,29 +78,28 @@ namespace InsuranceAPI.Business
                                  OrgName = o.NAME,
                                  EffectDate = p.EFFECT_DATE,
                                  DeclaredDate = p.DECLARED_DATE,
-                                 //NewSal = (p.NEW_SAL == null ? 0 : (float)p.NEW_SAL) >= (spec.SI_HI == null ? 0 : (float)spec.SI_HI) ? (spec.SI_HI == null ? 0 : (float)spec.SI_HI) : (p.NEW_SAL == null ? 0 : (float)p.NEW_SAL),
-                                 //OldSal =  (p.OLD_SAL ==null? 0: (float) p.OLD_SAL) >= (spec.SI_HI ==null? 0: (float)spec.SI_HI)?(spec.SI_HI ==null? 0: (float)spec.SI_HI) : ( p.OLD_SAL ==null? 0: (float) p.OLD_SAL),
-                                 NewSal = p.NEW_SAL,
-                                 OldSal = p.OLD_SAL,
+
+                                 NewSal = (p.NEW_SAL == null ? 0 : (float)p.NEW_SAL!) >= (spec.SI_HI == null ? 0 : (float)spec.SI_HI) ? (spec.SI_HI == null ? 0 : (float)spec.SI_HI) : (p.NEW_SAL == null ? 0 : (float)p.NEW_SAL!),
+                                 OldSal = (p.OLD_SAL == null ? 0 : (float)p.OLD_SAL!) >= (spec.SI_HI == null ? 0 : (float)spec.SI_HI) ? (spec.SI_HI == null ? 0 : (float)spec.SI_HI) : (p.OLD_SAL == null ? 0 : (float)p.OLD_SAL!),
                                  InsOrgId = i.ID == null ? 0 : i.ID,
                                  InsOrgName = i.NAME,
                                  InsGroupType = p.INS_GROUP_TYPE,
                                  InsGroupTypeName = p.INS_GROUP_TYPE == 1 ? "Tăng" : p.INS_GROUP_TYPE == 2 ? "Giảm" : "Điều chỉnh",
                                  Hi = p.HI,
                                  Ai = p.AI,
-                                 Si = p.SI, 
-                                 Ui = p.UI, 
+                                 Si = p.SI,
+                                 Ui = p.UI,
                                  CreatedBy = p.CREATED_BY,
                                  UpdatedBy = p.UPDATED_BY,
                                  CreatedDate = p.CREATED_DATE,
                                  UpdatedDate = p.UPDATED_DATE,
                                  InsNo = e.Profile!.INSURENCE_NUMBER,
-                                 
-                                 NewInsSal = (float)(p.NEW_SAL??0),
+
+                                 NewInsSal = (p.NEW_SAL == null ? 0 : (float)p.NEW_SAL!) < (r.CEILING_UI == null ? 0 : (float)r.CEILING_UI) ? (p.NEW_SAL == null ? 0 : (float)p.NEW_SAL!) : (r.CEILING_UI == null ? 0 : (float)r.CEILING_UI),
                                  //NewInsSal = (p.NEW_SAL == null ? 0 : (float)p.NEW_SAL) > (spec.UI == null ? 0 : (float)spec.UI) ? (spec.UI == null ? 0 : (float)spec.UI) : (p.NEW_SAL == null ? 0 : (float)p.NEW_SAL),
                                  OldInsSal = (p.OLD_SAL == null ? 0 : (float)p.OLD_SAL!) < (r.CEILING_UI == null ? 0 : (float)r.CEILING_UI) ? (p.OLD_SAL == null ? 0 : (float)p.OLD_SAL!) : (r.CEILING_UI == null ? 0 : (float)r.CEILING_UI),
                                  //OldInsSal = (p.OLD_SAL == null ? 0 : (float)p.OLD_SAL) > (spec.UI == null ? 0 : (float)spec.UI) ? (spec.UI == null ? 0 : (float)spec.UI) : (p.OLD_SAL == null ? 0 : (float)p.OLD_SAL),
-                                 Reasons = p.REASONS,
+                                 Reasons = p.REASONS
                              };
 
                 //NewInsSal = w.SAL_INSU > r.MONEY * 20 ?(float) r.MONEY * 20 : (float)w.SAL_INSU,
@@ -135,16 +135,16 @@ namespace InsuranceAPI.Business
             {
                 var entity = _uow.Context.Set<INS_TYPE>().AsNoTracking().AsQueryable();
                 var joined = await (from p in entity
-                                  orderby p.NAME 
-                                  select new InsTypeDTO
-                                  {
-                                      Id = p.ID,
-                                      Name = p.NAME,
-                                      CreatedBy = p.CREATED_BY,
-                                      UpdatedBy = p.UPDATED_BY,
-                                      CreatedDate = p.CREATED_DATE,
-                                      UpdatedDate = p.UPDATED_DATE
-                                  }).ToListAsync();
+                                    orderby p.NAME
+                                    select new InsTypeDTO
+                                    {
+                                        Id = p.ID,
+                                        Name = p.NAME,
+                                        CreatedBy = p.CREATED_BY,
+                                        UpdatedBy = p.UPDATED_BY,
+                                        CreatedDate = p.CREATED_DATE,
+                                        UpdatedDate = p.UPDATED_DATE
+                                    }).ToListAsync();
                 var response = new FormatedResponse() { InnerBody = joined };
                 return Ok(response);
             }
@@ -161,17 +161,17 @@ namespace InsuranceAPI.Business
             {
                 var entity = _uow.Context.Set<INS_TYPE>().AsNoTracking().AsQueryable();
                 var joined = await (from p in entity
-                                  where p.ID == id && p.IS_ACTIVE == true
-                                  orderby p.NAME
-                                  select new 
-                                  {
-                                      Id = p.ID,
-                                      Name = p.NAME,
-                                      CreatedBy = p.CREATED_BY,
-                                      UpdatedBy = p.UPDATED_BY,
-                                      CreatedDate = p.CREATED_DATE,
-                                      UpdatedDate = p.UPDATED_DATE
-                                  }).FirstOrDefaultAsync();
+                                    where p.ID == id && p.IS_ACTIVE == true
+                                    orderby p.NAME
+                                    select new
+                                    {
+                                        Id = p.ID,
+                                        Name = p.NAME,
+                                        CreatedBy = p.CREATED_BY,
+                                        UpdatedBy = p.UPDATED_BY,
+                                        CreatedDate = p.CREATED_DATE,
+                                        UpdatedDate = p.UPDATED_DATE
+                                    }).FirstOrDefaultAsync();
                 var response = new FormatedResponse() { InnerBody = joined };
                 return Ok(response);
             }
@@ -193,34 +193,34 @@ namespace InsuranceAPI.Business
                 var companies = _uow.Context.Set<HU_COMPANY>().AsNoTracking().AsQueryable();
                 var otherLists = _uow.Context.Set<SYS_OTHER_LIST>().AsNoTracking().AsQueryable();
                 var joined = (from p in entity
-                             from e in employees.Where(x => x.ID == p.EMPLOYEE_ID).DefaultIfEmpty()
-                             from t in positions.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
-                             from o in organizations.Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
-                             from c in companies.Where(x => x.ID == o.COMPANY_ID).DefaultIfEmpty()
-                             from i in otherLists.Where(x => x.ID == c.INS_UNIT).DefaultIfEmpty()
-                             where p.ID == id
-                             orderby p.CREATED_DATE descending
-                             select new InsArisingDTO
-                             {
-                                 Id = p.ID,
-                                 EmployeeName = e.Profile.FULL_NAME,
-                                 EmployeeCode = e.CODE,
-                                 PositionName = t.NAME,
-                                 OrgId = e.ORG_ID,
-                                 OrgName = o.NAME,
-                                 InsOrgId = i.ID,
-                                 InsOrgName = i.NAME,
-                                 InsGroupType = p.INS_GROUP_TYPE,
-                                 InsGroupTypeName = p.INS_GROUP_TYPE == 1 ? "Tăng" : p.INS_GROUP_TYPE == 2 ? "Giảm" : "Điều chỉnh",
-                                 Hi = p.HI,
-                                 Ai = p.AI,
-                                 Si = p.SI,
-                                 Ui = p.UI,
-                                 CreatedBy = p.CREATED_BY,
-                                 UpdatedBy = p.UPDATED_BY,
-                                 CreatedDate = p.CREATED_DATE,
-                                 UpdatedDate = p.UPDATED_DATE
-                             }).FirstOrDefault();
+                              from e in employees.Where(x => x.ID == p.EMPLOYEE_ID).DefaultIfEmpty()
+                              from t in positions.Where(x => x.ID == e.POSITION_ID).DefaultIfEmpty()
+                              from o in organizations.Where(x => x.ID == e.ORG_ID).DefaultIfEmpty()
+                              from c in companies.Where(x => x.ID == o.COMPANY_ID).DefaultIfEmpty()
+                              from i in otherLists.Where(x => x.ID == c.INS_UNIT).DefaultIfEmpty()
+                              where p.ID == id
+                              orderby p.CREATED_DATE descending
+                              select new InsArisingDTO
+                              {
+                                  Id = p.ID,
+                                  EmployeeName = e.Profile.FULL_NAME,
+                                  EmployeeCode = e.CODE,
+                                  PositionName = t.NAME,
+                                  OrgId = e.ORG_ID,
+                                  OrgName = o.NAME,
+                                  InsOrgId = i.ID,
+                                  InsOrgName = i.NAME,
+                                  InsGroupType = p.INS_GROUP_TYPE,
+                                  InsGroupTypeName = p.INS_GROUP_TYPE == 1 ? "Tăng" : p.INS_GROUP_TYPE == 2 ? "Giảm" : "Điều chỉnh",
+                                  Hi = p.HI,
+                                  Ai = p.AI,
+                                  Si = p.SI,
+                                  Ui = p.UI,
+                                  CreatedBy = p.CREATED_BY,
+                                  UpdatedBy = p.UPDATED_BY,
+                                  CreatedDate = p.CREATED_DATE,
+                                  UpdatedDate = p.UPDATED_DATE
+                              }).FirstOrDefault();
                 var response = new FormatedResponse() { InnerBody = joined };
                 return Ok(response);
             }

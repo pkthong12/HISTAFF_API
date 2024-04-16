@@ -12,7 +12,8 @@
       "ExDirectReferences": [
         {
           "Table": "HU_EMPLOYEE_CV",
-          "UniqueIndexColumns": [ "FULL_NAME", "ID_NO" ]
+          "UniqueIndexColumns": [ "FULL_NAME", "ID_NO" ],
+          "Condition":  "(IS_MEMBER = 1)"
         },
         {
           "Table": "HU_EMPLOYEE",
@@ -33,6 +34,7 @@
           "ChildKey": "PROFILE_ID",
           "ParentUniqueIndexColumns": [ "FULL_NAME", "ID_NO" ],
           "ChildUniqueIndexColumns": [ "CODE" ]
+          
         }
 
       ],

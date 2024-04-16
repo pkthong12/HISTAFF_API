@@ -9,17 +9,25 @@ using System.Diagnostics;
 namespace API.All.SYSTEM.Common.Middleware
 {
 
-    public class MessageCodeTranslationMiddleware(
-        RequestDelegate next, 
-        ILogger<MessageCodeTranslationMiddleware> logger, 
+    public class MessageCodeTranslationMiddleware
+    {
+        private readonly RequestDelegate _next;
+        private readonly ILogger<MessageCodeTranslationMiddleware> _logger;
+        private readonly IHubContext<SignalHub> _hubContext;
+        private readonly AppSettings _appSettings;
+
+        public MessageCodeTranslationMiddleware(
+        RequestDelegate next,
+        ILogger<MessageCodeTranslationMiddleware> logger,
         IHubContext<SignalHub> hubContext,
         IOptions<AppSettings> options
         )
-    {
-        private readonly RequestDelegate _next = next;
-        private readonly ILogger<MessageCodeTranslationMiddleware> _logger = logger;
-        private readonly IHubContext<SignalHub> _hubContext = hubContext;
-        private readonly AppSettings _appSettings = options.Value;
+        {
+            _next = next;
+            _logger = logger;
+            _hubContext = hubContext;
+            _appSettings = options.Value;
+        }
 
         public async Task Invoke(HttpContext context, ILanguageService languageService)
         {

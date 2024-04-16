@@ -20,7 +20,6 @@ namespace API.All.DbContexts
         public DbSet<HUV_ORGANIZATION> ViewOrganizations { get; set; }
         public DbSet<HU_POSITION_GROUP> GroupPositions { get; set; }
         public DbSet<HU_POSITION> Positions { get; set; }
-        public DbSet<HU_POSITION_ORG_MAP_BUFFER> HuPositionOrgMapBuffers { get; set; }
         public DbSet<HU_FAMILY> Famylies { get; set; }
         public DbSet<HU_JOB_DESCRIPTION> PositionDesriptions { get; set; }
         public DbSet<SYS_OTHER_LIST_FIX> OtherListFixs { get; set; }

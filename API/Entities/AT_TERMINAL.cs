@@ -19,6 +19,10 @@ public partial class AT_TERMINAL : BASE_ENTITY
 
     public bool? IS_ACTIVE { get; set; }
 
-    public string? NOTE { get; set; } 
+    public string? NOTE { get; set; }
+    public DateTime? LAST_TIME_STATUS { get; set; }
+    public string? TERMINAL_STATUS { get; set; }
+    public long? TERMINAL_ROW { get; set; }
+    public DateTime? LAST_TIME_UPDATE { get; set; }
 
 }

@@ -20,5 +20,4 @@ public partial class AD_PROGRAMS
     public string? TEMPLATE_TYPE_IN  { get; set; }
     public string? TEMPLATE_TYPE_OUT { get; set; }
     public string? TEMPLATE_URL { get; set; }
-    public string? NOTE { get; set; }
 }

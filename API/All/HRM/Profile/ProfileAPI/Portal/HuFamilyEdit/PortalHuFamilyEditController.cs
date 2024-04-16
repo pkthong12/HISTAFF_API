@@ -4,10 +4,12 @@ using API.Main;
 using CORE.DTO;
 using CORE.Enum;
 using CORE.GenericUOW;
+using CORE.JsonHelper;
 using CORE.StaticConstant;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Logical;
+using System.Reflection;
 
 namespace API.Controllers.HuFamilyEdit
 {
@@ -220,49 +222,7 @@ namespace API.Controllers.HuFamilyEdit
         {
             var sid = Request.Sid(_appSettings);
             if (sid == null) return Unauthorized();
-            bool pathMode = true;
-            var getOtherList = (from t in _uow.Context.Set<SYS_OTHER_LIST_TYPE>().Where(x => x.CODE == "STATUS")
-                                from o in _uow.Context.Set<SYS_OTHER_LIST>().Where(x => x.CODE == "CD")
-                                select new { Id = o.ID }).FirstOrDefault();
-            
-            if (request.Id != null && request.IsSavePortal == true)
-            {
-                request.IsSavePortal = false;
-                request.IsApprovePortal = false;
-                request.StatusId = getOtherList?.Id;
-                request.IsSendPortal = true;
-                var updateResponse = await _HuFamilyEditRepository.Update(_uow, request, sid, pathMode) ;
-                return Ok(updateResponse);
-            }
-            if(request.Id != null && request.IsSavePortal == false)
-            {
-                request.IsApprovePortal = false;
-                request.StatusId = getOtherList?.Id;
-                request.IsSendPortal = true;
-                var updateResponse = await _HuFamilyEditRepository.Update(_uow, request, sid, pathMode);
-                return Ok(updateResponse);
-            }
-            var getData = _uow.Context.Set<HU_FAMILY_EDIT>().Where(x => x.EMPLOYEE_ID == request.EmployeeId && x.IS_APPROVE_PORTAL == false && x.IS_SEND_PORTAL == true);
-            if(getData.Any())
-            {
-                return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.HAD_RECORD_IS_APPROVING });
-            }
-            if(request.Id == 0)
-            {
-                request.IsApprovePortal = false;
-                request.StatusId = getOtherList?.Id;
-                request.IsSendPortal = true;
-                request.IsSavePortal = false;
-                var createResponse = await _HuFamilyEditRepository.Create(_uow, request, sid);
-                return Ok(createResponse);
-            }
-
-            request.IsSendPortal = true;
-            request.IsSavePortal = false;
-            request.IsApprovePortal = false;
-            request.HuFamilyId = request.Id;
-            request.Id = null;
-            var response = await _HuFamilyEditRepository.Create(_uow, request, sid);
+            var response = await _HuFamilyEditRepository.InsertHuFamilyEdit(request);
             return Ok(response);
 
         }

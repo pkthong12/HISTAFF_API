@@ -85,10 +85,11 @@ namespace API.All.DbContexts
                 }
                 else
                 {
-                    optionsBuilder.UseSqlServer(_appSettings.ConnectionStrings.CoreDb, o => o.UseCompatibilityLevel(120));
+                    optionsBuilder.UseSqlServer(_appSettings.ConnectionStrings.CoreDb);
 
                 }
-            } else if (_appSettings.DbType == EnumDBType.ORACLE)
+            }
+            else if (_appSettings.DbType == EnumDBType.ORACLE)
             {
                 if (!_appSettings.ConnectionStrings.CoreDb.Contains("DESCRIPTION"))
                 {
@@ -101,12 +102,5 @@ namespace API.All.DbContexts
             }
 
         }
-
-        protected override void OnModelCreating(ModelBuilder builder)
-        {
-            builder.Entity<HU_EMPLOYEE>().Property(x => x.PROFILE_ID).HasColumnName("PROFILE_ID");
-            base.OnModelCreating(builder);
-        }
-
     }
 }

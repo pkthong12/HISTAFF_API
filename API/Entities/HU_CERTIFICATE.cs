@@ -35,7 +35,6 @@ public partial class HU_CERTIFICATE
     public DateTime? MODIFIED_DATE { get; set; }
     public string? MODIFIED_BY { get; set; }
     public string? MODIFIED_LOG { get; set; }
-    public bool? IS_LICENSE { get; set; }
 
 
 

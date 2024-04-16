@@ -53,5 +53,4 @@ public partial class HU_TERMINATE
 
     public string? ATTACHMENT { get; set; }
     public string? FILE_NAME { get; set; }
-    public bool? IS_BLACK_LIST { get; set; }
 }

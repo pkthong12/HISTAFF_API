@@ -17,15 +17,13 @@ namespace API.DTO
         public long? ElementId { get; set; }
         public long? PeriodId { get; set; }
         public double? Clchinh8 { get; set; }
+        public double? Cl8 { get; set; }
+        public double? Deduct5 { get; set; }
         public int? TypeSal { get; set; }
         public double? Clchinh3 { get; set; }
         public double? Clchinh4 { get; set; }
         public string? Note { get; set; }
         public int? JobOrderNum { get; set; }
-        public double? Lbs9 { get; set; }
-        public double? Lbs23 { get; set; }
-        public double? Lbs25 { get; set; }
-
 
     }
 }

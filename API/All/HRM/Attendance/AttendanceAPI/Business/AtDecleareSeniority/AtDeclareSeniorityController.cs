@@ -106,6 +106,14 @@ namespace API.Controllers.AtDecleareSeniority
             return Ok(response);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> CalculateTotal(long employeeId)
+        {
+            var response = await _AtDeclareSeniorityRepository.CalculateTotal(employeeId);
+            return Ok(response);
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> ExportTempImportBasic(ExportDTO dto)
         {

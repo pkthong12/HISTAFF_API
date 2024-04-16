@@ -138,9 +138,6 @@ namespace ProfileDAL.ViewModels
         public string? Company { get; set; }
         public string? WorkAddress { get; set; }
         public string? Active { get; set; }
-        public long? StatusChair { get; set; }
-        public long? ConcurrentStatus { get; set; }
-
     }
     public class PositionOutputDTO
     {
@@ -195,8 +192,7 @@ namespace ProfileDAL.ViewModels
         public bool? isInterim { get; set; }
         public bool? isTDV { get; set; }
         public bool? isNotot { get; set; }
-        public decimal? OrderNum { get; set; }
-
+        
     }
 
     public class PositionInputDTO
@@ -251,16 +247,6 @@ namespace ProfileDAL.ViewModels
         public List<long?>? Ids { get; set; }
         public bool? ValueToBind { get; set; }
         public bool? ConfirmChangeTdv { get; set; }
-
-
-
-        //Added by Datnv 
-        public List<long>? ListId { get; set; }
-        public long? OrgIdTransfer { get; set; }
-        public string? UserId { get; set; }
-        public int?  Amount { get; set; }
-
-
 
     }
 

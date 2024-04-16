@@ -236,10 +236,13 @@ namespace API.Controllers.SysUserFunctionAction
             try
             {
                 var getListUserFunctionAction = await _dbContext.SysUserFunctionActions.Where(x => x.USER_ID == userId).ToListAsync();
-                if (getListUserFunctionAction.Count > 0)
+                var getListUserOrg = await _dbContext.SysUserOrgs.Where(x => x.USER_ID == userId).ToListAsync();
+                if (getListUserFunctionAction.Count > 0 || getListUserOrg.Count > 0)
                 {
-                     _dbContext.RemoveRange(getListUserFunctionAction);
-                    return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode200, MessageCode = CommonMessageCode.DELETE_SUCCESS };
+                     _dbContext.SysUserFunctionActions.RemoveRange(getListUserFunctionAction);
+                    _dbContext.SysUserOrgs.RemoveRange(getListUserOrg);
+                    _dbContext.SaveChanges();
+                    return new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode200, MessageCode = CommonMessageCode.DELETE_MULTIPLE_RECORD_SUCCESS };
 
                 }
                 else

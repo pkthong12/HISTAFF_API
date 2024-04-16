@@ -4,7 +4,6 @@
     {
         MSSQL = 1, ORACLE = 2
     }
-
     public class JwtToken
     {
         public required string SecretKey { get; set; }
@@ -25,7 +24,7 @@
     }
     public class StaticFolders
     {
-        public required string Logs { get; set; }
+		public required string Logs { get; set; }
         public required string Root { get; set; }
         public required string Avatars { get; set; }
         public required string Attachments { get; set; }
@@ -71,7 +70,7 @@
 
     public class Auth2Oidc
     {
-        public List<Auth2OidcSetting>? Settings { get; set; }
+        public List<Auth2OidcSetting>? Settings {  get; set; }
     }
 
     public class MessageCodeTranslation
@@ -92,9 +91,9 @@
         public required RequestResponseLogger RequestResponseLogger { get; set; }
         public required Auth2Oidc Auth2Oidc { get; set; }
         public required Saml2AdfsSetting Saml2AdfsSetting { get; set; }
+
         public required MessageCodeTranslation MessageCodeTranslation { get; set; }
         public bool SupportMultipleTimeZones { get; set; }
         public required string SiteTimeZoneId { get; set; }
-
     }
 }

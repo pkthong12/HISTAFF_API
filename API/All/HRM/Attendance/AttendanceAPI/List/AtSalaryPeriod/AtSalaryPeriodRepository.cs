@@ -34,7 +34,6 @@ namespace API.Controllers.AtSalaryPeriod
                              /*from op in _dbContext.AtOrgPeriods.AsNoTracking().Where( x => x.PERIOD_ID == p.ID)*/
                          from c in _dbContext.SysUsers.AsNoTracking().Where(x => x.ID == p.CREATED_BY).DefaultIfEmpty()
                          from u in _dbContext.SysUsers.AsNoTracking().Where(x => x.ID == p.UPDATED_BY).DefaultIfEmpty()
-
                              // JOIN OTHER ENTITIES BASED ON THE BUSINESS
                          select new AtSalaryPeriodDTO
                          {

@@ -192,11 +192,11 @@ namespace API.DTO
         public string? JobName { get; set; }
         public long? ComputerSkillId { get; set; }
         public long? LicenseId { get; set; }
-        public long? DefenseSecurityTraining { get; set; }
     }
 
     public class HuEmployeeCvInputDTO
     {
         public List<long>? OrgIds { get; set;}
+        public bool? ShowDissolved { get; set; }
     }
 }

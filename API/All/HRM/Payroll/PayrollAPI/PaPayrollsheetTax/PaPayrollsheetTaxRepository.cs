@@ -31,7 +31,6 @@ namespace API.Controllers.PaPayrollsheetTax
         {
             var result = await (from p in _dbContext.PaListSals.AsNoTracking()
                                 from t in _dbContext.PaListsalariess.AsNoTracking().Where(t => t.CODE_SAL == p.ID && t.OBJ_SAL_ID == param.ObjSalaryId && t.IS_VISIBLE == true)
-                                orderby t.COL_INDEX ascending
                                 select new
                                 {
                                     Code = p.CODE_LISTSAL,

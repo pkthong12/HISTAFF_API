@@ -129,20 +129,19 @@ namespace API.Controllers.HuCommendEmployee
         [HttpPost]
         public async Task<IActionResult> DeleteIds(IdsRequest model)
         {
-
             bool isCheckStatus = false;
             model.Ids.ForEach(item =>
+            {
+                var otherList = _uow.Context.Set<SYS_OTHER_LIST>().Where(x => x.CODE == "DD").FirstOrDefault();
+                var getHuCommend = _uow.Context.Set<HU_COMMEND_EMPLOYEE>().Where(x => x.ID == item).FirstOrDefault();
+                if(otherList.ID == getHuCommend.STATUS_ID)
                 {
-                    var otherList = _uow.Context.Set<SYS_OTHER_LIST>().Where(x => x.CODE == "DD").FirstOrDefault();
-                    var getHuCommend = _uow.Context.Set<HU_COMMEND_EMPLOYEE>().Where(x => x.ID == item).FirstOrDefault();
-                    if (otherList.ID == getHuCommend.STATUS_ID)
-                    {
-                        isCheckStatus = true;
-                        return;
-                    }
-
-                });
-            if (isCheckStatus == true)
+                    isCheckStatus = true;
+                    return;
+                }
+               
+            });
+            if(isCheckStatus == true)
             {
                 return Ok(new FormatedResponse() { ErrorType = EnumErrorType.CATCHABLE, StatusCode = EnumStatusCode.StatusCode400, MessageCode = CommonMessageCode.APPROVED_RECORDS_CAN_NOT_BE_DELETED });
             }
@@ -151,7 +150,6 @@ namespace API.Controllers.HuCommendEmployee
                 var response = await _HuCommendEmployeeRepository.DeleteIds(_uow, model.Ids);
                 return Ok(response);
             }
-
         }
 
         [HttpPost]
@@ -173,50 +171,35 @@ namespace API.Controllers.HuCommendEmployee
         {
             var sid = Request.Sid(_appSettings);
             bool pathMode = true;
-            List<HuCommendDTO> dto = new();
-            List<HuCommendEmployeeDTO> dtos = new();
+            HuCommendDTO dto = new();
             if (model.ValueToBind == true)
             {
-                model.Ids.ForEach(item =>
+                foreach (var item in model.Ids)
                 {
                     var getCommendEmp = _uow.Context.Set<HU_COMMEND_EMPLOYEE>().Where(x => x.ID == item).FirstOrDefault();
-                    var getCommendEmpList = _uow.Context.Set<HU_COMMEND_EMPLOYEE>().Where(x => x.ID == item).ToList();
-                    var getCommend = _uow.Context.Set<HU_COMMEND>().Where(x => x.ID == getCommendEmp!.COMMEND_ID).FirstOrDefault();
+                    var getCommend = _uow.Context.Set<HU_COMMEND>().Where(x => x.ID == getCommendEmp.COMMEND_ID).FirstOrDefault();
                     var getOtherList = (from t in _uow.Context.Set<SYS_OTHER_LIST_TYPE>().Where(x => x.CODE == "STATUS")
                                         from o in _uow.Context.Set<SYS_OTHER_LIST>().Where(x => x.TYPE_ID == t.ID)
                                         where o.CODE == "DD"
                                         select new { Id = o.ID }).FirstOrDefault();
                     if (getCommend?.ID != null)
                     {
-                        dto.Add(new()
-                        {
-                            Id = getCommend.ID,
-                            StatusPaymentId = getOtherList!.Id
-                        });
+                        dto.Id = getCommend.ID;
+                        dto.StatusPaymentId = getOtherList?.Id;
                     }
-                    if (getCommendEmpList != null)
-                    {
-                        foreach (var items in getCommendEmpList)
-                        {
-                            dtos.Add(new()
-                            {
-                                Id = items.ID,
-                                StatusId = getOtherList!.Id
-                            });
-                        }
-                    }
-                });
-                await _HuCommendEmployeeRepository.UpdateRange(_uow, dtos, sid, pathMode);
-                await _huCommendRepository.UpdateRange(_uow, dto, sid, pathMode);
-                return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode200, InnerBody = dto, MessageCode = CommonMessageCode.APPROVED_SUCCESS });
+                    await _huCommendRepository.Update(_uow, dto, sid, pathMode);
 
+                    if (getCommendEmp != null && getOtherList != null) getCommendEmp.STATUS_ID = getOtherList.Id;
+                    _uow.Context.SaveChanges();
+                }
+                
+                return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode200, InnerBody = dto, MessageCode = CommonMessageCode.APPROVED_SUCCESS });
             }
             else
             {
-                model.Ids.ForEach(item =>
+                foreach (var item in model.Ids)
                 {
                     var getCommendEmp = _uow.Context.Set<HU_COMMEND_EMPLOYEE>().Where(x => x.ID == item).FirstOrDefault();
-                    var getCommendEmpList = _uow.Context.Set<HU_COMMEND_EMPLOYEE>().Where(x => x.ID == item).ToList();
                     var getCommend = _uow.Context.Set<HU_COMMEND>().Where(x => x.ID == getCommendEmp.COMMEND_ID).FirstOrDefault();
                     var getOtherList = (from t in _uow.Context.Set<SYS_OTHER_LIST_TYPE>().Where(x => x.CODE == "STATUS")
                                         from o in _uow.Context.Set<SYS_OTHER_LIST>().Where(x => x.TYPE_ID == t.ID)
@@ -224,29 +207,17 @@ namespace API.Controllers.HuCommendEmployee
                                         select new { Id = o.ID }).FirstOrDefault();
                     if (getCommend?.ID != null)
                     {
-                        dto.Add(new()
-                        {
-                            Id = getCommend.ID,
-                            StatusPaymentId = getOtherList!.Id
-                        });
+                        dto.Id = getCommend.ID;
+                        dto.StatusPaymentId = getOtherList?.Id;
                     }
-                    if (getCommendEmpList != null)
-                    {
-                        foreach (var items in getCommendEmpList)
-                        {
-                            dtos.Add(new()
-                            {
-                                Id = items.ID,
-                                StatusId = getOtherList!.Id
-                            });
-                        }
-                    }
-                });
-                await _HuCommendEmployeeRepository.UpdateRange(_uow, dtos, sid, pathMode);
-                await _huCommendRepository.UpdateRange(_uow, dto, sid, pathMode);
+                    await _huCommendRepository.Update(_uow, dto, sid, pathMode);
+
+                    if (getCommendEmp != null && getOtherList != null) getCommendEmp.STATUS_ID = getOtherList.Id;
+                    _uow.Context.SaveChanges();
+                }
+                
                 return Ok(new FormatedResponse() { StatusCode = EnumStatusCode.StatusCode200, InnerBody = dto, MessageCode = CommonMessageCode.UNAPPROVED_SUCCESS });
             }
-
             //{
             //    var r = _coreDbContext.HuCommendEmployees.Where(x => x.ID == item).FirstOrDefault();
             //    var statusIdCur = r.STATUS_ID;
