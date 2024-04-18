@@ -13,6 +13,7 @@ using Common.Interfaces;
 using Common.DataAccess;
 using API.All.Services;
 using Common.Repositories;
+using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers.HuOrganization
 {
@@ -45,11 +46,16 @@ namespace API.Controllers.HuOrganization
 
         public async Task<GenericPhaseTwoListResponse<HuOrganizationDTO>> SinglePhaseQueryList(GenericQueryListDTO<HuOrganizationDTO> request)
         {
-            var joined = from p in _dbContext.HuOrganizations.AsNoTracking()
-                             // JOIN OTHER ENTITIES BASED ON THE BUSINESS
+            var joined = from p in _dbContext.HuOrganizations
+                         where p.PARENT_ID == 12233
                          select new HuOrganizationDTO
                          {
-                             Id = p.ID
+                             Id = p.ID,
+                             Code = p.CODE,
+                             Name = p.NAME,
+                             ParentName = "Công ty Cổ phần Tư vấn Quản trị Doanh nghiệp Tinh Vân",
+                             Note = p.NOTE,
+                             Status = p.STATUS
                          };
 
             var singlePhaseResult = await _genericReducer.SinglePhaseReduce(joined, request);
@@ -612,6 +618,21 @@ namespace API.Controllers.HuOrganization
 
         public async Task<FormatedResponse> DeleteIds(GenericUnitOfWork _uow, List<long> ids)
         {
+            var query = _dbContext.HuOrganizations.Where(x => ids.Contains(x.ID));
+
+            foreach (var item in query)
+            {
+                if (item.STATUS == true)
+                {
+                    return new FormatedResponse()
+                    {
+                        ErrorType = EnumErrorType.CATCHABLE,
+                        MessageCode = "Không được xóa bản ghi đang áp dụng",
+                        StatusCode = EnumStatusCode.StatusCode400
+                    };
+                }
+            }
+
             var response = await _genericRepository.DeleteIds(_uow, ids);
             return response;
         }
@@ -744,8 +765,40 @@ namespace API.Controllers.HuOrganization
             });
 
         }
+
+        public virtual async Task<FormatedResponse> ToggleActiveIds2(GenericUnitOfWork _uow, List<long> ids, bool valueToBind, string sid)
+        {
+            var response = await _genericRepository.ToggleActiveIds(_uow, ids, valueToBind, sid);
+
+            var query = _dbContext.HuOrganizations.Where(x => ids.Contains(x.ID));
+
+            foreach (var item in query)
+            {
+                item.STATUS = valueToBind;
+            }
+
+            _dbContext.SaveChanges();
+
+            return response;
+        }
+
+        public async Task<FormatedResponse> Update2(HuOrganizationDTO dto)
+        {
+            var record = await _dbContext.HuOrganizations.FirstOrDefaultAsync(x => x.ID == dto.Id);
+
+            record!.CODE = dto.Code;
+            record.NAME = dto.Name;
+            record.NOTE = dto.Note;
+
+            _dbContext.SaveChanges();
+
+
+            return new FormatedResponse()
+            {
+                InnerBody = dto,
+                MessageCode = CommonMessageCode.UPDATE_SUCCESS,
+                StatusCode = EnumStatusCode.StatusCode200
+            };
+        }
     }
-
 }
-
-

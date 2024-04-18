@@ -9,6 +9,7 @@ namespace API.DTO
         public long? TenantId { get; set; }
         public string? Code { get; set; }
         public string? Name { get; set; }
+        public bool? Status { get; set; }
         public long? ParentId { get; set; }
         public long? CompanyId { get; set; }
         public long? OrgLevelId { get; set; }

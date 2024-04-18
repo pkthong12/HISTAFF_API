@@ -175,6 +175,26 @@ namespace API.Controllers.HuOrganization
             _HuOrganizationRepository.ScanDissolveOrg();
             return Ok();
         }
+
+        [HttpPost]
+        public async Task<IActionResult> ToggleActiveIds2(GenericToggleIsActiveDTO model)
+        {
+            var sid = Request.Sid(_appSettings);
+            if (sid == null) return Unauthorized();
+
+            var response = await _HuOrganizationRepository.ToggleActiveIds2(_uow, model.Ids, model.ValueToBind, sid);
+            return Ok(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Update2(HuOrganizationDTO model)
+        {
+            var sid = Request.Sid(_appSettings);
+            if (sid == null) return Unauthorized();
+
+            var response = await _HuOrganizationRepository.Update2(model);
+            return Ok(response);
+        }
     }
 }
 

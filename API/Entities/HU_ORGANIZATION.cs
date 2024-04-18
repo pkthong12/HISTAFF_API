@@ -11,6 +11,8 @@ public partial class HU_ORGANIZATION: BASE_ENTITY
 
     public string NAME { get; set; } = null!;
 
+    public bool? STATUS { get; set; }
+
     public long? PARENT_ID { get; set; }
     
     public long? COMPANY_ID { get; set; }
