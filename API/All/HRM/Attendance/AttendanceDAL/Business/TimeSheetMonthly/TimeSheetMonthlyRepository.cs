@@ -149,18 +149,36 @@ namespace AttendanceDAL.Repositories
                     P_PERIOD_ID = request.PeriodId,
                     P_ORG_ID = request.OrgId,
                     P_ISDISSOLVE = -1,
+                    P_EMPLOYEE_ID = request.EmployeeId == null ? 0 : request.EmployeeId
                 };
-                var data = QueryData.ExecuteStoreToTable(Procedures.PKG_ATTENDANCE_CALCULATE_CAL_TIME_TIMESHEET_MONTHLY,
+                var data = QueryData.ExecuteStoreToTable(Procedures.PKG_ATTENDANCE_CALCULATE_CAL_TIME_TIMESHEET_MACHINE,
                     x, false);
                 if (Convert.ToDouble(data.Tables[0].Rows[0][0]) > 0)
                 {
-                    return new ResultWithError(200, data.Tables[0].Rows[0][0]);
+                    var x1 = new
+                    {
+                        P_USER_ID = _appContext.CurrentUserId,
+                        P_PERIOD_ID = request.PeriodId,
+                        P_ORG_ID = request.OrgId,
+                        P_ISDISSOLVE = -1,
+                    };
+                    var data1 = QueryData.ExecuteStoreToTable(Procedures.PKG_ATTENDANCE_CALCULATE_CAL_TIME_TIMESHEET_MONTHLY,
+                        x1, false);
+                    if (Convert.ToDouble(data.Tables[0].Rows[0][0]) > 0)
+                    {
+                        return new ResultWithError(200, data.Tables[0].Rows[0][0]);
+                    }
+                    else
+                    {
+
+                        return new ResultWithError(400);
+                    }
                 }
                 else
                 {
-
                     return new ResultWithError(400);
                 }
+                
             }
             catch (Exception ex)
             {
