@@ -1574,7 +1574,7 @@ namespace ProfileDAL.Repositories
                 // Gencode
                 //var DecisionCode = "";
                 var data = Map(param, new HU_WORKING());
-                var PCCoef = (from p in _appContext.WorkingAllowances
+                /*var PCCoef = (from p in _appContext.WorkingAllowances
                               from a in _appContext.Allowances.Where(f => f.ID == p.ALLOWANCE_ID)
                               where p.WORKING_ID == data.ID && p.COEFFICIENT != null
                               select p.COEFFICIENT).ToList();
@@ -1636,7 +1636,7 @@ namespace ProfileDAL.Repositories
                 else
                 {
                     data.SAL_INSU = 0;
-                }
+                }*/
                 //data.DECISION_NO = DecisionCode;
                 await _appContext.Database.BeginTransactionAsync();
                 if (data.EXPIRE_UPSAL_DATE != null)

@@ -107,6 +107,7 @@ namespace ProfileDAL.Repositories
                               NameOnProfileEmployee = j.NAME_VN,
                               InsurenceArea = v.NAME, //Lấy ra vùng bảo hiểm
                               InsurenceAreaId = v.ID, //Lấy ra ID vùng bảo hiểm
+                              IsActive = p.IS_ACTIVE
                           }).Distinct();
             //request.Sort = new List<SortItem>();
             //request.Sort.Add(new SortItem()
