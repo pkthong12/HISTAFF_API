@@ -10,6 +10,7 @@ namespace API.DTO
         public string? Code { get; set; }
         public string? Name { get; set; }
         public bool? Status { get; set; }
+        public string? StatusString { get; set; }
         public long? ParentId { get; set; }
         public long? CompanyId { get; set; }
         public long? OrgLevelId { get; set; }

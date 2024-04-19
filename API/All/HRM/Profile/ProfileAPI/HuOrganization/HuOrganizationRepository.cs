@@ -46,16 +46,16 @@ namespace API.Controllers.HuOrganization
 
         public async Task<GenericPhaseTwoListResponse<HuOrganizationDTO>> SinglePhaseQueryList(GenericQueryListDTO<HuOrganizationDTO> request)
         {
-            var joined = from p in _dbContext.HuOrganizations
-                         where p.PARENT_ID == 12233
+            var joined = from p in _dbContext.HuOrganizations.AsNoTracking()
+                         from p1 in _dbContext.HuOrganizations.AsNoTracking().Where(x => p.PARENT_ID == x.ID && x.ID != p.ID).DefaultIfEmpty()
                          select new HuOrganizationDTO
                          {
                              Id = p.ID,
                              Code = p.CODE,
                              Name = p.NAME,
-                             ParentName = "Công ty Cổ phần Tư vấn Quản trị Doanh nghiệp Tinh Vân",
+                             ParentName = p1.NAME,
                              Note = p.NOTE,
-                             Status = p.STATUS
+                             StatusString = p.IS_ACTIVE == true ? "Hoạt động" : "Giải thể"
                          };
 
             var singlePhaseResult = await _genericReducer.SinglePhaseReduce(joined, request);
